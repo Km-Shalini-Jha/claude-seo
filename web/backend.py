@@ -20,7 +20,7 @@ from typing import Any, Literal
 
 from fastapi import Depends, Header, HTTPException
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel, HttpUrl
 from starlette.middleware.cors import CORSMiddleware
 
@@ -35,6 +35,13 @@ MAX_HISTORY = 80
 SESSION_TTL_SECONDS = 60 * 60 * 24 * 14
 RATE_LIMIT_WINDOW = 60 * 60
 RATE_LIMIT_MAX_JOBS = int(os.environ.get("CLAUDE_SEO_WEB_RATE_LIMIT", "30"))
+PLAN_LIMITS = {
+    "free": {"hourly_jobs": 10, "projects": 3, "sites": 10},
+    "pro": {"hourly_jobs": 60, "projects": 25, "sites": 100},
+    "agency": {"hourly_jobs": 240, "projects": 250, "sites": 1000},
+}
+WORKER_EVENT = threading.Event()
+WORKER_STARTED = False
 
 app = FastAPI(title="Claude SEO SaaS Console API")
 app.add_middleware(
@@ -52,6 +59,23 @@ class AuthRequest(BaseModel):
     email: str
     password: str
     name: str | None = None
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    password: str
+
+
+class BillingPlanRequest(BaseModel):
+    plan: str
 
 
 class ProjectRequest(BaseModel):
@@ -79,7 +103,7 @@ class JobRecord(BaseModel):
     module: str
     label: str
     url: str
-    status: Literal["queued", "running", "complete", "error"]
+    status: Literal["queued", "running", "complete", "error", "cancelled"]
     created_at: float
     updated_at: float
     command: str | None = None
@@ -213,6 +237,8 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             email TEXT NOT NULL UNIQUE,
             name TEXT,
             password_hash TEXT NOT NULL,
+            plan TEXT NOT NULL DEFAULT 'free',
+            email_verified INTEGER NOT NULL DEFAULT 0,
             created_at REAL NOT NULL
         )
         """
@@ -257,6 +283,30 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS email_verification_tokens (
+            token TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            expires_at REAL NOT NULL,
+            used_at REAL,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            token TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            expires_at REAL NOT NULL,
+            used_at REAL,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        """
+    )
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS jobs (
             id TEXT PRIMARY KEY,
             user_id TEXT,
@@ -288,6 +338,11 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     for column, statement in migrations.items():
         if column not in existing:
             conn.execute(statement)
+    user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+    if "plan" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
+    if "email_verified" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_user_updated ON jobs(user_id, updated_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_sites_user_project ON sites(user_id, project_id)")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_share_token ON jobs(share_token)")
@@ -330,7 +385,36 @@ def create_session(user_id: str) -> str:
 
 
 def user_public(row: sqlite3.Row) -> dict[str, Any]:
-    return {"id": row["id"], "email": row["email"], "name": row["name"], "created_at": row["created_at"]}
+    return {
+        "id": row["id"],
+        "email": row["email"],
+        "name": row["name"],
+        "plan": row["plan"] if "plan" in row.keys() else "free",
+        "email_verified": bool(row["email_verified"]) if "email_verified" in row.keys() else False,
+        "created_at": row["created_at"],
+    }
+
+
+def create_email_verification_token(user_id: str) -> str:
+    token = secrets.token_urlsafe(32)
+    ts = now()
+    with db() as conn:
+        conn.execute(
+            "INSERT INTO email_verification_tokens (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
+            (token, user_id, ts, ts + 60 * 60 * 24),
+        )
+    return token
+
+
+def create_password_reset_token(user_id: str) -> str:
+    token = secrets.token_urlsafe(32)
+    ts = now()
+    with db() as conn:
+        conn.execute(
+            "INSERT INTO password_reset_tokens (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
+            (token, user_id, ts, ts + 60 * 30),
+        )
+    return token
 
 
 def current_user(authorization: str | None = Header(default=None)) -> dict[str, Any]:
@@ -351,13 +435,33 @@ def current_user(authorization: str | None = Header(default=None)) -> dict[str, 
     return user_public(row)
 
 
-def check_rate_limit(user_id: str) -> None:
+def check_rate_limit(user: dict[str, Any]) -> None:
+    plan = user.get("plan", "free")
+    hourly_limit = PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])["hourly_jobs"]
+    hourly_limit = min(hourly_limit, RATE_LIMIT_MAX_JOBS) if RATE_LIMIT_MAX_JOBS else hourly_limit
     cutoff = now() - RATE_LIMIT_WINDOW
+    user_id = user["id"]
     runs = [ts for ts in RATE_LIMITS.get(user_id, []) if ts >= cutoff]
-    if len(runs) >= RATE_LIMIT_MAX_JOBS:
-        raise HTTPException(status_code=429, detail="Audit rate limit reached")
+    if len(runs) >= hourly_limit:
+        raise HTTPException(status_code=429, detail=f"Audit rate limit reached for {plan} plan")
     runs.append(now())
     RATE_LIMITS[user_id] = runs
+
+
+def enforce_project_limit(user: dict[str, Any]) -> None:
+    limit = PLAN_LIMITS.get(user.get("plan", "free"), PLAN_LIMITS["free"])["projects"]
+    with db() as conn:
+        count = conn.execute("SELECT COUNT(*) AS n FROM projects WHERE user_id = ?", (user["id"],)).fetchone()["n"]
+    if count >= limit:
+        raise HTTPException(status_code=402, detail="Project limit reached for current plan")
+
+
+def enforce_site_limit(user: dict[str, Any]) -> None:
+    limit = PLAN_LIMITS.get(user.get("plan", "free"), PLAN_LIMITS["free"])["sites"]
+    with db() as conn:
+        count = conn.execute("SELECT COUNT(*) AS n FROM sites WHERE user_id = ?", (user["id"],)).fetchone()["n"]
+    if count >= limit:
+        raise HTTPException(status_code=402, detail="Site limit reached for current plan")
 
 
 def row_to_job(row: sqlite3.Row) -> JobRecord:
@@ -632,6 +736,33 @@ def execute_job(job_id: str) -> None:
     persist_job(completed)
 
 
+def next_queued_job() -> JobRecord | None:
+    with db() as conn:
+        row = conn.execute(
+            "SELECT * FROM jobs WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1"
+        ).fetchone()
+    return row_to_job(row) if row else None
+
+
+def worker_loop() -> None:
+    while True:
+        job = next_queued_job()
+        if job:
+            execute_job(job.id)
+            continue
+        WORKER_EVENT.wait(1.0)
+        WORKER_EVENT.clear()
+
+
+@app.on_event("startup")
+def start_worker() -> None:
+    global WORKER_STARTED
+    if WORKER_STARTED:
+        return
+    WORKER_STARTED = True
+    threading.Thread(target=worker_loop, daemon=True).start()
+
+
 def run_runtime_doctor() -> dict[str, Any]:
     if not LAUNCHER.exists():
         return {"ready": False, "browser_ready": False, "mode": "missing", "python_version": None, "reasons": [f"Claude SEO launcher not found: {LAUNCHER}"]}
@@ -650,6 +781,73 @@ def run_runtime_doctor() -> dict[str, Any]:
     except ValueError:
         pass
     return {"ready": False, "browser_ready": False, "mode": "error", "python_version": None, "reasons": [result.stderr.strip() or result.stdout.strip() or "Runtime doctor failed"]}
+
+
+def escape_html(value: object) -> str:
+    text = str(value if value is not None else "")
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#039;")
+    )
+
+
+def render_report_html(job: JobRecord) -> str:
+    public = public_job(job)
+    findings = public.get("findings") or []
+    finding_html = "\n".join(
+        f"""
+        <article class="finding">
+          <div><strong>{escape_html(item.get('title'))}</strong><span>{escape_html(item.get('severity'))}</span></div>
+          <p>{escape_html(item.get('detail'))}</p>
+        </article>
+        """
+        for item in findings
+    )
+    raw = escape_html(json.dumps(public, indent=2, sort_keys=True))
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{escape_html(job.label)} Report</title>
+  <style>
+    body{{margin:0;background:#f5f7f2;color:#18211c;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+    main{{max-width:1040px;margin:0 auto;padding:36px 20px}}
+    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid #dce4d8;padding-bottom:22px;margin-bottom:22px}}
+    h1{{margin:0;font-size:32px;letter-spacing:0}} p{{color:#69766d;line-height:1.55}}
+    .badge{{display:inline-flex;border-radius:99px;padding:6px 10px;background:#dff1e8;color:#237255;font-weight:800;font-size:12px;text-transform:uppercase}}
+    .grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}}
+    .card,.finding{{background:white;border:1px solid #dce4d8;border-radius:8px;box-shadow:0 12px 34px rgba(31,44,34,.07)}}
+    .card{{padding:16px}} .card span{{display:block;color:#69766d;font-size:12px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;word-break:break-word}}
+    .findings{{display:grid;gap:10px;margin-top:12px}} .finding{{padding:14px}} .finding div{{display:flex;justify-content:space-between;gap:12px}} .finding span{{color:#a2651b;font-size:12px;font-weight:800;text-transform:uppercase}}
+    pre{{white-space:pre-wrap;word-break:break-word;background:#eef2ed;border:1px solid #dce4d8;border-radius:8px;padding:14px;max-height:520px;overflow:auto;font-size:12px}}
+    @media(max-width:760px){{header,.grid{{display:grid;grid-template-columns:1fr}}}}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>{escape_html(job.label)}</h1>
+      <p>{escape_html(job.url)}</p>
+    </div>
+    <span class="badge">{escape_html(job.status)}</span>
+  </header>
+  <section class="grid">
+    <div class="card"><span>Module</span><strong>{escape_html(job.module)}</strong></div>
+    <div class="card"><span>Command</span><strong>{escape_html(job.command or "Completed")}</strong></div>
+    <div class="card"><span>Findings</span><strong>{len(findings)}</strong></div>
+  </section>
+  <h2>Findings</h2>
+  <section class="findings">{finding_html}</section>
+  <h2>Raw Audit JSON</h2>
+  <pre>{raw}</pre>
+</main>
+</body>
+</html>"""
 
 
 @app.get("/")
@@ -675,13 +873,14 @@ async def signup(request: AuthRequest) -> dict[str, Any]:
     try:
         with db() as conn:
             conn.execute(
-                "INSERT INTO users (id, email, name, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
-                (user_id, email, request.name or email.split("@")[0], hash_password(request.password), created),
+                "INSERT INTO users (id, email, name, password_hash, plan, email_verified, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (user_id, email, request.name or email.split("@")[0], hash_password(request.password), "free", 0, created),
             )
             row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     except sqlite3.IntegrityError as exc:
         raise HTTPException(status_code=409, detail="An account already exists for this email") from exc
-    return {"token": create_session(user_id), "user": user_public(row)}
+    verification_token = create_email_verification_token(user_id)
+    return {"token": create_session(user_id), "user": user_public(row), "verification_token": verification_token}
 
 
 @app.post("/api/auth/login")
@@ -694,9 +893,87 @@ async def login(request: AuthRequest) -> dict[str, Any]:
     return {"token": create_session(row["id"]), "user": user_public(row)}
 
 
+@app.post("/api/auth/logout")
+async def logout(authorization: str | None = Header(default=None)) -> dict[str, bool]:
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.removeprefix("Bearer ").strip()
+        with db() as conn:
+            conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
+    return {"ok": True}
+
+
+@app.post("/api/auth/verify-email")
+async def verify_email(request: VerifyEmailRequest) -> dict[str, bool]:
+    with db() as conn:
+        row = conn.execute(
+            "SELECT * FROM email_verification_tokens WHERE token = ? AND used_at IS NULL AND expires_at > ?",
+            (request.token, now()),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+        ts = now()
+        conn.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (row["user_id"],))
+        conn.execute("UPDATE email_verification_tokens SET used_at = ? WHERE token = ?", (ts, request.token))
+    return {"ok": True}
+
+
+@app.post("/api/auth/password-reset/request")
+async def request_password_reset(request: PasswordResetRequest) -> dict[str, Any]:
+    email = normalize_email(request.email)
+    with db() as conn:
+        row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if not row:
+        return {"ok": True}
+    token = create_password_reset_token(row["id"])
+    return {"ok": True, "reset_token": token}
+
+
+@app.post("/api/auth/password-reset/confirm")
+async def confirm_password_reset(request: PasswordResetConfirm) -> dict[str, bool]:
+    with db() as conn:
+        row = conn.execute(
+            "SELECT * FROM password_reset_tokens WHERE token = ? AND used_at IS NULL AND expires_at > ?",
+            (request.token, now()),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        ts = now()
+        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_password(request.password), row["user_id"]))
+        conn.execute("UPDATE password_reset_tokens SET used_at = ? WHERE token = ?", (ts, request.token))
+        conn.execute("DELETE FROM sessions WHERE user_id = ?", (row["user_id"],))
+    return {"ok": True}
+
+
 @app.get("/api/me")
 async def me(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
-    return {"user": user}
+    return {"user": user, "plan_limits": PLAN_LIMITS.get(user.get("plan", "free"), PLAN_LIMITS["free"])}
+
+
+@app.get("/api/billing/plans")
+async def billing_plans() -> dict[str, Any]:
+    return {"plans": PLAN_LIMITS}
+
+
+@app.post("/api/billing/dev-upgrade")
+async def dev_upgrade(request: BillingPlanRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    if request.plan not in PLAN_LIMITS:
+        raise HTTPException(status_code=400, detail="Unknown plan")
+    with db() as conn:
+        conn.execute("UPDATE users SET plan = ? WHERE id = ?", (request.plan, user["id"]))
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+    return {"user": user_public(row), "plan_limits": PLAN_LIMITS[request.plan]}
+
+
+@app.post("/api/billing/checkout")
+async def billing_checkout(request: BillingPlanRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    if request.plan not in PLAN_LIMITS:
+        raise HTTPException(status_code=400, detail="Unknown plan")
+    return {
+        "checkout_url": None,
+        "mode": "dev",
+        "message": "Stripe is not configured. Use /api/billing/dev-upgrade in development.",
+        "requested_plan": request.plan,
+    }
 
 
 @app.post("/api/projects")
@@ -704,6 +981,7 @@ async def create_project(request: ProjectRequest, user: dict[str, Any] = Depends
     name = request.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Project name is required")
+    enforce_project_limit(user)
     project_id = uuid.uuid4().hex
     ts = now()
     with db() as conn:
@@ -724,6 +1002,7 @@ async def list_projects(user: dict[str, Any] = Depends(current_user)) -> list[di
 
 @app.post("/api/sites")
 async def create_site(request: SiteRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    enforce_site_limit(user)
     with db() as conn:
         project = conn.execute("SELECT * FROM projects WHERE id = ? AND user_id = ?", (request.project_id, user["id"])).fetchone()
         if not project:
@@ -755,7 +1034,7 @@ async def list_sites(project_id: str | None = None, user: dict[str, Any] = Depen
 async def create_job(request: JobRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
     if request.module not in MODULES:
         raise HTTPException(status_code=404, detail="Unknown audit module")
-    check_rate_limit(user["id"])
+    check_rate_limit(user)
     with db() as conn:
         if request.project_id:
             project = conn.execute("SELECT id FROM projects WHERE id = ? AND user_id = ?", (request.project_id, user["id"])).fetchone()
@@ -781,7 +1060,7 @@ async def create_job(request: JobRequest, user: dict[str, Any] = Depends(current
     with JOBS_LOCK:
         JOBS[record.id] = record
     persist_job(record)
-    threading.Thread(target=execute_job, args=(record.id,), daemon=True).start()
+    WORKER_EVENT.set()
     return public_job(record)
 
 
@@ -794,6 +1073,34 @@ async def get_job(job_id: str, user: dict[str, Any] = Depends(current_user)) -> 
     if not record or record.user_id != user["id"]:
         raise HTTPException(status_code=404, detail="Job not found")
     return public_job(record)
+
+
+@app.post("/api/jobs/{job_id}/cancel")
+async def cancel_job(job_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    record = load_job(job_id, user["id"])
+    if not record or record.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if record.status != "queued":
+        raise HTTPException(status_code=409, detail="Only queued jobs can be cancelled")
+    cancelled = update_job(job_id, status="cancelled")
+    return public_job(cancelled)
+
+
+@app.get("/api/jobs/{job_id}/export.json")
+async def export_job_json(job_id: str, user: dict[str, Any] = Depends(current_user)) -> Response:
+    record = load_job(job_id, user["id"])
+    if not record or record.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="Job not found")
+    content = json.dumps(public_job(record), indent=2, sort_keys=True)
+    return Response(content, media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{job_id}.json"'})
+
+
+@app.get("/api/jobs/{job_id}/report.html")
+async def export_job_html(job_id: str, user: dict[str, Any] = Depends(current_user)) -> HTMLResponse:
+    record = load_job(job_id, user["id"])
+    if not record or record.user_id != user["id"]:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return HTMLResponse(render_report_html(record))
 
 
 @app.get("/api/history")
@@ -813,6 +1120,26 @@ async def shared_report(share_token: str) -> dict[str, Any]:
     public = public_job(job)
     public.pop("user_id", None)
     return public
+
+
+@app.get("/share/{share_token}")
+async def public_shared_report_page(share_token: str) -> HTMLResponse:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM jobs WHERE share_token = ? AND status = 'complete'", (share_token,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Shared report not found")
+    return HTMLResponse(render_report_html(row_to_job(row)))
+
+
+@app.get("/api/share/{share_token}/export.json")
+async def public_shared_report_json(share_token: str) -> Response:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM jobs WHERE share_token = ? AND status = 'complete'", (share_token,)).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Shared report not found")
+    public = public_job(row_to_job(row))
+    public.pop("user_id", None)
+    return Response(json.dumps(public, indent=2, sort_keys=True), media_type="application/json")
 
 
 @app.post("/api/audit")

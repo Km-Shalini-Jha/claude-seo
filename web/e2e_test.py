@@ -91,6 +91,23 @@ def main() -> int:
         assert status == 200, body
         owner = json.loads(body)
         token = owner["token"]
+        verification_token = owner["verification_token"]
+
+        status, body = request(base, "/api/auth/verify-email", {"token": verification_token})
+        assert status == 200, body
+
+        status, body = request(base, "/api/billing/dev-upgrade", {"plan": "pro"}, token)
+        assert status == 200, body
+        assert json.loads(body)["user"]["plan"] == "pro"
+
+        status, body = request(base, "/api/auth/password-reset/request", {"email": "owner@example.com"})
+        assert status == 200, body
+        reset_token = json.loads(body)["reset_token"]
+        status, body = request(base, "/api/auth/password-reset/confirm", {"token": reset_token, "password": "new-long-password"})
+        assert status == 200, body
+        status, body = request(base, "/api/auth/login", {"email": "owner@example.com", "password": "new-long-password"})
+        assert status == 200, body
+        token = json.loads(body)["token"]
 
         status, body = request(base, "/api/projects", {"name": "Acme Client"}, token)
         assert status == 200, body
@@ -123,6 +140,18 @@ def main() -> int:
         shared = json.loads(body)
         assert shared["id"] == job_id
         assert "user_id" not in shared
+
+        status, body = request(base, completed["share_url"])
+        assert status == 200, body
+        assert "Raw Audit JSON" in body
+
+        status, body = request(base, f"/api/jobs/{job_id}/report.html", token=token)
+        assert status == 200, body
+        assert "Findings" in body
+
+        status, body = request(base, f"/api/jobs/{job_id}/export.json", token=token)
+        assert status == 200, body
+        assert json.loads(body)["id"] == job_id
 
         status, body = request(base, "/api/auth/signup", {"email": "other@example.com", "password": "long-password", "name": "Other"})
         assert status == 200, body

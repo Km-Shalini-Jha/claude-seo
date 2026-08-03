@@ -65,6 +65,9 @@ def main() -> int:
             page.fill("#authPassword", "long-password")
             page.click("#signupBtn")
             expect(page.get_by_text("SEO audit command center")).to_be_visible(timeout=5000)
+            expect(page.get_by_text("Plan and Billing")).to_be_visible()
+            page.click("[data-plan='pro']")
+            expect(page.locator("#planBadge")).to_contain_text("pro")
             page.fill("#newProject", "Acme Browser Client")
             page.click("#createProjectBtn")
             expect(page.locator("#projectSelect")).to_contain_text("Acme Browser Client")
@@ -74,6 +77,8 @@ def main() -> int:
             page.click("#startBtn")
             expect(page.get_by_role("heading", name="Full SEO Audit")).to_be_visible()
             expect(page.get_by_text("Share: http")).to_be_visible(timeout=12000)
+            expect(page.get_by_text("HTML: http")).to_be_visible()
+            expect(page.get_by_text("JSON: http")).to_be_visible()
             expect(page.get_by_text("HTML and On-page Signals: Image alt text gaps", exact=True)).to_be_visible()
             browser.close()
     finally:

@@ -1,8 +1,9 @@
 # Claude SEO SaaS Console
 
 Browser console for customer SEO audits with local SaaS foundations:
-accounts, projects, saved sites, protected audit jobs, durable SQLite history,
-and shareable completed-report links.
+accounts, email verification tokens, password reset tokens, plan quotas,
+projects, saved sites, protected audit jobs, a SQLite-backed worker, durable
+history, report exports, and shareable completed-report links.
 
 ## Run Locally
 
@@ -25,8 +26,9 @@ http://127.0.0.1:8001
 
 The E2E test starts a temporary local server, enables fake script outputs,
 creates two accounts, creates a project and site, runs a full audit, polls it
-to completion, verifies history, verifies the public share endpoint, and checks
-cross-user job isolation.
+to completion, verifies history, verifies report/share exports, exercises email
+verification, password reset, dev billing upgrade, and checks cross-user job
+isolation.
 
 ## Customer Workflow
 
@@ -35,7 +37,7 @@ cross-user job isolation.
 3. Save a website under that project.
 4. Run `Full SEO Audit` or an individual audit module.
 5. Review findings and raw JSON.
-6. Share the completed report link.
+6. Export HTML/JSON or share the completed report link.
 
 ## Storage
 
@@ -45,7 +47,8 @@ Development data is stored in SQLite:
 web/data/console.sqlite3
 ```
 
-Tables include users, sessions, projects, sites, and jobs.
+Tables include users, sessions, verification tokens, password reset tokens,
+projects, sites, and jobs.
 
 ## Environment
 
@@ -58,8 +61,21 @@ CLAUDE_SEO_LAUNCHER=/path/to/bin/claude-seo
 CLAUDE_SEO_PYTHON=/opt/homebrew/bin/python3.11
 ```
 
+## Billing Scaffold
+
+Plans are enforced locally:
+
+- `free`: 10 audits/hour, 3 projects, 10 sites
+- `pro`: 60 audits/hour, 25 projects, 100 sites
+- `agency`: 240 audits/hour, 250 projects, 1000 sites
+
+`/api/billing/checkout` is a Stripe-ready placeholder. In development,
+`/api/billing/dev-upgrade` upgrades the logged-in account without external
+payment infrastructure.
+
 ## Production Still Needed
 
-Before a public launch, add hosted Postgres, a real worker queue, HTTPS,
-managed secrets, billing, email verification/password reset, observability,
-backups, and stricter abuse controls.
+Before a public launch, replace SQLite with hosted Postgres, replace the local
+worker thread with a managed queue, add real email delivery, wire Stripe
+checkout/webhooks, configure HTTPS, managed secrets, observability, backups,
+and stricter abuse controls.
