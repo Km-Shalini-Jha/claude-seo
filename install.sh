@@ -5,9 +5,16 @@ set -euo pipefail
 # Wraps everything in main() to prevent partial execution on network failure
 
 main() {
+    SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
     SKILL_DIR="${HOME}/.claude/skills/seo"
     AGENT_DIR="${HOME}/.claude/agents"
-    REPO_URL="https://github.com/AgriciDaniel/claude-seo"
+    REPO_URL="${CLAUDE_SEO_REPO_URL:-}"
+    if [ -z "${REPO_URL}" ] && [ -d "${SCRIPT_DIR}/.git" ]; then
+        REPO_URL="$(git -C "${SCRIPT_DIR}" remote get-url origin 2>/dev/null || true)"
+    fi
+    if [ -z "${REPO_URL}" ]; then
+        REPO_URL="https://github.com/AgriciDaniel/claude-seo"
+    fi
     # Pin to a specific release tag to prevent silent updates from main.
     # This default MUST be bumped on every release. CI guard
     # (tests/test_manifest_consistency.py) enforces this matches plugin.json.
@@ -34,7 +41,15 @@ main() {
     trap cleanup EXIT
 
     echo "↓ Downloading Claude SEO (${REPO_TAG})..."
-    git clone --depth 1 --branch "${REPO_TAG}" "${REPO_URL}" "${TEMP_DIR}/claude-seo" 2>/dev/null
+    if [ -d "${SCRIPT_DIR}/.git" ]; then
+        echo "  Using local checkout from ${SCRIPT_DIR}"
+        cp -r "${SCRIPT_DIR}" "${TEMP_DIR}/claude-seo"
+    else
+        git clone --depth 1 --branch "${REPO_TAG}" "${REPO_URL}" "${TEMP_DIR}/claude-seo" 2>/dev/null || {
+            echo "⚠ Could not clone ${REPO_URL}; falling back to local repository contents if available." >&2
+            exit 1
+        }
+    fi
 
     # Copy skill files
     echo "→ Installing skill files..."

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude SEO Console</title>
+  <style>
+    :root {
+      --bg:#f5f7f2; --surface:#fff; --soft:#eef2ea; --ink:#18211c; --muted:#69766d;
+      --line:#dce4d8; --line-strong:#c9d4c5; --green:#237255; --green-soft:#dff1e8;
+      --blue:#2f6f9f; --blue-soft:#deedf7; --amber:#a2651b; --amber-soft:#f8ead7;
+      --red:#b13f3f; --red-soft:#f5dddd; --shadow:0 18px 46px rgba(31,44,34,.09);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink)}
+    button,input,select{font:inherit} button{cursor:pointer}
+    .auth{min-height:100vh;display:grid;grid-template-columns:minmax(320px,480px) minmax(0,1fr)}
+    .auth-panel{padding:42px;display:flex;flex-direction:column;justify-content:center;background:#fbfcfa;border-right:1px solid var(--line)}
+    .auth-art{display:grid;place-items:center;padding:42px}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}.mark{width:40px;height:40px;border-radius:8px;display:grid;place-items:center;background:var(--ink);color:#fff;font-weight:850}
+    h1{margin:0;font-size:30px;line-height:1.15;letter-spacing:0}.subtitle{margin:8px 0 24px;color:var(--muted);font-size:14px;line-height:1.5}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}.form{padding:18px;display:grid;gap:12px}
+    label{display:block;color:var(--muted);font-size:12px;font-weight:850;text-transform:uppercase;margin-bottom:8px}
+    input,select{width:100%;height:44px;border:1px solid var(--line-strong);border-radius:8px;padding:0 12px;background:#fbfcfa;color:var(--ink);outline:0}
+    input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(35,114,85,.14)}
+    .primary{height:44px;border:0;border-radius:8px;padding:0 16px;background:var(--green);color:#fff;font-weight:850;display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap}
+    .secondary{height:36px;border:1px solid var(--line-strong);border-radius:8px;background:#fbfcfa;color:var(--ink);font-weight:850;padding:0 11px}
+    .link{border:0;background:transparent;color:var(--green);font-weight:850;padding:0}.muted{color:var(--muted);font-size:12px;line-height:1.45}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:620px;width:100%}.metric{padding:20px;min-height:150px}.metric strong{font-size:28px;display:block;margin-bottom:8px}.metric span{color:var(--muted);font-size:13px;line-height:1.45}
+
+    .app{min-height:100vh;display:grid;grid-template-columns:268px minmax(0,1fr)}.hidden{display:none!important}
+    .sidebar{position:sticky;top:0;height:100vh;padding:22px 18px;background:#fbfcfa;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:22px}
+    .brand.small{margin-bottom:0}.brand strong{display:block;font-size:15px}.brand span{display:block;color:var(--muted);font-size:12px}
+    .nav{display:grid;gap:4px}.nav button{height:38px;border:0;background:transparent;border-radius:8px;color:var(--muted);text-align:left;padding:0 10px;display:flex;align-items:center;gap:10px}.nav button.active{background:var(--soft);color:var(--ink);font-weight:800}
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--line-strong)}.active .dot{background:var(--green)}
+    .runtime{margin-top:auto;border:1px solid var(--line);border-radius:8px;padding:14px;background:var(--surface)}.runtime-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.runtime-title{font-size:13px;font-weight:850}
+    .badge{display:inline-flex;align-items:center;height:24px;border-radius:99px;padding:0 9px;background:var(--amber-soft);color:var(--amber);font-size:12px;font-weight:850;white-space:nowrap}.badge.ok{background:var(--green-soft);color:var(--green)}.badge.bad{background:var(--red-soft);color:var(--red)}.badge.info{background:var(--blue-soft);color:var(--blue)}
+    main{min-width:0;padding:26px}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .icon-button{width:38px;height:38px;border:1px solid var(--line);background:var(--surface);border-radius:8px;color:var(--ink);box-shadow:0 4px 16px rgba(31,44,34,.05)}
+    .launcher{padding:18px;display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.45fr) minmax(180px,.45fr) auto;gap:14px;align-items:end;margin-bottom:18px}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.kpi{padding:15px;min-height:94px}.kpi span{color:var(--muted);font-size:12px;font-weight:850;text-transform:uppercase}.kpi strong{display:block;font-size:25px;margin-top:10px;line-height:1}
+    .workspace{display:grid;grid-template-columns:minmax(330px,430px) minmax(0,1fr);gap:18px;align-items:start}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 10px}.section-title h2{margin:0;font-size:15px}
+    .stack{display:grid;gap:10px}.module{padding:14px;display:grid;gap:12px}.module-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.module h3{margin:0;font-size:14px;line-height:1.35}.module p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+    .results{min-height:690px;overflow:hidden}.results-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}.tabs{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px;background:var(--soft)}.tabs button{height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted);padding:0 10px;font-size:12px;font-weight:850}.tabs button.active{background:var(--surface);color:var(--ink);box-shadow:0 2px 8px rgba(31,44,34,.08)}
+    .result-body{padding:16px}.empty{min-height:560px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:40px}.empty strong{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}.findings{display:grid;gap:10px}.finding{border:1px solid var(--line);border-radius:8px;background:#fbfcfa;padding:13px}.finding-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}.finding-title{font-size:14px;font-weight:850}
+    pre{margin:0;max-height:420px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#eef2ed;border:1px solid var(--line);border-radius:8px;padding:12px;color:#27302a;font-size:12px;line-height:1.55}
+    .toast{position:fixed;right:22px;bottom:22px;display:none;max-width:min(420px,calc(100vw - 44px));background:var(--ink);color:#fff;border-radius:8px;padding:13px 15px;box-shadow:var(--shadow);font-size:14px;z-index:10}
+    .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .85s linear infinite;display:none}.busy .spinner{display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:1080px){.auth,.app{grid-template-columns:1fr}.auth-art{display:none}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.runtime{margin-top:0}.launcher,.workspace{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:660px){main,.auth-panel{padding:18px}.topbar,.results-head,.module-top{display:grid}.toolbar{justify-content:flex-start}.kpis,.metric-grid{grid-template-columns:1fr}.tabs{width:100%}.tabs button{flex:1}}
+  </style>
+</head>
+<body>
+  <section class="auth" id="authView">
+    <div class="auth-panel">
+      <div class="brand"><div class="mark">CS</div><div><strong>Claude SEO Console</strong><span>Public SaaS workspace</span></div></div>
+      <h1>Client SEO audits, packaged for teams.</h1>
+      <p class="subtitle">Create an account, add a client project, save a site, and run protected audits with shareable report links.</p>
+      <div class="card form">
+        <div><label for="authName">Name</label><input id="authName" placeholder="Agency or user name"></div>
+        <div><label for="authEmail">Email</label><input id="authEmail" type="email" placeholder="you@example.com"></div>
+        <div><label for="authPassword">Password</label><input id="authPassword" type="password" placeholder="At least 8 characters"></div>
+        <button class="primary" id="signupBtn" type="button">Create Account</button>
+        <button class="secondary" id="loginBtn" type="button">Log In</button>
+        <p class="muted">Accounts are stored locally in SQLite for this development build.</p>
+      </div>
+    </div>
+    <div class="auth-art">
+      <div class="metric-grid">
+        <div class="card metric"><strong>11</strong><span>Audit modules including a full SEO audit workflow.</span></div>
+        <div class="card metric"><strong>SQLite</strong><span>Durable customer projects, sites, audit jobs, and share tokens.</span></div>
+        <div class="card metric"><strong>Private</strong><span>Authenticated APIs keep each customer's audits isolated.</span></div>
+        <div class="card metric"><strong>Reports</strong><span>Summaries, raw JSON, history, and shareable report URLs.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="app hidden" id="appView">
+    <aside class="sidebar">
+      <div class="brand small"><div class="mark">CS</div><div><strong>Claude SEO Console</strong><span id="userLine">Customer workspace</span></div></div>
+      <nav class="nav"><button class="active" type="button"><span class="dot"></span>Audit Desk</button><button type="button"><span class="dot"></span>Projects</button><button type="button"><span class="dot"></span>Sites</button><button type="button"><span class="dot"></span>Reports</button></nav>
+      <div class="runtime"><div class="runtime-top"><div class="runtime-title">Runtime</div><span class="badge" id="runtimeBadge">Checking</span></div><div class="muted" id="runtimeDetail">Connecting.</div></div>
+    </aside>
+    <main>
+      <div class="topbar">
+        <div><h1>SEO audit command center</h1><p class="subtitle">Select a client project and site, run an audit, then share the completed report with stakeholders.</p></div>
+        <div class="toolbar"><button class="icon-button" id="copyBtn" type="button" title="Copy result">C</button><button class="icon-button" id="logoutBtn" type="button" title="Log out">L</button></div>
+      </div>
+      <section class="card launcher">
+        <div><label for="projectSelect">Client Project</label><select id="projectSelect"></select></div>
+        <div><label for="newProject">New Project</label><input id="newProject" placeholder="Client name"></div>
+        <button class="secondary" id="createProjectBtn" type="button">Add Project</button>
+        <div></div>
+        <div><label for="siteSelect">Saved Site</label><select id="siteSelect"></select></div>
+        <div><label for="url">Website URL</label><input id="url" type="url" placeholder="https://client.com"></div>
+        <button class="secondary" id="saveSiteBtn" type="button">Save Site</button>
+        <div><label for="moduleSelect">Audit Skill</label><select id="moduleSelect"></select></div>
+        <button class="primary" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
+      </section>
+      <section class="kpis">
+        <div class="card kpi"><span>Total Runs</span><strong id="runsKpi">0</strong></div>
+        <div class="card kpi"><span>Active Status</span><strong id="statusKpi">Idle</strong></div>
+        <div class="card kpi"><span>Runtime</span><strong id="runtimeKpi">--</strong></div>
+        <div class="card kpi"><span>Browser</span><strong id="browserKpi">--</strong></div>
+      </section>
+      <div class="workspace">
+        <section>
+          <div class="section-title"><h2>Audit Modules</h2><span class="badge info" id="moduleCount">0 modules</span></div>
+          <div class="stack" id="modules"></div>
+          <section class="card module"><div class="section-title"><h2>Recent Runs</h2><span class="badge" id="historyCount">0 saved</span></div><div class="stack" id="historyList"></div></section>
+        </section>
+        <section class="card results">
+          <div class="results-head"><strong id="resultTitle">Analysis Output</strong><div class="tabs"><button class="active" type="button" data-tab="summary">Summary</button><button type="button" data-tab="raw">Raw JSON</button></div></div>
+          <div class="result-body"><div class="empty" id="emptyState"><div><strong>No audit selected</strong>Run a module or open a recent report.</div></div><div class="findings" id="summaryView" hidden></div><div class="finding" id="rawView" hidden><pre id="rawOutput"></pre></div></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+    const state={token:localStorage.getItem('seo_token'),user:null,modules:[],projects:[],sites:[],latest:null,activeTab:'summary',poll:null};
+    const $=id=>document.getElementById(id);
+    const authHeaders=()=>state.token?{Authorization:`Bearer ${state.token}`}:{};
+    async function fetchJson(url,options={}){const headers={...(options.headers||{}),...authHeaders()};const resp=await fetch(url,{...options,headers});const data=await resp.json();if(!resp.ok)throw new Error(data.detail||JSON.stringify(data));return data}
+    async function init(){await loadHealth();await loadModules();if(state.token){try{const me=await fetchJson('/api/me');state.user=me.user;showApp();await refreshWorkspace()}catch{localStorage.removeItem('seo_token');state.token=null}}}
+    async function loadHealth(){try{const d=await fetchJson('/api/health');$('runtimeBadge').textContent=d.ready?'Ready':'Setup';$('runtimeBadge').className=`badge ${d.ready?'ok':'bad'}`;$('runtimeKpi').textContent=d.ready?'Ready':'Setup';$('browserKpi').textContent=d.browser_ready?'Ready':'Off';$('runtimeDetail').textContent=d.ready?`Python ${d.python_version||'--'} · ${d.mode||'local'} mode`:(d.reasons||['Runtime setup required']).join(', ')}catch{}}
+    async function loadModules(){state.modules=await fetchJson('/api/modules');$('moduleSelect').innerHTML=state.modules.map(m=>`<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');$('moduleCount').textContent=`${state.modules.length} modules`;$('modules').innerHTML=state.modules.map(m=>`<article class="card module"><div class="module-top"><div><h3>${esc(m.label)}</h3><p>${esc(m.description)}</p></div><button class="secondary" data-module="${esc(m.id)}" type="button">Run</button></div><span class="badge info">${esc(m.category)}</span></article>`).join('');document.querySelectorAll('[data-module]').forEach(b=>b.onclick=()=>startJob(b.dataset.module))}
+    function showApp(){$('authView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent=state.user?.email||'Customer workspace'}
+    async function auth(mode){try{const payload={email:$('authEmail').value,password:$('authPassword').value,name:$('authName').value};const data=await fetchJson(`/api/auth/${mode}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});state.token=data.token;state.user=data.user;localStorage.setItem('seo_token',state.token);showApp();await refreshWorkspace();toast(mode==='signup'?'Account created.':'Logged in.')}catch(e){toast(e.message)}}
+    async function refreshWorkspace(){await Promise.all([loadProjects(),loadSites(),loadHistory()])}
+    async function loadProjects(){state.projects=await fetchJson('/api/projects');$('projectSelect').innerHTML=state.projects.length?state.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join(''):'<option value="">No projects yet</option>'}
+    async function loadSites(){const project=$('projectSelect').value;const path=project?`/api/sites?project_id=${encodeURIComponent(project)}`:'/api/sites';state.sites=await fetchJson(path);$('siteSelect').innerHTML=state.sites.length?state.sites.map(s=>`<option value="${esc(s.id)}" data-url="${esc(s.url)}">${esc(s.name||s.url)}</option>`).join(''):'<option value="">No saved sites</option>';if(state.sites[0])$('url').value=state.sites[0].url}
+    async function createProject(){const name=$('newProject').value.trim();if(!name)return toast('Enter a client project name.');await fetchJson('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});$('newProject').value='';await loadProjects();await loadSites();toast('Project added.')}
+    async function saveSite(){const project_id=$('projectSelect').value;const url=targetUrl();if(!project_id)return toast('Create or select a project first.');if(!url)return;await fetchJson('/api/sites',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id,url,name:new URL(url).hostname})});await loadSites();toast('Site saved.')}
+    async function loadHistory(){const rows=await fetchJson('/api/history');$('historyCount').textContent=`${rows.length} saved`;$('runsKpi').textContent=String(rows.length);window.historyRows={};$('historyList').innerHTML=rows.length?rows.slice(0,8).map(r=>{window.historyRows[r.id]=r;return`<article class="finding"><div class="finding-top"><button class="link" data-history="${esc(r.id)}" type="button">${esc(r.label)}</button><span class="badge ${r.status==='complete'?'ok':r.status==='error'?'bad':''}">${esc(r.status)}</span></div><p class="muted">${esc(r.url)}</p></article>`}).join(''):'<p class="muted">Completed runs will appear here.</p>';document.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>renderJob(window.historyRows[b.dataset.history]))}
+    function targetUrl(){const value=$('url').value.trim();if(!value){toast('Enter a website URL.');return null}try{return new URL(value).toString()}catch{toast('Use a full URL such as https://example.com.');return null}}
+    async function startJob(module=$('moduleSelect').value){const url=targetUrl();if(!url)return;setBusy(true);$('statusKpi').textContent='Queued';try{const payload={url,module,project_id:$('projectSelect').value||null,site_id:$('siteSelect').value||null};const job=await fetchJson('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});renderJob(job);pollJob(job.id)}catch(e){setBusy(false);$('statusKpi').textContent='Error';toast(e.message)}}
+    function pollJob(id){clearInterval(state.poll);state.poll=setInterval(async()=>{try{const job=await fetchJson(`/api/jobs/${id}`);renderJob(job);if(['complete','error'].includes(job.status)){clearInterval(state.poll);setBusy(false);await loadHistory()}}catch(e){clearInterval(state.poll);setBusy(false);toast(e.message)}},1200)}
+    function renderJob(job){state.latest=job;$('emptyState').hidden=true;$('resultTitle').textContent=`${job.label} · ${job.status}`;$('statusKpi').textContent=title(job.status);$('rawOutput').textContent=JSON.stringify(job,null,2);const share=job.share_url?`${location.origin}${job.share_url}`:'Available after completion';$('summaryView').innerHTML=`<article class="finding"><div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status==='complete'?'ok':job.status==='error'?'bad':''}">${esc(job.status)}</span></div><pre>${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command||'Pending'}\nShare: ${share}`)}</pre></article>${(job.findings||[]).map(f=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${tone(f.severity)}">${esc(f.severity)}</span></div><pre>${esc(f.detail||'')}</pre></article>`).join('')}`;updateTabs()}
+    function setBusy(v){$('startBtn').disabled=v;$('startBtn').classList.toggle('busy',v);document.querySelectorAll('[data-module]').forEach(b=>b.disabled=v)}
+    function updateTabs(){$('summaryView').hidden=state.activeTab!=='summary';$('rawView').hidden=state.activeTab!=='raw'} function tone(s){return ['critical','high'].includes(s)?'bad':s==='info'?'info':''} function title(v){return v?v.charAt(0).toUpperCase()+v.slice(1):''} function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))} function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',3300)}
+    $('signupBtn').onclick=()=>auth('signup');$('loginBtn').onclick=()=>auth('login');$('logoutBtn').onclick=()=>{localStorage.removeItem('seo_token');location.reload()};$('createProjectBtn').onclick=createProject;$('saveSiteBtn').onclick=saveSite;$('projectSelect').onchange=loadSites;$('siteSelect').onchange=()=>{const o=$('siteSelect').selectedOptions[0];if(o?.dataset.url)$('url').value=o.dataset.url};$('startBtn').onclick=()=>startJob();$('copyBtn').onclick=async()=>{if(!state.latest)return toast('Run or open an audit first.');await navigator.clipboard.writeText(JSON.stringify(state.latest,null,2));toast('Result copied.')};document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{state.activeTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateTabs()});
+    init();
+  </script>
+</body>
+</html>

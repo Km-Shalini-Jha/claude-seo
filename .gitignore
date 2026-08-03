@@ -148,6 +148,12 @@ scripts/generate_setup_guide.py
 # Generated site builds
 site/
 
+# Local Claude SEO web console/runtime state
+runtime-state.json
+ms-playwright/
+web/data/
+web/__pycache__/
+
 # Git worktrees (isolated workspaces for parallel branch work)
 .worktrees/
 
