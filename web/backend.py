@@ -14,6 +14,8 @@ import subprocess
 import threading
 import time
 import uuid
+import smtplib
+from email.message import EmailMessage
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Literal
@@ -42,6 +44,16 @@ PLAN_LIMITS = {
 }
 WORKER_EVENT = threading.Event()
 WORKER_STARTED = False
+AUTO_WORKER = os.environ.get("CLAUDE_SEO_WEB_AUTO_WORKER", "1") != "0"
+WORKER_POLL_SECONDS = float(os.environ.get("CLAUDE_SEO_WORKER_POLL_SECONDS", "0.25"))
+WORKER_LOG = os.environ.get("CLAUDE_SEO_WORKER_LOG")
+DEV_EMAIL_TOKENS = os.environ.get("CLAUDE_SEO_WEB_DEV_EMAIL_TOKENS", "0") == "1"
+PUBLIC_BASE_URL = os.environ.get("CLAUDE_SEO_PUBLIC_URL", "http://127.0.0.1:8001")
+SMTP_HOST = os.environ.get("CLAUDE_SEO_SMTP_HOST")
+SMTP_PORT = int(os.environ.get("CLAUDE_SEO_SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("CLAUDE_SEO_SMTP_USER")
+SMTP_PASSWORD = os.environ.get("CLAUDE_SEO_SMTP_PASSWORD")
+MAIL_FROM = os.environ.get("CLAUDE_SEO_MAIL_FROM", "Claude SEO <noreply@example.com>")
 
 app = FastAPI(title="Claude SEO SaaS Console API")
 app.add_middleware(
@@ -53,6 +65,18 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if os.environ.get("CLAUDE_SEO_WEB_HSTS") == "1":
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return response
 
 
 class AuthRequest(BaseModel):
@@ -307,6 +331,25 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS email_outbox (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            recipient TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            body TEXT NOT NULL,
+            purpose TEXT NOT NULL,
+            token TEXT,
+            provider TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            sent_at REAL,
+            error TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        """
+    )
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS jobs (
             id TEXT PRIMARY KEY,
             user_id TEXT,
@@ -415,6 +458,81 @@ def create_password_reset_token(user_id: str) -> str:
             (token, user_id, ts, ts + 60 * 30),
         )
     return token
+
+
+def queue_email(user_id: str | None, recipient: str, subject: str, body: str, purpose: str, token: str | None = None) -> dict[str, Any]:
+    provider = "smtp" if SMTP_HOST else "dev-outbox"
+    status = "queued"
+    error = None
+    sent_at = None
+    if SMTP_HOST:
+        try:
+            message = EmailMessage()
+            message["From"] = MAIL_FROM
+            message["To"] = recipient
+            message["Subject"] = subject
+            message.set_content(body)
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as smtp:
+                smtp.starttls()
+                if SMTP_USER and SMTP_PASSWORD:
+                    smtp.login(SMTP_USER, SMTP_PASSWORD)
+                smtp.send_message(message)
+            status = "sent"
+            sent_at = now()
+        except Exception as exc:
+            status = "error"
+            error = str(exc)
+    row = {
+        "id": uuid.uuid4().hex,
+        "user_id": user_id,
+        "recipient": recipient,
+        "subject": subject,
+        "body": body,
+        "purpose": purpose,
+        "token": token,
+        "provider": provider,
+        "status": status,
+        "created_at": now(),
+        "sent_at": sent_at,
+        "error": error,
+    }
+    with db() as conn:
+        conn.execute(
+            """
+            INSERT INTO email_outbox (id, user_id, recipient, subject, body, purpose, token, provider, status, created_at, sent_at, error)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                row["id"], row["user_id"], row["recipient"], row["subject"], row["body"],
+                row["purpose"], row["token"], row["provider"], row["status"],
+                row["created_at"], row["sent_at"], row["error"],
+            ),
+        )
+    return row
+
+
+def send_verification_email(user_id: str, email: str, token: str) -> None:
+    url = f"{PUBLIC_BASE_URL}/verify-email?token={token}"
+    queue_email(
+        user_id,
+        email,
+        "Verify your Claude SEO account",
+        f"Verify your Claude SEO account:\n\n{url}\n\nIf you did not create this account, ignore this email.",
+        "email_verification",
+        token,
+    )
+
+
+def send_password_reset_email(user_id: str, email: str, token: str) -> None:
+    url = f"{PUBLIC_BASE_URL}/reset-password?token={token}"
+    queue_email(
+        user_id,
+        email,
+        "Reset your Claude SEO password",
+        f"Reset your Claude SEO password:\n\n{url}\n\nThis link expires in 30 minutes.",
+        "password_reset",
+        token,
+    )
 
 
 def current_user(authorization: str | None = Header(default=None)) -> dict[str, Any]:
@@ -737,10 +855,20 @@ def execute_job(job_id: str) -> None:
 
 
 def next_queued_job() -> JobRecord | None:
+    ts = now()
     with db() as conn:
         row = conn.execute(
             "SELECT * FROM jobs WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1"
         ).fetchone()
+        if not row:
+            return None
+        changed = conn.execute(
+            "UPDATE jobs SET status = 'running', updated_at = ? WHERE id = ? AND status = 'queued'",
+            (ts, row["id"]),
+        ).rowcount
+        if not changed:
+            return None
+        row = conn.execute("SELECT * FROM jobs WHERE id = ?", (row["id"],)).fetchone()
     return row_to_job(row) if row else None
 
 
@@ -748,15 +876,42 @@ def worker_loop() -> None:
     while True:
         job = next_queued_job()
         if job:
-            execute_job(job.id)
+            worker_log(f"claimed {job.id} {job.module}")
+            try:
+                command, output = run_module(job.module, job.url)
+                completed = update_job(
+                    job.id,
+                    status="complete",
+                    command=command,
+                    output=output,
+                    error=None,
+                    share_token=job.share_token or secrets.token_urlsafe(18),
+                )
+            except Exception as exc:
+                completed = update_job(job.id, status="error", error=str(exc))
+                worker_log(f"failed {job.id} {exc}")
+            persist_job(completed)
+            worker_log(f"finished {job.id} {completed.status}")
             continue
-        WORKER_EVENT.wait(1.0)
+        WORKER_EVENT.wait(WORKER_POLL_SECONDS)
         WORKER_EVENT.clear()
+
+
+def worker_log(message: str) -> None:
+    if not WORKER_LOG:
+        return
+    try:
+        with open(WORKER_LOG, "a", encoding="utf-8") as handle:
+            handle.write(f"{time.time():.3f} {message}\n")
+    except OSError:
+        pass
 
 
 @app.on_event("startup")
 def start_worker() -> None:
     global WORKER_STARTED
+    if not AUTO_WORKER:
+        return
     if WORKER_STARTED:
         return
     WORKER_STARTED = True
@@ -880,7 +1035,11 @@ async def signup(request: AuthRequest) -> dict[str, Any]:
     except sqlite3.IntegrityError as exc:
         raise HTTPException(status_code=409, detail="An account already exists for this email") from exc
     verification_token = create_email_verification_token(user_id)
-    return {"token": create_session(user_id), "user": user_public(row), "verification_token": verification_token}
+    send_verification_email(user_id, email, verification_token)
+    response = {"token": create_session(user_id), "user": user_public(row), "verification_required": True}
+    if DEV_EMAIL_TOKENS:
+        response["verification_token"] = verification_token
+    return response
 
 
 @app.post("/api/auth/login")
@@ -925,7 +1084,11 @@ async def request_password_reset(request: PasswordResetRequest) -> dict[str, Any
     if not row:
         return {"ok": True}
     token = create_password_reset_token(row["id"])
-    return {"ok": True, "reset_token": token}
+    send_password_reset_email(row["id"], email, token)
+    response = {"ok": True}
+    if DEV_EMAIL_TOKENS:
+        response["reset_token"] = token
+    return response
 
 
 @app.post("/api/auth/password-reset/confirm")
@@ -942,6 +1105,21 @@ async def confirm_password_reset(request: PasswordResetConfirm) -> dict[str, boo
         conn.execute("UPDATE password_reset_tokens SET used_at = ? WHERE token = ?", (ts, request.token))
         conn.execute("DELETE FROM sessions WHERE user_id = ?", (row["user_id"],))
     return {"ok": True}
+
+
+@app.get("/api/dev/email-outbox")
+async def dev_email_outbox(recipient: str | None = None) -> list[dict[str, Any]]:
+    if not DEV_EMAIL_TOKENS:
+        raise HTTPException(status_code=404, detail="Dev email outbox is disabled")
+    if recipient:
+        query = "SELECT * FROM email_outbox WHERE recipient = ? ORDER BY created_at DESC"
+        params = (normalize_email(recipient),)
+    else:
+        query = "SELECT * FROM email_outbox ORDER BY created_at DESC LIMIT 50"
+        params = ()
+    with db() as conn:
+        rows = conn.execute(query, params).fetchall()
+    return [dict(row) for row in rows]
 
 
 @app.get("/api/me")
@@ -1066,10 +1244,7 @@ async def create_job(request: JobRequest, user: dict[str, Any] = Depends(current
 
 @app.get("/api/jobs/{job_id}")
 async def get_job(job_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
-    with JOBS_LOCK:
-        record = JOBS.get(job_id)
-    if not record:
-        record = load_job(job_id, user["id"])
+    record = load_job(job_id, user["id"])
     if not record or record.user_id != user["id"]:
         raise HTTPException(status_code=404, detail="Job not found")
     return public_job(record)

@@ -24,11 +24,18 @@ http://127.0.0.1:8001
 /opt/homebrew/bin/python3.11 web/e2e_test.py
 ```
 
-The E2E test starts a temporary local server, enables fake script outputs,
+The E2E test starts a temporary local server and separate worker process,
+enables fake script outputs,
 creates two accounts, creates a project and site, runs a full audit, polls it
 to completion, verifies history, verifies report/share exports, exercises email
 verification, password reset, dev billing upgrade, and checks cross-user job
 isolation.
+
+Browser E2E:
+
+```bash
+/Users/shalinijha/Documents/claude-seo/.venv/bin/python web/browser_e2e_test.py
+```
 
 ## Customer Workflow
 
@@ -54,12 +61,41 @@ projects, sites, and jobs.
 
 ```bash
 CLAUDE_SEO_WEB_DATA=/path/to/data
+CLAUDE_SEO_WEB_AUTO_WORKER=1
 CLAUDE_SEO_WEB_RATE_LIMIT=30
 CLAUDE_SEO_WEB_FAKE_RUNS=1
+CLAUDE_SEO_WEB_DEV_EMAIL_TOKENS=0
 CLAUDE_SEO_WEB_ORIGINS=http://127.0.0.1:8001
+CLAUDE_SEO_PUBLIC_URL=http://127.0.0.1:8001
 CLAUDE_SEO_LAUNCHER=/path/to/bin/claude-seo
 CLAUDE_SEO_PYTHON=/opt/homebrew/bin/python3.11
 ```
+
+## Separate Worker
+
+For production-like local runs, disable the app's in-process worker and run the
+worker separately:
+
+```bash
+CLAUDE_SEO_WEB_AUTO_WORKER=0 /opt/homebrew/bin/python3.11 -m uvicorn web.backend:app --host 127.0.0.1 --port 8001
+CLAUDE_SEO_WEB_AUTO_WORKER=0 /opt/homebrew/bin/python3.11 -m web.worker
+```
+
+## Docker Compose
+
+```bash
+cd web
+docker compose up --build
+```
+
+The compose setup runs `web` and `worker` services against a shared data volume.
+
+## Email
+
+Without SMTP configuration, verification and password-reset messages are stored
+in `email_outbox`. Set SMTP variables in `.env.example` to send real email.
+For local tests only, `CLAUDE_SEO_WEB_DEV_EMAIL_TOKENS=1` exposes tokens through
+`/api/dev/email-outbox`.
 
 ## Billing Scaffold
 

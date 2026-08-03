@@ -52,10 +52,12 @@ def wait_for_server(base: str, proc: subprocess.Popen[str]) -> None:
     raise AssertionError("server did not start")
 
 
-def wait_for_job(base: str, job_id: str, token: str) -> dict:
+def wait_for_job(base: str, job_id: str, token: str, worker: subprocess.Popen[str] | None = None) -> dict:
     deadline = time.time() + 12
     last = None
     while time.time() < deadline:
+        if worker and worker.poll() is not None:
+            raise AssertionError(f"worker exited early: {worker.stderr.read() if worker.stderr else ''}")
         status, body = request(base, f"/api/jobs/{job_id}", token=token)
         assert status == 200, body
         last = json.loads(body)
@@ -71,7 +73,11 @@ def main() -> int:
     base = f"http://127.0.0.1:{port}"
     env = os.environ.copy()
     env["CLAUDE_SEO_WEB_FAKE_RUNS"] = "1"
+    env["CLAUDE_SEO_WEB_DEV_EMAIL_TOKENS"] = "1"
+    env["CLAUDE_SEO_WEB_AUTO_WORKER"] = "0"
     env["CLAUDE_SEO_WEB_DATA"] = str(data_dir)
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parent.parent)
+    env["CLAUDE_SEO_WORKER_LOG"] = str(data_dir / "worker.log")
     proc = subprocess.Popen(
         [SERVER_PYTHON, "-m", "uvicorn", "web.backend:app", "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"],
         cwd=str(Path(__file__).resolve().parent.parent),
@@ -80,6 +86,7 @@ def main() -> int:
         stderr=subprocess.PIPE,
         text=True,
     )
+    worker = None
     try:
         wait_for_server(base, proc)
 
@@ -92,6 +99,10 @@ def main() -> int:
         owner = json.loads(body)
         token = owner["token"]
         verification_token = owner["verification_token"]
+
+        status, body = request(base, "/api/dev/email-outbox?recipient=owner%40example.com")
+        assert status == 200, body
+        assert any(row["purpose"] == "email_verification" for row in json.loads(body))
 
         status, body = request(base, "/api/auth/verify-email", {"token": verification_token})
         assert status == 200, body
@@ -125,7 +136,19 @@ def main() -> int:
         )
         assert status == 200, body
         job_id = json.loads(body)["id"]
-        completed = wait_for_job(base, job_id, token)
+        worker = subprocess.Popen(
+            [SERVER_PYTHON, "-m", "web.worker"],
+            cwd=str(Path(__file__).resolve().parent.parent),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        try:
+            completed = wait_for_job(base, job_id, token, worker)
+        except AssertionError as exc:
+            log = (data_dir / "worker.log").read_text(encoding="utf-8") if (data_dir / "worker.log").exists() else "<no worker log>"
+            raise AssertionError(f"{exc}\nworker log:\n{log}") from exc
         assert completed["status"] == "complete", completed
         assert completed["share_url"], completed
         assert completed["findings"], completed
@@ -164,7 +187,14 @@ def main() -> int:
         assert "Client SEO audits" in body
         assert (data_dir / "console.sqlite3").exists()
     finally:
+        if worker:
+            worker.terminate()
         proc.terminate()
+        if worker:
+            try:
+                worker.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                worker.kill()
         try:
             proc.wait(timeout=5)
         except subprocess.TimeoutExpired:
