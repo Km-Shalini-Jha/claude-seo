@@ -3,7 +3,8 @@
 Browser console for customer SEO audits with local SaaS foundations:
 accounts, email verification tokens, password reset tokens, plan quotas,
 projects, saved sites, protected audit jobs, a SQLite-backed worker, durable
-history, report exports, and shareable completed-report links.
+history, report exports, audit logs, admin endpoints, legal pages, and
+shareable completed-report links.
 
 ## Run Locally
 
@@ -28,8 +29,8 @@ The E2E test starts a temporary local server and separate worker process,
 enables fake script outputs,
 creates two accounts, creates a project and site, runs a full audit, polls it
 to completion, verifies history, verifies report/share exports, exercises email
-verification, password reset, dev billing upgrade, and checks cross-user job
-isolation.
+verification, password reset, dev billing upgrade, admin endpoints, backup
+export, legal pages, and checks cross-user job isolation.
 
 Browser E2E:
 
@@ -55,7 +56,7 @@ web/data/console.sqlite3
 ```
 
 Tables include users, sessions, verification tokens, password reset tokens,
-projects, sites, and jobs.
+projects, sites, jobs, audit logs, and email outbox.
 
 ## Environment
 
@@ -108,6 +109,26 @@ Plans are enforced locally:
 `/api/billing/checkout` is a Stripe-ready placeholder. In development,
 `/api/billing/dev-upgrade` upgrades the logged-in account without external
 payment infrastructure.
+
+## Admin And Ops
+
+The first registered account becomes `admin`. Admin endpoints include:
+
+- `/api/admin/summary`
+- `/api/admin/users`
+- `/api/admin/jobs`
+- `/api/admin/audit-logs`
+- `/api/admin/backup.json`
+
+Operational endpoints:
+
+- `/api/health`: Claude SEO runtime readiness.
+- `/api/ready`: runtime + database readiness and queued-job count.
+
+Legal placeholders:
+
+- `/terms`
+- `/privacy`
 
 ## Production Still Needed
 

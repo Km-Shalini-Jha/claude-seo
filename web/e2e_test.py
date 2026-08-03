@@ -99,6 +99,11 @@ def main() -> int:
         owner = json.loads(body)
         token = owner["token"]
         verification_token = owner["verification_token"]
+        assert owner["user"]["role"] == "admin"
+
+        status, body = request(base, "/api/ready")
+        assert status == 200, body
+        assert json.loads(body)["database"] is True
 
         status, body = request(base, "/api/dev/email-outbox?recipient=owner%40example.com")
         assert status == 200, body
@@ -127,6 +132,10 @@ def main() -> int:
         status, body = request(base, "/api/sites", {"project_id": project_id, "url": "https://example.com", "name": "Example"}, token)
         assert status == 200, body
         site_id = json.loads(body)["id"]
+
+        status, body = request(base, "/api/admin/summary", token=token)
+        assert status == 200, body
+        assert json.loads(body)["counts"]["users"] == 1
 
         status, body = request(
             base,
@@ -176,11 +185,32 @@ def main() -> int:
         assert status == 200, body
         assert json.loads(body)["id"] == job_id
 
+        status, body = request(base, "/api/admin/backup.json", token=token)
+        assert status == 200, body
+        assert "audit_logs" in json.loads(body)["tables"]
+
+        status, body = request(base, "/terms")
+        assert status == 200, body
+        assert "Terms of Service" in body
+
+        status, body = request(base, "/privacy")
+        assert status == 200, body
+        assert "Privacy Policy" in body
+
         status, body = request(base, "/api/auth/signup", {"email": "other@example.com", "password": "long-password", "name": "Other"})
         assert status == 200, body
-        other_token = json.loads(body)["token"]
+        other = json.loads(body)
+        other_token = other["token"]
+        assert other["user"]["role"] == "user"
         status, body = request(base, f"/api/jobs/{job_id}", token=other_token)
         assert status == 404, body
+
+        status, body = request(base, "/api/admin/summary", token=other_token)
+        assert status == 403, body
+
+        status, body = request(base, f"/api/admin/users/{other['user']['id']}/plan", {"plan": "agency"}, token)
+        assert status == 200, body
+        assert json.loads(body)["user"]["plan"] == "agency"
 
         status, body = request(base, "/")
         assert status == 200, body[:200]

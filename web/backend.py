@@ -102,6 +102,10 @@ class BillingPlanRequest(BaseModel):
     plan: str
 
 
+class AdminUserPlanRequest(BaseModel):
+    plan: str
+
+
 class ProjectRequest(BaseModel):
     name: str
 
@@ -263,6 +267,9 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             password_hash TEXT NOT NULL,
             plan TEXT NOT NULL DEFAULT 'free',
             email_verified INTEGER NOT NULL DEFAULT 0,
+            role TEXT NOT NULL DEFAULT 'user',
+            stripe_customer_id TEXT,
+            subscription_status TEXT NOT NULL DEFAULT 'dev',
             created_at REAL NOT NULL
         )
         """
@@ -350,6 +357,20 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            action TEXT NOT NULL,
+            target_type TEXT,
+            target_id TEXT,
+            metadata_json TEXT,
+            created_at REAL NOT NULL,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        """
+    )
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS jobs (
             id TEXT PRIMARY KEY,
             user_id TEXT,
@@ -386,9 +407,16 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
     if "email_verified" not in user_columns:
         conn.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+    if "role" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
+    if "stripe_customer_id" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT")
+    if "subscription_status" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN subscription_status TEXT NOT NULL DEFAULT 'dev'")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_user_updated ON jobs(user_id, updated_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_sites_user_project ON sites(user_id, project_id)")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_share_token ON jobs(share_token)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created ON audit_logs(user_id, created_at)")
 
 
 def normalize_email(email: str) -> str:
@@ -434,8 +462,49 @@ def user_public(row: sqlite3.Row) -> dict[str, Any]:
         "name": row["name"],
         "plan": row["plan"] if "plan" in row.keys() else "free",
         "email_verified": bool(row["email_verified"]) if "email_verified" in row.keys() else False,
+        "role": row["role"] if "role" in row.keys() else "user",
+        "subscription_status": row["subscription_status"] if "subscription_status" in row.keys() else "dev",
         "created_at": row["created_at"],
     }
+
+
+def is_first_user() -> bool:
+    with db() as conn:
+        count = conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"]
+    return count == 0
+
+
+def log_event(user_id: str | None, action: str, target_type: str | None = None, target_id: str | None = None, metadata: dict[str, Any] | None = None) -> None:
+    with db() as conn:
+        conn.execute(
+            """
+            INSERT INTO audit_logs (id, user_id, action, target_type, target_id, metadata_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                uuid.uuid4().hex,
+                user_id,
+                action,
+                target_type,
+                target_id,
+                json.dumps(metadata or {}, sort_keys=True),
+                now(),
+            ),
+        )
+
+
+def backup_payload() -> dict[str, Any]:
+    tables = [
+        "users", "projects", "sites", "jobs", "sessions",
+        "email_verification_tokens", "password_reset_tokens", "email_outbox",
+        "audit_logs",
+    ]
+    data = {}
+    with db() as conn:
+        for table in tables:
+            rows = conn.execute(f"SELECT * FROM {table}").fetchall()
+            data[table] = [dict(row) for row in rows]
+    return {"created_at": now(), "schema": 1, "tables": data}
 
 
 def create_email_verification_token(user_id: str) -> str:
@@ -551,6 +620,12 @@ def current_user(authorization: str | None = Header(default=None)) -> dict[str, 
     if not row:
         raise HTTPException(status_code=401, detail="Invalid or expired session")
     return user_public(row)
+
+
+def require_admin(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
 
 
 def check_rate_limit(user: dict[str, Any]) -> None:
@@ -1015,9 +1090,28 @@ async def health() -> dict[str, Any]:
     return run_runtime_doctor()
 
 
+@app.get("/api/ready")
+async def ready() -> dict[str, Any]:
+    runtime = run_runtime_doctor()
+    with db() as conn:
+        db_ok = conn.execute("SELECT 1 AS ok").fetchone()["ok"] == 1
+        queued = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").fetchone()["n"]
+    return {"ready": bool(runtime.get("ready")) and db_ok, "database": db_ok, "runtime": runtime, "queued_jobs": queued}
+
+
 @app.get("/api/modules")
 async def modules() -> list[dict[str, str]]:
     return [{"id": key, "label": value["label"], "category": value["category"], "description": value["description"]} for key, value in MODULES.items()]
+
+
+@app.get("/terms")
+async def terms_page() -> HTMLResponse:
+    return HTMLResponse("""<!doctype html><html><head><title>Terms - Claude SEO</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Terms of Service</h1><p>This development build is provided for evaluation. Production terms should be reviewed by counsel before public launch.</p><h2>Acceptable Use</h2><p>Users may only audit websites they own, manage, or are authorized to evaluate.</p><h2>Service Availability</h2><p>Audit results are informational and depend on third-party services and website availability.</p></body></html>""")
+
+
+@app.get("/privacy")
+async def privacy_page() -> HTMLResponse:
+    return HTMLResponse("""<!doctype html><html><head><title>Privacy - Claude SEO</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Privacy Policy</h1><p>This development build stores account, project, site, audit, and email-outbox data in the configured application database.</p><h2>Customer Data</h2><p>Website URLs and audit outputs are stored to provide history, exports, and shareable reports.</p><h2>Production Review</h2><p>Before public launch, replace this placeholder with a jurisdiction-specific policy reviewed by counsel.</p></body></html>""")
 
 
 @app.post("/api/auth/signup")
@@ -1025,17 +1119,19 @@ async def signup(request: AuthRequest) -> dict[str, Any]:
     email = normalize_email(request.email)
     user_id = uuid.uuid4().hex
     created = now()
+    role = "admin" if is_first_user() else "user"
     try:
         with db() as conn:
             conn.execute(
-                "INSERT INTO users (id, email, name, password_hash, plan, email_verified, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (user_id, email, request.name or email.split("@")[0], hash_password(request.password), "free", 0, created),
+                "INSERT INTO users (id, email, name, password_hash, plan, email_verified, role, subscription_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (user_id, email, request.name or email.split("@")[0], hash_password(request.password), "free", 0, role, "dev", created),
             )
             row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     except sqlite3.IntegrityError as exc:
         raise HTTPException(status_code=409, detail="An account already exists for this email") from exc
     verification_token = create_email_verification_token(user_id)
     send_verification_email(user_id, email, verification_token)
+    log_event(user_id, "auth.signup", "user", user_id, {"role": role})
     response = {"token": create_session(user_id), "user": user_public(row), "verification_required": True}
     if DEV_EMAIL_TOKENS:
         response["verification_token"] = verification_token
@@ -1049,6 +1145,7 @@ async def login(request: AuthRequest) -> dict[str, Any]:
         row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     if not row or not verify_password(request.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    log_event(row["id"], "auth.login", "user", row["id"])
     return {"token": create_session(row["id"]), "user": user_public(row)}
 
 
@@ -1073,6 +1170,7 @@ async def verify_email(request: VerifyEmailRequest) -> dict[str, bool]:
         ts = now()
         conn.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (row["user_id"],))
         conn.execute("UPDATE email_verification_tokens SET used_at = ? WHERE token = ?", (ts, request.token))
+    log_event(row["user_id"], "auth.verify_email", "user", row["user_id"])
     return {"ok": True}
 
 
@@ -1085,6 +1183,7 @@ async def request_password_reset(request: PasswordResetRequest) -> dict[str, Any
         return {"ok": True}
     token = create_password_reset_token(row["id"])
     send_password_reset_email(row["id"], email, token)
+    log_event(row["id"], "auth.password_reset_requested", "user", row["id"])
     response = {"ok": True}
     if DEV_EMAIL_TOKENS:
         response["reset_token"] = token
@@ -1104,6 +1203,7 @@ async def confirm_password_reset(request: PasswordResetConfirm) -> dict[str, boo
         conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_password(request.password), row["user_id"]))
         conn.execute("UPDATE password_reset_tokens SET used_at = ? WHERE token = ?", (ts, request.token))
         conn.execute("DELETE FROM sessions WHERE user_id = ?", (row["user_id"],))
+    log_event(row["user_id"], "auth.password_reset_confirmed", "user", row["user_id"])
     return {"ok": True}
 
 
@@ -1137,8 +1237,9 @@ async def dev_upgrade(request: BillingPlanRequest, user: dict[str, Any] = Depend
     if request.plan not in PLAN_LIMITS:
         raise HTTPException(status_code=400, detail="Unknown plan")
     with db() as conn:
-        conn.execute("UPDATE users SET plan = ? WHERE id = ?", (request.plan, user["id"]))
+        conn.execute("UPDATE users SET plan = ?, subscription_status = 'dev_active' WHERE id = ?", (request.plan, user["id"]))
         row = conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+    log_event(user["id"], "billing.dev_upgrade", "user", user["id"], {"plan": request.plan})
     return {"user": user_public(row), "plan_limits": PLAN_LIMITS[request.plan]}
 
 
@@ -1168,6 +1269,7 @@ async def create_project(request: ProjectRequest, user: dict[str, Any] = Depends
             (project_id, user["id"], name, ts, ts),
         )
         row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
+    log_event(user["id"], "project.create", "project", project_id, {"name": name})
     return dict(row)
 
 
@@ -1192,6 +1294,7 @@ async def create_site(request: SiteRequest, user: dict[str, Any] = Depends(curre
             (site_id, user["id"], request.project_id, request.name or str(request.url), str(request.url), ts, ts),
         )
         row = conn.execute("SELECT * FROM sites WHERE id = ?", (site_id,)).fetchone()
+    log_event(user["id"], "site.create", "site", site_id, {"project_id": request.project_id, "url": str(request.url)})
     return dict(row)
 
 
@@ -1239,6 +1342,7 @@ async def create_job(request: JobRequest, user: dict[str, Any] = Depends(current
         JOBS[record.id] = record
     persist_job(record)
     WORKER_EVENT.set()
+    log_event(user["id"], "job.create", "job", record.id, {"module": request.module, "url": str(request.url)})
     return public_job(record)
 
 
@@ -1283,6 +1387,67 @@ async def history(user: dict[str, Any] = Depends(current_user)) -> list[dict[str
     with db() as conn:
         rows = conn.execute("SELECT * FROM jobs WHERE user_id = ? ORDER BY updated_at DESC LIMIT ?", (user["id"], MAX_HISTORY)).fetchall()
     return [public_job(row_to_job(row)) for row in rows]
+
+
+@app.get("/api/admin/summary")
+async def admin_summary(admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
+    with db() as conn:
+        counts = {
+            "users": conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"],
+            "projects": conn.execute("SELECT COUNT(*) AS n FROM projects").fetchone()["n"],
+            "sites": conn.execute("SELECT COUNT(*) AS n FROM sites").fetchone()["n"],
+            "jobs": conn.execute("SELECT COUNT(*) AS n FROM jobs").fetchone()["n"],
+            "queued_jobs": conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").fetchone()["n"],
+            "completed_jobs": conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE status = 'complete'").fetchone()["n"],
+        }
+        plans = [dict(row) for row in conn.execute("SELECT plan, COUNT(*) AS users FROM users GROUP BY plan").fetchall()]
+    return {"counts": counts, "plans": plans}
+
+
+@app.get("/api/admin/users")
+async def admin_users(admin: dict[str, Any] = Depends(require_admin)) -> list[dict[str, Any]]:
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM users ORDER BY created_at DESC LIMIT 200").fetchall()
+    return [user_public(row) for row in rows]
+
+
+@app.post("/api/admin/users/{user_id}/plan")
+async def admin_set_user_plan(user_id: str, request: AdminUserPlanRequest, admin: dict[str, Any] = Depends(require_admin)) -> dict[str, Any]:
+    if request.plan not in PLAN_LIMITS:
+        raise HTTPException(status_code=400, detail="Unknown plan")
+    with db() as conn:
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        conn.execute("UPDATE users SET plan = ?, subscription_status = 'admin_set' WHERE id = ?", (request.plan, user_id))
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    log_event(admin["id"], "admin.user_plan_update", "user", user_id, {"plan": request.plan})
+    return {"user": user_public(row), "plan_limits": PLAN_LIMITS[request.plan]}
+
+
+@app.get("/api/admin/jobs")
+async def admin_jobs(admin: dict[str, Any] = Depends(require_admin)) -> list[dict[str, Any]]:
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM jobs ORDER BY updated_at DESC LIMIT 200").fetchall()
+    return [public_job(row_to_job(row)) for row in rows]
+
+
+@app.get("/api/admin/audit-logs")
+async def admin_audit_logs(admin: dict[str, Any] = Depends(require_admin)) -> list[dict[str, Any]]:
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 200").fetchall()
+    return [dict(row) for row in rows]
+
+
+@app.get("/api/admin/backup.json")
+async def admin_backup(admin: dict[str, Any] = Depends(require_admin)) -> Response:
+    payload = backup_payload()
+    log_event(admin["id"], "admin.backup_export", "backup", None)
+    return Response(
+        json.dumps(payload, indent=2, sort_keys=True),
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="claude-seo-backup.json"'},
+    )
 
 
 @app.get("/api/share/{share_token}")
