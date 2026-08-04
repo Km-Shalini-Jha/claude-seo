@@ -25,7 +25,7 @@ from typing import Any, Literal
 
 from fastapi import Depends, Header, HTTPException, Request
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, HttpUrl
 from starlette.middleware.cors import CORSMiddleware
 
@@ -341,7 +341,7 @@ def db() -> AppDatabase:
             from psycopg.rows import dict_row
         except ImportError as exc:
             raise RuntimeError("PostgreSQL support requires psycopg. Run `pip install -r web/requirements.txt`.") from exc
-        raw = psycopg.connect(postgres_url(), row_factory=dict_row, autocommit=True)
+        raw = psycopg.connect(postgres_url(), row_factory=dict_row, autocommit=True, prepare_threshold=None)
         conn = AppDatabase(raw, "postgres")
     else:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -1603,11 +1603,25 @@ async def health() -> dict[str, Any]:
 
 
 @app.get("/api/ready")
-async def ready() -> dict[str, Any]:
+async def ready():
     runtime = run_runtime_doctor()
-    with db() as conn:
-        db_ok = conn.execute("SELECT 1 AS ok").fetchone()["ok"] == 1
-        queued = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").fetchone()["n"]
+    try:
+        with db() as conn:
+            db_ok = conn.execute("SELECT 1 AS ok").fetchone()["ok"] == 1
+            queued = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").fetchone()["n"]
+    except Exception as exc:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "ready": False,
+                "database": False,
+                "database_backend": DATABASE_BACKEND,
+                "database_location": "DATABASE_URL" if DATABASE_BACKEND == "postgres" else str(DB_PATH),
+                "database_error": str(exc),
+                "runtime": runtime,
+                "queued_jobs": None,
+            },
+        )
     return {
         "ready": bool(runtime.get("ready")) and db_ok,
         "database": db_ok,

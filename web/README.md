@@ -51,7 +51,7 @@ Browser E2E:
 ## Storage
 
 Production data should be stored in hosted PostgreSQL. Set `DATABASE_URL` to
-your Supabase Postgres connection string:
+your Supabase Transaction pooler connection string:
 
 ```bash
 DATABASE_URL='postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?sslmode=require'
