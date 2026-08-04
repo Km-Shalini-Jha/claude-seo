@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev-firstIMP-V1]
   pull_request:
-    branches: [main]
+    branches: [main, dev-firstIMP-V1]
 
 permissions:
   contents: read
@@ -78,3 +78,33 @@ jobs:
             exit 1
           fi
           echo "Secret scan clean: no credentials detected in tracked files."
+
+  web-e2e:
+    name: SaaS Web E2E
+    runs-on: ubuntu-latest
+    env:
+      CLAUDE_SEO_WEB_SERVER_PYTHON: python3
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install web runtime deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r web/requirements.txt
+
+      - name: Install browser for Playwright
+        run: python -m playwright install --with-deps chromium
+
+      - name: Check web Python syntax
+        run: python -m py_compile web/backend.py web/worker.py web/e2e_test.py web/browser_e2e_test.py
+
+      - name: Run SaaS API E2E
+        run: python web/e2e_test.py
+
+      - name: Run SaaS browser E2E
+        run: python web/browser_e2e_test.py

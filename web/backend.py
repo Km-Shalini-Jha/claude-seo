@@ -15,12 +15,15 @@ import threading
 import time
 import uuid
 import smtplib
+import urllib.error
+import urllib.parse
+import urllib.request
 from email.message import EmailMessage
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Literal
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header, HTTPException, Request
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from pydantic import BaseModel, HttpUrl
@@ -54,6 +57,15 @@ SMTP_PORT = int(os.environ.get("CLAUDE_SEO_SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("CLAUDE_SEO_SMTP_USER")
 SMTP_PASSWORD = os.environ.get("CLAUDE_SEO_SMTP_PASSWORD")
 MAIL_FROM = os.environ.get("CLAUDE_SEO_MAIL_FROM", "Claude SEO <noreply@example.com>")
+STRIPE_SECRET_KEY = os.environ.get("CLAUDE_SEO_STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.environ.get("CLAUDE_SEO_STRIPE_WEBHOOK_SECRET")
+STRIPE_PRICE_IDS = {
+    "pro": os.environ.get("CLAUDE_SEO_STRIPE_PRICE_PRO"),
+    "agency": os.environ.get("CLAUDE_SEO_STRIPE_PRICE_AGENCY"),
+}
+STRIPE_SUCCESS_URL = os.environ.get("CLAUDE_SEO_BILLING_SUCCESS_URL")
+STRIPE_CANCEL_URL = os.environ.get("CLAUDE_SEO_BILLING_CANCEL_URL")
+STRIPE_API_BASE = os.environ.get("CLAUDE_SEO_STRIPE_API_BASE", "https://api.stripe.com")
 
 app = FastAPI(title="Claude SEO SaaS Console API")
 app.add_middleware(
@@ -269,7 +281,9 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             email_verified INTEGER NOT NULL DEFAULT 0,
             role TEXT NOT NULL DEFAULT 'user',
             stripe_customer_id TEXT,
+            stripe_subscription_id TEXT,
             subscription_status TEXT NOT NULL DEFAULT 'dev',
+            subscription_current_period_end REAL,
             created_at REAL NOT NULL
         )
         """
@@ -371,6 +385,18 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS stripe_events (
+            event_id TEXT PRIMARY KEY,
+            event_type TEXT NOT NULL,
+            received_at REAL NOT NULL,
+            processed_at REAL,
+            payload_json TEXT NOT NULL,
+            error TEXT
+        )
+        """
+    )
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS jobs (
             id TEXT PRIMARY KEY,
             user_id TEXT,
@@ -411,12 +437,17 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user'")
     if "stripe_customer_id" not in user_columns:
         conn.execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT")
+    if "stripe_subscription_id" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT")
     if "subscription_status" not in user_columns:
         conn.execute("ALTER TABLE users ADD COLUMN subscription_status TEXT NOT NULL DEFAULT 'dev'")
+    if "subscription_current_period_end" not in user_columns:
+        conn.execute("ALTER TABLE users ADD COLUMN subscription_current_period_end REAL")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_jobs_user_updated ON jobs(user_id, updated_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_sites_user_project ON sites(user_id, project_id)")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_share_token ON jobs(share_token)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created ON audit_logs(user_id, created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_stripe_events_received ON stripe_events(received_at)")
 
 
 def normalize_email(email: str) -> str:
@@ -464,6 +495,7 @@ def user_public(row: sqlite3.Row) -> dict[str, Any]:
         "email_verified": bool(row["email_verified"]) if "email_verified" in row.keys() else False,
         "role": row["role"] if "role" in row.keys() else "user",
         "subscription_status": row["subscription_status"] if "subscription_status" in row.keys() else "dev",
+        "subscription_current_period_end": row["subscription_current_period_end"] if "subscription_current_period_end" in row.keys() else None,
         "created_at": row["created_at"],
     }
 
@@ -497,7 +529,7 @@ def backup_payload() -> dict[str, Any]:
     tables = [
         "users", "projects", "sites", "jobs", "sessions",
         "email_verification_tokens", "password_reset_tokens", "email_outbox",
-        "audit_logs",
+        "audit_logs", "stripe_events",
     ]
     data = {}
     with db() as conn:
@@ -602,6 +634,245 @@ def send_password_reset_email(user_id: str, email: str, token: str) -> None:
         "password_reset",
         token,
     )
+
+
+def stripe_configured_for_plan(plan: str) -> bool:
+    return bool(STRIPE_SECRET_KEY and STRIPE_PRICE_IDS.get(plan))
+
+
+def stripe_checkout_url(path: str) -> str:
+    return f"{STRIPE_API_BASE.rstrip('/')}{path}"
+
+
+def stripe_success_url(plan: str) -> str:
+    if STRIPE_SUCCESS_URL:
+        return STRIPE_SUCCESS_URL
+    return f"{PUBLIC_BASE_URL}/?billing=success&plan={urllib.parse.quote(plan)}&session_id={{CHECKOUT_SESSION_ID}}"
+
+
+def stripe_cancel_url(plan: str) -> str:
+    if STRIPE_CANCEL_URL:
+        return STRIPE_CANCEL_URL
+    return f"{PUBLIC_BASE_URL}/?billing=cancelled&plan={urllib.parse.quote(plan)}"
+
+
+def stripe_api_post(path: str, fields: dict[str, str]) -> dict[str, Any]:
+    if not STRIPE_SECRET_KEY:
+        raise RuntimeError("Stripe secret key is not configured")
+    encoded = urllib.parse.urlencode(fields).encode("utf-8")
+    auth = base64.b64encode(f"{STRIPE_SECRET_KEY}:".encode("utf-8")).decode("ascii")
+    req = urllib.request.Request(
+        stripe_checkout_url(path),
+        data=encoded,
+        headers={
+            "Authorization": f"Basic {auth}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8")
+        raise RuntimeError(detail or f"Stripe API returned HTTP {exc.code}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Stripe API request failed: {exc.reason}") from exc
+
+
+def create_stripe_checkout_session(plan: str, user: dict[str, Any]) -> dict[str, Any]:
+    price_id = STRIPE_PRICE_IDS.get(plan)
+    if not price_id:
+        raise RuntimeError(f"Stripe price ID is not configured for {plan}")
+    fields = {
+        "mode": "subscription",
+        "success_url": stripe_success_url(plan),
+        "cancel_url": stripe_cancel_url(plan),
+        "line_items[0][price]": price_id,
+        "line_items[0][quantity]": "1",
+        "client_reference_id": user["id"],
+        "metadata[user_id]": user["id"],
+        "metadata[plan]": plan,
+        "subscription_data[metadata][user_id]": user["id"],
+        "subscription_data[metadata][plan]": plan,
+        "allow_promotion_codes": "true",
+    }
+    with db() as conn:
+        row = conn.execute("SELECT stripe_customer_id FROM users WHERE id = ?", (user["id"],)).fetchone()
+    if row and row["stripe_customer_id"]:
+        fields["customer"] = row["stripe_customer_id"]
+    else:
+        fields["customer_email"] = user["email"]
+    return stripe_api_post("/v1/checkout/sessions", fields)
+
+
+def parse_stripe_signature(header: str) -> tuple[int, list[str]]:
+    timestamp = None
+    signatures: list[str] = []
+    for item in header.split(","):
+        key, _, value = item.partition("=")
+        if key == "t":
+            try:
+                timestamp = int(value)
+            except ValueError:
+                timestamp = None
+        elif key == "v1":
+            signatures.append(value)
+    if timestamp is None or not signatures:
+        raise HTTPException(status_code=400, detail="Invalid Stripe signature header")
+    return timestamp, signatures
+
+
+def verify_stripe_webhook_signature(payload: bytes, signature_header: str | None) -> None:
+    if not STRIPE_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Stripe webhook secret is not configured")
+    if not signature_header:
+        raise HTTPException(status_code=400, detail="Missing Stripe signature")
+    timestamp, signatures = parse_stripe_signature(signature_header)
+    if abs(int(now()) - timestamp) > 300:
+        raise HTTPException(status_code=400, detail="Expired Stripe signature")
+    signed_payload = str(timestamp).encode("utf-8") + b"." + payload
+    expected = hmac.new(STRIPE_WEBHOOK_SECRET.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
+    if not any(hmac.compare_digest(expected, candidate) for candidate in signatures):
+        raise HTTPException(status_code=400, detail="Invalid Stripe signature")
+
+
+def event_already_processed(event_id: str) -> bool:
+    with db() as conn:
+        try:
+            conn.execute(
+                "INSERT INTO stripe_events (event_id, event_type, received_at, payload_json) VALUES (?, ?, ?, ?)",
+                (event_id, "pending", now(), "{}"),
+            )
+            return False
+        except sqlite3.IntegrityError:
+            return True
+
+
+def store_stripe_event(event: dict[str, Any], error: str | None = None) -> None:
+    with db() as conn:
+        conn.execute(
+            """
+            UPDATE stripe_events
+            SET event_type = ?, processed_at = ?, payload_json = ?, error = ?
+            WHERE event_id = ?
+            """,
+            (
+                str(event.get("type") or "unknown"),
+                now() if error is None else None,
+                json.dumps(event, sort_keys=True),
+                error,
+                str(event.get("id")),
+            ),
+        )
+
+
+def plan_from_metadata(metadata: Any) -> str | None:
+    if not isinstance(metadata, dict):
+        return None
+    plan = metadata.get("plan")
+    return str(plan) if plan in PLAN_LIMITS else None
+
+
+def update_user_subscription(
+    user_id: str,
+    plan: str,
+    status: str,
+    customer_id: str | None = None,
+    subscription_id: str | None = None,
+    current_period_end: float | None = None,
+) -> dict[str, Any] | None:
+    if plan not in PLAN_LIMITS:
+        raise ValueError("Unknown plan")
+    with db() as conn:
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not row:
+            return None
+        conn.execute(
+            """
+            UPDATE users
+            SET plan = ?,
+                subscription_status = ?,
+                stripe_customer_id = COALESCE(?, stripe_customer_id),
+                stripe_subscription_id = COALESCE(?, stripe_subscription_id),
+                subscription_current_period_end = COALESCE(?, subscription_current_period_end)
+            WHERE id = ?
+            """,
+            (plan, status, customer_id, subscription_id, current_period_end, user_id),
+        )
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    log_event(user_id, "billing.subscription_updated", "user", user_id, {"plan": plan, "status": status})
+    return user_public(row) if row else None
+
+
+def downgrade_user_subscription(user_id: str, status: str = "cancelled") -> dict[str, Any] | None:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not row:
+            return None
+        conn.execute(
+            "UPDATE users SET plan = 'free', subscription_status = ?, subscription_current_period_end = NULL WHERE id = ?",
+            (status, user_id),
+        )
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    log_event(user_id, "billing.subscription_downgraded", "user", user_id, {"status": status})
+    return user_public(row) if row else None
+
+
+def apply_stripe_event(event: dict[str, Any]) -> dict[str, Any]:
+    event_type = str(event.get("type") or "")
+    obj = ((event.get("data") or {}).get("object") or {}) if isinstance(event.get("data"), dict) else {}
+    if not isinstance(obj, dict):
+        return {"handled": False, "reason": "missing data.object"}
+    metadata = obj.get("metadata") if isinstance(obj.get("metadata"), dict) else {}
+    user_id = metadata.get("user_id") or obj.get("client_reference_id")
+    plan = plan_from_metadata(metadata)
+    if event_type == "checkout.session.completed":
+        if not user_id or not plan:
+            return {"handled": False, "reason": "missing checkout metadata"}
+        user = update_user_subscription(
+            str(user_id),
+            plan,
+            "active",
+            str(obj.get("customer")) if obj.get("customer") else None,
+            str(obj.get("subscription")) if obj.get("subscription") else None,
+            float(obj["current_period_end"]) if obj.get("current_period_end") else None,
+        )
+        return {"handled": bool(user), "user": user}
+    if event_type in {"customer.subscription.created", "customer.subscription.updated"}:
+        if not user_id or not plan:
+            return {"handled": False, "reason": "missing subscription metadata"}
+        status = str(obj.get("status") or "active")
+        if status in {"active", "trialing"}:
+            user = update_user_subscription(
+                str(user_id),
+                plan,
+                status,
+                str(obj.get("customer")) if obj.get("customer") else None,
+                str(obj.get("id")) if obj.get("id") else None,
+                float(obj["current_period_end"]) if obj.get("current_period_end") else None,
+            )
+            return {"handled": bool(user), "user": user}
+        user = downgrade_user_subscription(str(user_id), status)
+        return {"handled": bool(user), "user": user}
+    if event_type == "customer.subscription.deleted":
+        if not user_id:
+            return {"handled": False, "reason": "missing subscription metadata"}
+        user = downgrade_user_subscription(str(user_id), "cancelled")
+        return {"handled": bool(user), "user": user}
+    if event_type == "invoice.payment_failed":
+        customer_id = obj.get("customer")
+        if not customer_id:
+            return {"handled": False, "reason": "missing invoice customer"}
+        with db() as conn:
+            row = conn.execute("SELECT * FROM users WHERE stripe_customer_id = ?", (str(customer_id),)).fetchone()
+            if not row:
+                return {"handled": False, "reason": "customer not found"}
+            conn.execute("UPDATE users SET subscription_status = 'past_due' WHERE id = ?", (row["id"],))
+            row = conn.execute("SELECT * FROM users WHERE id = ?", (row["id"],)).fetchone()
+        log_event(row["id"], "billing.payment_failed", "user", row["id"], {"customer_id": str(customer_id)})
+        return {"handled": True, "user": user_public(row)}
+    return {"handled": False, "reason": "ignored event type"}
 
 
 def current_user(authorization: str | None = Header(default=None)) -> dict[str, Any]:
@@ -1247,12 +1518,49 @@ async def dev_upgrade(request: BillingPlanRequest, user: dict[str, Any] = Depend
 async def billing_checkout(request: BillingPlanRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
     if request.plan not in PLAN_LIMITS:
         raise HTTPException(status_code=400, detail="Unknown plan")
+    if stripe_configured_for_plan(request.plan):
+        try:
+            session = create_stripe_checkout_session(request.plan, user)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
+        checkout_url = session.get("url")
+        if not checkout_url:
+            raise HTTPException(status_code=502, detail="Stripe did not return a checkout URL")
+        log_event(user["id"], "billing.checkout_created", "user", user["id"], {"plan": request.plan, "session_id": session.get("id")})
+        return {
+            "checkout_url": checkout_url,
+            "mode": "stripe",
+            "requested_plan": request.plan,
+            "session_id": session.get("id"),
+        }
     return {
         "checkout_url": None,
         "mode": "dev",
         "message": "Stripe is not configured. Use /api/billing/dev-upgrade in development.",
         "requested_plan": request.plan,
     }
+
+
+@app.post("/api/billing/webhook")
+async def stripe_billing_webhook(request: Request, stripe_signature: str | None = Header(default=None, alias="Stripe-Signature")) -> dict[str, Any]:
+    payload = await request.body()
+    verify_stripe_webhook_signature(payload, stripe_signature)
+    try:
+        event = json.loads(payload.decode("utf-8"))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid Stripe webhook JSON") from exc
+    event_id = str(event.get("id") or "")
+    if not event_id:
+        raise HTTPException(status_code=400, detail="Stripe webhook event id is required")
+    if event_already_processed(event_id):
+        return {"ok": True, "duplicate": True}
+    try:
+        result = apply_stripe_event(event)
+        store_stripe_event(event)
+    except Exception as exc:
+        store_stripe_event(event, str(exc))
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return {"ok": True, "duplicate": False, **result}
 
 
 @app.post("/api/projects")

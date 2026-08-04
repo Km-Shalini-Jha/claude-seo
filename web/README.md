@@ -2,9 +2,9 @@
 
 Browser console for customer SEO audits with local SaaS foundations:
 accounts, email verification tokens, password reset tokens, plan quotas,
-projects, saved sites, protected audit jobs, a SQLite-backed worker, durable
-history, report exports, audit logs, admin endpoints, legal pages, and
-shareable completed-report links.
+optional Stripe Checkout/webhooks, projects, saved sites, protected audit jobs,
+a SQLite-backed worker, durable history, report exports, audit logs, admin
+endpoints, legal pages, and shareable completed-report links.
 
 ## Run Locally
 
@@ -29,8 +29,9 @@ The E2E test starts a temporary local server and separate worker process,
 enables fake script outputs,
 creates two accounts, creates a project and site, runs a full audit, polls it
 to completion, verifies history, verifies report/share exports, exercises email
-verification, password reset, dev billing upgrade, admin endpoints, backup
-export, legal pages, and checks cross-user job isolation.
+verification, password reset, dev billing upgrade, signed Stripe webhook
+handling, admin endpoints, backup export, legal pages, and checks cross-user
+job isolation.
 
 Browser E2E:
 
@@ -56,7 +57,7 @@ web/data/console.sqlite3
 ```
 
 Tables include users, sessions, verification tokens, password reset tokens,
-projects, sites, jobs, audit logs, and email outbox.
+projects, sites, jobs, audit logs, Stripe event receipts, and email outbox.
 
 ## Environment
 
@@ -70,6 +71,10 @@ CLAUDE_SEO_WEB_ORIGINS=http://127.0.0.1:8001
 CLAUDE_SEO_PUBLIC_URL=http://127.0.0.1:8001
 CLAUDE_SEO_LAUNCHER=/path/to/bin/claude-seo
 CLAUDE_SEO_PYTHON=/opt/homebrew/bin/python3.11
+CLAUDE_SEO_STRIPE_SECRET_KEY=sk_live_...
+CLAUDE_SEO_STRIPE_WEBHOOK_SECRET=whsec_...
+CLAUDE_SEO_STRIPE_PRICE_PRO=price_...
+CLAUDE_SEO_STRIPE_PRICE_AGENCY=price_...
 ```
 
 ## Separate Worker
@@ -106,9 +111,27 @@ Plans are enforced locally:
 - `pro`: 60 audits/hour, 25 projects, 100 sites
 - `agency`: 240 audits/hour, 250 projects, 1000 sites
 
-`/api/billing/checkout` is a Stripe-ready placeholder. In development,
+`/api/billing/checkout` creates a hosted Stripe Checkout Session when
+`CLAUDE_SEO_STRIPE_SECRET_KEY` and a matching plan price ID are configured.
+Without Stripe settings, it returns a development-mode response and
 `/api/billing/dev-upgrade` upgrades the logged-in account without external
 payment infrastructure.
+
+Configure this webhook endpoint in Stripe:
+
+```text
+POST https://your-app.example.com/api/billing/webhook
+```
+
+The endpoint verifies the raw payload using `Stripe-Signature` and
+`CLAUDE_SEO_STRIPE_WEBHOOK_SECRET`, stores event IDs for idempotency, and
+handles:
+
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_failed`
 
 ## Admin And Ops
 
@@ -133,6 +156,5 @@ Legal placeholders:
 ## Production Still Needed
 
 Before a public launch, replace SQLite with hosted Postgres, replace the local
-worker thread with a managed queue, add real email delivery, wire Stripe
-checkout/webhooks, configure HTTPS, managed secrets, observability, backups,
-and stricter abuse controls.
+worker thread with a managed queue, add real email delivery, configure HTTPS,
+managed secrets, observability, backups, and stricter abuse controls.

@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import hmac
 import os
 import socket
 import subprocess
@@ -22,7 +24,7 @@ def free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def request(base: str, path: str, payload: dict | None = None, token: str | None = None) -> tuple[int, str]:
+def request(base: str, path: str, payload: dict | None = None, token: str | None = None, extra_headers: dict[str, str] | None = None) -> tuple[int, str]:
     data = None
     headers = {}
     if payload is not None:
@@ -30,12 +32,21 @@ def request(base: str, path: str, payload: dict | None = None, token: str | None
         headers["Content-Type"] = "application/json"
     if token:
         headers["Authorization"] = f"Bearer {token}"
+    if extra_headers:
+        headers.update(extra_headers)
     req = urllib.request.Request(f"{base}{path}", data=data, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             return resp.status, resp.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read().decode("utf-8")
+
+
+def stripe_signature(payload: dict, secret: str) -> tuple[dict, dict[str, str]]:
+    timestamp = int(time.time())
+    body = json.dumps(payload).encode("utf-8")
+    digest = hmac.new(secret.encode("utf-8"), str(timestamp).encode("utf-8") + b"." + body, hashlib.sha256).hexdigest()
+    return payload, {"Stripe-Signature": f"t={timestamp},v1={digest}"}
 
 
 def wait_for_server(base: str, proc: subprocess.Popen[str]) -> None:
@@ -78,6 +89,7 @@ def main() -> int:
     env["CLAUDE_SEO_WEB_DATA"] = str(data_dir)
     env["PYTHONPATH"] = str(Path(__file__).resolve().parent.parent)
     env["CLAUDE_SEO_WORKER_LOG"] = str(data_dir / "worker.log")
+    env["CLAUDE_SEO_STRIPE_WEBHOOK_SECRET"] = "whsec_local_test"
     proc = subprocess.Popen(
         [SERVER_PYTHON, "-m", "uvicorn", "web.backend:app", "--host", "127.0.0.1", "--port", str(port), "--log-level", "warning"],
         cwd=str(Path(__file__).resolve().parent.parent),
@@ -112,9 +124,38 @@ def main() -> int:
         status, body = request(base, "/api/auth/verify-email", {"token": verification_token})
         assert status == 200, body
 
+        status, body = request(base, "/api/billing/checkout", {"plan": "pro"}, token)
+        assert status == 200, body
+        assert json.loads(body)["mode"] == "dev"
+
         status, body = request(base, "/api/billing/dev-upgrade", {"plan": "pro"}, token)
         assert status == 200, body
         assert json.loads(body)["user"]["plan"] == "pro"
+
+        stripe_event = {
+            "id": "evt_checkout_completed",
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "id": "cs_test_123",
+                    "mode": "subscription",
+                    "customer": "cus_test_123",
+                    "subscription": "sub_test_123",
+                    "client_reference_id": owner["user"]["id"],
+                    "metadata": {"user_id": owner["user"]["id"], "plan": "agency"},
+                }
+            },
+        }
+        payload, headers = stripe_signature(stripe_event, "whsec_local_test")
+        status, body = request(base, "/api/billing/webhook", payload, extra_headers=headers)
+        assert status == 200, body
+        assert json.loads(body)["handled"] is True
+        status, body = request(base, "/api/billing/webhook", payload, extra_headers=headers)
+        assert status == 200, body
+        assert json.loads(body)["duplicate"] is True
+        status, body = request(base, "/api/me", token=token)
+        assert status == 200, body
+        assert json.loads(body)["user"]["plan"] == "agency"
 
         status, body = request(base, "/api/auth/password-reset/request", {"email": "owner@example.com"})
         assert status == 200, body
