@@ -119,6 +119,15 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 
+class TeamInviteRequest(BaseModel):
+    email: str
+    role: str = "member"
+
+
+class TeamInviteAcceptRequest(BaseModel):
+    token: str
+
+
 class BillingPlanRequest(BaseModel):
     plan: str
 
@@ -150,6 +159,14 @@ class SiteUpdateRequest(BaseModel):
 class JobRequest(BaseModel):
     url: HttpUrl
     module: str
+    project_id: str | None = None
+    site_id: str | None = None
+
+
+class ScheduleRequest(BaseModel):
+    url: HttpUrl
+    module: str
+    frequency: Literal["hourly", "daily", "weekly"]
     project_id: str | None = None
     site_id: str | None = None
 
@@ -404,6 +421,37 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS team_invitations (
+            id TEXT PRIMARY KEY,
+            owner_id TEXT NOT NULL,
+            email TEXT NOT NULL,
+            role TEXT NOT NULL,
+            token TEXT NOT NULL UNIQUE,
+            status TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            expires_at REAL NOT NULL,
+            accepted_at REAL,
+            FOREIGN KEY(owner_id) REFERENCES users(id)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS team_members (
+            id TEXT PRIMARY KEY,
+            owner_id TEXT NOT NULL,
+            user_id TEXT,
+            email TEXT NOT NULL,
+            role TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            FOREIGN KEY(owner_id) REFERENCES users(id),
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        """
+    )
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS stripe_events (
             event_id TEXT PRIMARY KEY,
             event_type TEXT NOT NULL,
@@ -411,6 +459,30 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             processed_at REAL,
             payload_json TEXT NOT NULL,
             error TEXT
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS scheduled_audits (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            project_id TEXT,
+            site_id TEXT,
+            module TEXT NOT NULL,
+            label TEXT NOT NULL,
+            url TEXT NOT NULL,
+            frequency TEXT NOT NULL,
+            status TEXT NOT NULL,
+            next_run_at REAL NOT NULL,
+            last_run_at REAL,
+            last_job_id TEXT,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL,
+            FOREIGN KEY(user_id) REFERENCES users(id),
+            FOREIGN KEY(project_id) REFERENCES projects(id),
+            FOREIGN KEY(site_id) REFERENCES sites(id),
+            FOREIGN KEY(last_job_id) REFERENCES jobs(id)
         )
         """
     )
@@ -467,6 +539,9 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_share_token ON jobs(share_token)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created ON audit_logs(user_id, created_at)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_stripe_events_received ON stripe_events(received_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_team_invitations_owner ON team_invitations(owner_id, created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_team_members_owner ON team_members(owner_id, created_at)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_scheduled_audits_due ON scheduled_audits(status, next_run_at)")
 
 
 def normalize_email(email: str) -> str:
@@ -548,7 +623,8 @@ def backup_payload() -> dict[str, Any]:
     tables = [
         "users", "projects", "sites", "jobs", "sessions",
         "email_verification_tokens", "password_reset_tokens", "email_outbox",
-        "audit_logs", "stripe_events",
+        "audit_logs", "stripe_events", "team_invitations", "team_members",
+        "scheduled_audits",
     ]
     data = {}
     with db() as conn:
@@ -651,6 +727,18 @@ def send_password_reset_email(user_id: str, email: str, token: str) -> None:
         "Reset your Claude SEO password",
         f"Reset your Claude SEO password:\n\n{url}\n\nThis link expires in 30 minutes.",
         "password_reset",
+        token,
+    )
+
+
+def send_team_invite_email(owner_id: str, email: str, token: str) -> None:
+    url = f"{PUBLIC_BASE_URL}/?invite_token={token}"
+    queue_email(
+        owner_id,
+        email,
+        "You were invited to Claude SEO",
+        f"You were invited to collaborate in Claude SEO:\n\n{url}\n\nCreate or log into an account with this email, then accept the invite.",
+        "team_invite",
         token,
     )
 
@@ -1202,6 +1290,56 @@ def update_job(job_id: str, **changes: Any) -> JobRecord:
     return updated
 
 
+def frequency_seconds(frequency: str) -> int:
+    return {"hourly": 60 * 60, "daily": 60 * 60 * 24, "weekly": 60 * 60 * 24 * 7}.get(frequency, 60 * 60 * 24)
+
+
+def process_due_schedules(limit: int = 5) -> int:
+    ts = now()
+    created = 0
+    with db() as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM scheduled_audits
+            WHERE status = 'active' AND next_run_at <= ?
+            ORDER BY next_run_at ASC
+            LIMIT ?
+            """,
+            (ts, limit),
+        ).fetchall()
+    for row in rows:
+        schedule = dict(row)
+        job_id = uuid.uuid4().hex
+        next_run = ts + frequency_seconds(schedule["frequency"])
+        with db() as conn:
+            claimed = conn.execute(
+                """
+                UPDATE scheduled_audits
+                SET last_run_at = ?, last_job_id = ?, next_run_at = ?, updated_at = ?
+                WHERE id = ? AND status = 'active' AND next_run_at <= ?
+                """,
+                (ts, job_id, next_run, ts, schedule["id"], ts),
+            ).rowcount
+        if not claimed:
+            continue
+        record = JobRecord(
+            id=job_id,
+            user_id=schedule["user_id"],
+            project_id=schedule["project_id"],
+            site_id=schedule["site_id"],
+            module=schedule["module"],
+            label=schedule["label"],
+            url=schedule["url"],
+            status="queued",
+            created_at=ts,
+            updated_at=ts,
+        )
+        persist_job(record)
+        WORKER_EVENT.set()
+        created += 1
+    return created
+
+
 def execute_job(job_id: str) -> None:
     record = update_job(job_id, status="running")
     try:
@@ -1239,6 +1377,9 @@ def next_queued_job() -> JobRecord | None:
 
 def worker_loop() -> None:
     while True:
+        due = process_due_schedules()
+        if due:
+            worker_log(f"scheduled {due} due audits")
         job = next_queued_job()
         if job:
             worker_log(f"claimed {job.id} {job.module}")
@@ -1286,6 +1427,8 @@ def start_worker() -> None:
 def run_runtime_doctor() -> dict[str, Any]:
     if not LAUNCHER.exists():
         return {"ready": False, "browser_ready": False, "mode": "missing", "python_version": None, "reasons": [f"Claude SEO launcher not found: {LAUNCHER}"]}
+    if os.environ.get("CLAUDE_SEO_WEB_FAKE_RUNS") == "1":
+        return {"ready": True, "browser_ready": True, "mode": "fake", "python_version": "3.11", "reasons": []}
     result = subprocess.run(
         ["bash", str(LAUNCHER), "doctor", "--json"],
         capture_output=True,
@@ -1563,6 +1706,75 @@ async def resend_verification(user: dict[str, Any] = Depends(current_user)) -> d
     return response
 
 
+@app.get("/api/team")
+async def team_status(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    with db() as conn:
+        invitations = [dict(row) for row in conn.execute("SELECT * FROM team_invitations WHERE owner_id = ? ORDER BY created_at DESC", (user["id"],)).fetchall()]
+        members = [dict(row) for row in conn.execute("SELECT * FROM team_members WHERE owner_id = ? ORDER BY created_at DESC", (user["id"],)).fetchall()]
+        memberships = [dict(row) for row in conn.execute("SELECT * FROM team_members WHERE user_id = ? ORDER BY created_at DESC", (user["id"],)).fetchall()]
+    return {"invitations": invitations, "members": members, "memberships": memberships}
+
+
+@app.post("/api/team/invitations")
+async def create_team_invitation(request: TeamInviteRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    email = normalize_email(request.email)
+    role = request.role.strip().lower() or "member"
+    if role not in {"member", "manager"}:
+        raise HTTPException(status_code=400, detail="Team role must be member or manager")
+    if email == user["email"]:
+        raise HTTPException(status_code=400, detail="Invite a teammate email, not your own account")
+    invite_id = uuid.uuid4().hex
+    token = secrets.token_urlsafe(32)
+    ts = now()
+    with db() as conn:
+        conn.execute(
+            """
+            INSERT INTO team_invitations (id, owner_id, email, role, token, status, created_at, expires_at)
+            VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+            """,
+            (invite_id, user["id"], email, role, token, ts, ts + 60 * 60 * 24 * 7),
+        )
+        row = conn.execute("SELECT * FROM team_invitations WHERE id = ?", (invite_id,)).fetchone()
+    send_team_invite_email(user["id"], email, token)
+    log_event(user["id"], "team.invite_create", "team_invitation", invite_id, {"email": email, "role": role})
+    return dict(row)
+
+
+@app.post("/api/team/invitations/{invite_id}/revoke")
+async def revoke_team_invitation(invite_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, bool]:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM team_invitations WHERE id = ? AND owner_id = ?", (invite_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Invitation not found")
+        conn.execute("UPDATE team_invitations SET status = 'revoked' WHERE id = ?", (invite_id,))
+    log_event(user["id"], "team.invite_revoke", "team_invitation", invite_id)
+    return {"ok": True}
+
+
+@app.post("/api/team/accept")
+async def accept_team_invitation(request: TeamInviteAcceptRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    with db() as conn:
+        invite = conn.execute(
+            "SELECT * FROM team_invitations WHERE token = ? AND status = 'pending' AND expires_at > ?",
+            (request.token, now()),
+        ).fetchone()
+        if not invite:
+            raise HTTPException(status_code=400, detail="Invalid or expired invitation")
+        if normalize_email(invite["email"]) != normalize_email(user["email"]):
+            raise HTTPException(status_code=403, detail="This invitation is for a different email")
+        existing = conn.execute("SELECT * FROM team_members WHERE owner_id = ? AND user_id = ?", (invite["owner_id"], user["id"])).fetchone()
+        member_id = existing["id"] if existing else uuid.uuid4().hex
+        if not existing:
+            conn.execute(
+                "INSERT INTO team_members (id, owner_id, user_id, email, role, status, created_at) VALUES (?, ?, ?, ?, ?, 'active', ?)",
+                (member_id, invite["owner_id"], user["id"], user["email"], invite["role"], now()),
+            )
+        conn.execute("UPDATE team_invitations SET status = 'accepted', accepted_at = ? WHERE id = ?", (now(), invite["id"]))
+        row = conn.execute("SELECT * FROM team_members WHERE id = ?", (member_id,)).fetchone()
+    log_event(user["id"], "team.invite_accept", "team_invitation", invite["id"], {"owner_id": invite["owner_id"]})
+    return {"member": dict(row)}
+
+
 @app.get("/api/billing/plans")
 async def billing_plans() -> dict[str, Any]:
     return {"plans": PLAN_LIMITS}
@@ -1784,6 +1996,63 @@ async def create_job(request: JobRequest, user: dict[str, Any] = Depends(current
     WORKER_EVENT.set()
     log_event(user["id"], "job.create", "job", record.id, {"module": request.module, "url": str(request.url)})
     return public_job(record)
+
+
+@app.get("/api/schedules")
+async def list_schedules(user: dict[str, Any] = Depends(current_user)) -> list[dict[str, Any]]:
+    with db() as conn:
+        rows = conn.execute("SELECT * FROM scheduled_audits WHERE user_id = ? ORDER BY created_at DESC", (user["id"],)).fetchall()
+    return [dict(row) for row in rows]
+
+
+@app.post("/api/schedules")
+async def create_schedule(request: ScheduleRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    if request.module not in MODULES:
+        raise HTTPException(status_code=404, detail="Unknown audit module")
+    with db() as conn:
+        if request.project_id:
+            project = conn.execute("SELECT id FROM projects WHERE id = ? AND user_id = ?", (request.project_id, user["id"])).fetchone()
+            if not project:
+                raise HTTPException(status_code=404, detail="Project not found")
+        if request.site_id:
+            site = conn.execute("SELECT id FROM sites WHERE id = ? AND user_id = ?", (request.site_id, user["id"])).fetchone()
+            if not site:
+                raise HTTPException(status_code=404, detail="Site not found")
+        schedule_id = uuid.uuid4().hex
+        ts = now()
+        conn.execute(
+            """
+            INSERT INTO scheduled_audits (id, user_id, project_id, site_id, module, label, url, frequency, status, next_run_at, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
+            """,
+            (
+                schedule_id,
+                user["id"],
+                request.project_id,
+                request.site_id,
+                request.module,
+                MODULES[request.module]["label"],
+                str(request.url),
+                request.frequency,
+                ts + frequency_seconds(request.frequency),
+                ts,
+                ts,
+            ),
+        )
+        row = conn.execute("SELECT * FROM scheduled_audits WHERE id = ?", (schedule_id,)).fetchone()
+    log_event(user["id"], "schedule.create", "scheduled_audit", schedule_id, {"frequency": request.frequency, "module": request.module, "url": str(request.url)})
+    return dict(row)
+
+
+@app.delete("/api/schedules/{schedule_id}")
+async def delete_schedule(schedule_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, bool]:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM scheduled_audits WHERE id = ? AND user_id = ?", (schedule_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Schedule not found")
+        conn.execute("UPDATE scheduled_audits SET status = 'paused', updated_at = ? WHERE id = ?", (now(), schedule_id))
+    log_event(user["id"], "schedule.pause", "scheduled_audit", schedule_id)
+    return {"ok": True}
 
 
 @app.get("/api/jobs/{job_id}")

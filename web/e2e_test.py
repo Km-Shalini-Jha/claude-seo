@@ -8,6 +8,7 @@ import hashlib
 import hmac
 import os
 import socket
+import sqlite3
 import subprocess
 import tempfile
 import time
@@ -180,6 +181,22 @@ def main() -> int:
         assert status == 200, body
         assert json.loads(body)["already_verified"] is True
 
+        status, body = request(base, "/api/team/invitations", {"email": "other@example.com", "role": "manager"}, token)
+        assert status == 200, body
+        team_invite = json.loads(body)
+        assert team_invite["status"] == "pending"
+        assert team_invite["token"]
+        status, body = request(base, "/api/team/invitations", {"email": "temp@example.com", "role": "member"}, token)
+        assert status == 200, body
+        temp_invite_id = json.loads(body)["id"]
+        status, body = request(base, f"/api/team/invitations/{temp_invite_id}/revoke", token=token, method="POST")
+        assert status == 200, body
+        status, body = request(base, "/api/team", token=token)
+        assert status == 200, body
+        team_state = json.loads(body)
+        assert any(row["email"] == "other@example.com" and row["status"] == "pending" for row in team_state["invitations"])
+        assert any(row["id"] == temp_invite_id and row["status"] == "revoked" for row in team_state["invitations"])
+
         status, body = request(base, "/api/projects", {"name": "Acme Client"}, token)
         assert status == 200, body
         project_id = json.loads(body)["id"]
@@ -213,6 +230,31 @@ def main() -> int:
         status, body = request(base, f"/api/projects/{temp_project_id}", token=token, method="DELETE")
         assert status == 200, body
 
+        status, body = request(
+            base,
+            "/api/schedules",
+            {"url": "https://example.com", "module": "overview", "frequency": "daily", "project_id": project_id, "site_id": site_id},
+            token,
+        )
+        assert status == 200, body
+        paused_schedule_id = json.loads(body)["id"]
+        status, body = request(base, "/api/schedules", token=token)
+        assert status == 200, body
+        assert any(row["id"] == paused_schedule_id and row["status"] == "active" for row in json.loads(body))
+        status, body = request(base, f"/api/schedules/{paused_schedule_id}", token=token, method="DELETE")
+        assert status == 200, body
+
+        status, body = request(
+            base,
+            "/api/schedules",
+            {"url": "https://example.com", "module": "overview", "frequency": "hourly", "project_id": project_id, "site_id": site_id},
+            token,
+        )
+        assert status == 200, body
+        due_schedule_id = json.loads(body)["id"]
+        with sqlite3.connect(data_dir / "console.sqlite3") as conn:
+            conn.execute("UPDATE scheduled_audits SET next_run_at = ? WHERE id = ?", (time.time() - 2, due_schedule_id))
+
         status, body = request(base, "/api/admin/summary", token=token)
         assert status == 200, body
         assert json.loads(body)["counts"]["users"] == 1
@@ -242,6 +284,20 @@ def main() -> int:
         assert completed["share_url"], completed
         assert completed["findings"], completed
         assert "overview" in completed["output"]["stdout"]
+
+        scheduled_job_id = None
+        deadline = time.time() + 8
+        while time.time() < deadline:
+            status, body = request(base, "/api/schedules", token=token)
+            assert status == 200, body
+            schedule = next(row for row in json.loads(body) if row["id"] == due_schedule_id)
+            scheduled_job_id = schedule["last_job_id"]
+            if scheduled_job_id:
+                break
+            time.sleep(0.1)
+        assert scheduled_job_id, "due schedule was not converted into a job"
+        scheduled = wait_for_job(base, scheduled_job_id, token, worker)
+        assert scheduled["status"] == "complete", scheduled
 
         status, body = request(base, "/api/history", token=token)
         assert status == 200, body
@@ -282,6 +338,12 @@ def main() -> int:
         other = json.loads(body)
         other_token = other["token"]
         assert other["user"]["role"] == "user"
+        status, body = request(base, "/api/team/accept", {"token": team_invite["token"]}, other_token)
+        assert status == 200, body
+        assert json.loads(body)["member"]["role"] == "manager"
+        status, body = request(base, "/api/team", token=other_token)
+        assert status == 200, body
+        assert any(row["owner_id"] == owner["user"]["id"] for row in json.loads(body)["memberships"])
         status, body = request(base, f"/api/jobs/{job_id}", token=other_token)
         assert status == 404, body
 
