@@ -49,7 +49,8 @@ PLAN_LIMITS = {
 }
 WORKER_EVENT = threading.Event()
 WORKER_STARTED = False
-AUTO_WORKER = os.environ.get("CLAUDE_SEO_WEB_AUTO_WORKER", "1") != "0"
+AUTO_WORKER_DEFAULT = "0" if os.environ.get("VERCEL") else "1"
+AUTO_WORKER = os.environ.get("CLAUDE_SEO_WEB_AUTO_WORKER", AUTO_WORKER_DEFAULT) != "0"
 WORKER_POLL_SECONDS = float(os.environ.get("CLAUDE_SEO_WORKER_POLL_SECONDS", "0.25"))
 WORKER_LOG = os.environ.get("CLAUDE_SEO_WORKER_LOG")
 DEV_EMAIL_TOKENS = os.environ.get("CLAUDE_SEO_WEB_DEV_EMAIL_TOKENS", "0") == "1"

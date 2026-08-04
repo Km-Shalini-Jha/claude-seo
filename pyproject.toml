@@ -9,6 +9,12 @@ authors = [
   {name = "Daniel Agrici"}
 ]
 keywords = ["seo", "claude-code", "ai-tools", "schema-markup", "e-e-a-t", "geo"]
+dependencies = [
+  "fastapi>=0.109.0",
+  "pydantic>=2.9.0",
+  "psycopg[binary]>=3.2.0",
+  "uvicorn>=0.24.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/AgriciDaniel/claude-seo"
@@ -21,3 +27,6 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
 ignore = ["E501"]
+
+[tool.vercel]
+entrypoint = "web.backend:app"
