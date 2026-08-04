@@ -24,7 +24,7 @@ def free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def request(base: str, path: str, payload: dict | None = None, token: str | None = None, extra_headers: dict[str, str] | None = None) -> tuple[int, str]:
+def request(base: str, path: str, payload: dict | None = None, token: str | None = None, extra_headers: dict[str, str] | None = None, method: str | None = None) -> tuple[int, str]:
     data = None
     headers = {}
     if payload is not None:
@@ -34,7 +34,7 @@ def request(base: str, path: str, payload: dict | None = None, token: str | None
         headers["Authorization"] = f"Bearer {token}"
     if extra_headers:
         headers.update(extra_headers)
-    req = urllib.request.Request(f"{base}{path}", data=data, headers=headers)
+    req = urllib.request.Request(f"{base}{path}", data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
             return resp.status, resp.read().decode("utf-8")
@@ -166,6 +166,20 @@ def main() -> int:
         assert status == 200, body
         token = json.loads(body)["token"]
 
+        status, body = request(base, "/api/me/profile", {"name": "Owner Updated"}, token)
+        assert status == 200, body
+        assert json.loads(body)["user"]["name"] == "Owner Updated"
+
+        status, body = request(base, "/api/me/password", {"current_password": "new-long-password", "new_password": "changed-long-password"}, token)
+        assert status == 200, body
+        status, body = request(base, "/api/auth/login", {"email": "owner@example.com", "password": "changed-long-password"})
+        assert status == 200, body
+        token = json.loads(body)["token"]
+
+        status, body = request(base, "/api/me/resend-verification", {}, token)
+        assert status == 200, body
+        assert json.loads(body)["already_verified"] is True
+
         status, body = request(base, "/api/projects", {"name": "Acme Client"}, token)
         assert status == 200, body
         project_id = json.loads(body)["id"]
@@ -173,6 +187,31 @@ def main() -> int:
         status, body = request(base, "/api/sites", {"project_id": project_id, "url": "https://example.com", "name": "Example"}, token)
         assert status == 200, body
         site_id = json.loads(body)["id"]
+
+        status, body = request(base, f"/api/projects/{project_id}", {"name": "Acme Client Updated"}, token, method="PATCH")
+        assert status == 200, body
+        assert json.loads(body)["name"] == "Acme Client Updated"
+
+        status, body = request(
+            base,
+            f"/api/sites/{site_id}",
+            {"project_id": project_id, "url": "https://example.com/about", "name": "Example About"},
+            token,
+            method="PATCH",
+        )
+        assert status == 200, body
+        assert json.loads(body)["name"] == "Example About"
+
+        status, body = request(base, "/api/projects", {"name": "Delete Me"}, token)
+        assert status == 200, body
+        temp_project_id = json.loads(body)["id"]
+        status, body = request(base, "/api/sites", {"project_id": temp_project_id, "url": "https://delete.example", "name": "Delete Site"}, token)
+        assert status == 200, body
+        temp_site_id = json.loads(body)["id"]
+        status, body = request(base, f"/api/sites/{temp_site_id}", token=token, method="DELETE")
+        assert status == 200, body
+        status, body = request(base, f"/api/projects/{temp_project_id}", token=token, method="DELETE")
+        assert status == 200, body
 
         status, body = request(base, "/api/admin/summary", token=token)
         assert status == 200, body

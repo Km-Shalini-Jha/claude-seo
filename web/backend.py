@@ -74,7 +74,7 @@ app.add_middleware(
         "CLAUDE_SEO_WEB_ORIGINS",
         "http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:8001,http://localhost:8001",
     ).split(","),
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -110,6 +110,15 @@ class PasswordResetConfirm(BaseModel):
     password: str
 
 
+class ProfileUpdateRequest(BaseModel):
+    name: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class BillingPlanRequest(BaseModel):
     plan: str
 
@@ -122,9 +131,19 @@ class ProjectRequest(BaseModel):
     name: str
 
 
+class ProjectUpdateRequest(BaseModel):
+    name: str
+
+
 class SiteRequest(BaseModel):
     project_id: str
     url: HttpUrl
+    name: str | None = None
+
+
+class SiteUpdateRequest(BaseModel):
+    project_id: str | None = None
+    url: HttpUrl | None = None
     name: str | None = None
 
 
@@ -1356,6 +1375,16 @@ async def frontend() -> FileResponse:
     return FileResponse(WEB_ROOT / "frontend.html")
 
 
+@app.get("/verify-email")
+async def verify_email_page() -> FileResponse:
+    return FileResponse(WEB_ROOT / "frontend.html")
+
+
+@app.get("/reset-password")
+async def reset_password_page() -> FileResponse:
+    return FileResponse(WEB_ROOT / "frontend.html")
+
+
 @app.get("/api/health")
 async def health() -> dict[str, Any]:
     return run_runtime_doctor()
@@ -1498,6 +1527,42 @@ async def me(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
     return {"user": user, "plan_limits": PLAN_LIMITS.get(user.get("plan", "free"), PLAN_LIMITS["free"])}
 
 
+@app.post("/api/me/profile")
+async def update_profile(request: ProfileUpdateRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    name = request.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    with db() as conn:
+        conn.execute("UPDATE users SET name = ? WHERE id = ?", (name, user["id"]))
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+    log_event(user["id"], "user.profile_update", "user", user["id"], {"name": name})
+    return {"user": user_public(row)}
+
+
+@app.post("/api/me/password")
+async def change_password(request: ChangePasswordRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, bool]:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+        if not row or not verify_password(request.current_password, row["password_hash"]):
+            raise HTTPException(status_code=401, detail="Current password is incorrect")
+        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_password(request.new_password), user["id"]))
+    log_event(user["id"], "user.password_change", "user", user["id"])
+    return {"ok": True}
+
+
+@app.post("/api/me/resend-verification")
+async def resend_verification(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    if user.get("email_verified"):
+        return {"ok": True, "already_verified": True}
+    token = create_email_verification_token(user["id"])
+    send_verification_email(user["id"], user["email"], token)
+    log_event(user["id"], "auth.verify_email_resend", "user", user["id"])
+    response = {"ok": True, "already_verified": False}
+    if DEV_EMAIL_TOKENS:
+        response["verification_token"] = token
+    return response
+
+
 @app.get("/api/billing/plans")
 async def billing_plans() -> dict[str, Any]:
     return {"plans": PLAN_LIMITS}
@@ -1588,6 +1653,36 @@ async def list_projects(user: dict[str, Any] = Depends(current_user)) -> list[di
     return [dict(row) for row in rows]
 
 
+@app.patch("/api/projects/{project_id}")
+async def update_project(project_id: str, request: ProjectUpdateRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    name = request.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Project name is required")
+    with db() as conn:
+        row = conn.execute("SELECT * FROM projects WHERE id = ? AND user_id = ?", (project_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Project not found")
+        conn.execute("UPDATE projects SET name = ?, updated_at = ? WHERE id = ?", (name, now(), project_id))
+        row = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
+    log_event(user["id"], "project.update", "project", project_id, {"name": name})
+    return dict(row)
+
+
+@app.delete("/api/projects/{project_id}")
+async def delete_project(project_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, bool]:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM projects WHERE id = ? AND user_id = ?", (project_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Project not found")
+        job_count = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE project_id = ?", (project_id,)).fetchone()["n"]
+        if job_count:
+            raise HTTPException(status_code=409, detail="Projects with audit history cannot be deleted")
+        conn.execute("DELETE FROM sites WHERE project_id = ? AND user_id = ?", (project_id, user["id"]))
+        conn.execute("DELETE FROM projects WHERE id = ? AND user_id = ?", (project_id, user["id"]))
+    log_event(user["id"], "project.delete", "project", project_id)
+    return {"ok": True}
+
+
 @app.post("/api/sites")
 async def create_site(request: SiteRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
     enforce_site_limit(user)
@@ -1617,6 +1712,43 @@ async def list_sites(project_id: str | None = None, user: dict[str, Any] = Depen
     with db() as conn:
         rows = conn.execute(query, params).fetchall()
     return [dict(row) for row in rows]
+
+
+@app.patch("/api/sites/{site_id}")
+async def update_site(site_id: str, request: SiteUpdateRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM sites WHERE id = ? AND user_id = ?", (site_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Site not found")
+        project_id = request.project_id or row["project_id"]
+        project = conn.execute("SELECT id FROM projects WHERE id = ? AND user_id = ?", (project_id, user["id"])).fetchone()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        url = str(request.url) if request.url else row["url"]
+        name = request.name.strip() if request.name is not None else row["name"]
+        if not name:
+            name = url
+        conn.execute(
+            "UPDATE sites SET project_id = ?, name = ?, url = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+            (project_id, name, url, now(), site_id, user["id"]),
+        )
+        row = conn.execute("SELECT * FROM sites WHERE id = ?", (site_id,)).fetchone()
+    log_event(user["id"], "site.update", "site", site_id, {"project_id": project_id, "url": url})
+    return dict(row)
+
+
+@app.delete("/api/sites/{site_id}")
+async def delete_site(site_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, bool]:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM sites WHERE id = ? AND user_id = ?", (site_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Site not found")
+        job_count = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE site_id = ?", (site_id,)).fetchone()["n"]
+        if job_count:
+            raise HTTPException(status_code=409, detail="Sites with audit history cannot be deleted")
+        conn.execute("DELETE FROM sites WHERE id = ? AND user_id = ?", (site_id, user["id"]))
+    log_event(user["id"], "site.delete", "site", site_id)
+    return {"ok": True}
 
 
 @app.post("/api/jobs")
