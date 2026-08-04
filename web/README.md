@@ -1,9 +1,9 @@
 # Claude SEO SaaS Console
 
-Browser console for customer SEO audits with local SaaS foundations:
+Browser console for customer SEO audits with SaaS foundations:
 accounts, email verification tokens, password reset tokens, plan quotas,
 optional Stripe Checkout/webhooks, projects, saved sites, protected audit jobs,
-a SQLite-backed worker, durable history, report exports, audit logs, admin
+Postgres/SQLite-backed worker, durable history, report exports, audit logs, admin
 endpoints, legal pages, and shareable completed-report links.
 
 ## Run Locally
@@ -50,7 +50,16 @@ Browser E2E:
 
 ## Storage
 
-Development data is stored in SQLite:
+Production data should be stored in hosted PostgreSQL. Set `DATABASE_URL` to
+your Supabase Postgres connection string:
+
+```bash
+DATABASE_URL='postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres?sslmode=require'
+```
+
+When `DATABASE_URL` or `CLAUDE_SEO_DATABASE_URL` is present, the app creates
+and uses the hosted Postgres tables automatically. Without that variable,
+development data falls back to local SQLite:
 
 ```text
 web/data/console.sqlite3
@@ -63,6 +72,7 @@ projects, sites, jobs, audit logs, Stripe event receipts, and email outbox.
 
 ```bash
 CLAUDE_SEO_WEB_DATA=/path/to/data
+DATABASE_URL=postgresql://...
 CLAUDE_SEO_WEB_AUTO_WORKER=1
 CLAUDE_SEO_WEB_RATE_LIMIT=30
 CLAUDE_SEO_WEB_FAKE_RUNS=1

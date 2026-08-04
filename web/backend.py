@@ -33,6 +33,8 @@ ROOT = Path(__file__).resolve().parent.parent
 WEB_ROOT = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("CLAUDE_SEO_WEB_DATA", WEB_ROOT / "data")).expanduser()
 DB_PATH = DATA_DIR / "console.sqlite3"
+DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("CLAUDE_SEO_DATABASE_URL")
+DATABASE_BACKEND = "postgres" if DATABASE_URL and DATABASE_URL.startswith(("postgres://", "postgresql://")) else "sqlite"
 DEFAULT_LAUNCHER = ROOT / "bin" / "claude-seo"
 LAUNCHER = Path(os.environ.get("CLAUDE_SEO_LAUNCHER", DEFAULT_LAUNCHER)).expanduser()
 PYTHON_OVERRIDE = os.environ.get("CLAUDE_SEO_PYTHON")
@@ -297,15 +299,74 @@ def now() -> float:
     return time.time()
 
 
-def db() -> sqlite3.Connection:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+class AppDatabase:
+    def __init__(self, raw: Any, backend: str):
+        self.raw = raw
+        self.backend = backend
+
+    def __enter__(self) -> "AppDatabase":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        if self.backend == "sqlite":
+            if exc_type:
+                self.raw.rollback()
+            else:
+                self.raw.commit()
+        self.raw.close()
+
+    def execute(self, sql: str, params: tuple[Any, ...] | list[Any] = ()) -> Any:
+        if self.backend == "postgres":
+            sql = sql.replace("?", "%s")
+        return self.raw.execute(sql, params)
+
+    def commit(self) -> None:
+        self.raw.commit()
+
+
+def postgres_url() -> str:
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not configured")
+    if "sslmode=" in DATABASE_URL:
+        return DATABASE_URL
+    separator = "&" if "?" in DATABASE_URL else "?"
+    return f"{DATABASE_URL}{separator}sslmode=require"
+
+
+def db() -> AppDatabase:
+    if DATABASE_BACKEND == "postgres":
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+        except ImportError as exc:
+            raise RuntimeError("PostgreSQL support requires psycopg. Run `pip install -r web/requirements.txt`.") from exc
+        raw = psycopg.connect(postgres_url(), row_factory=dict_row, autocommit=True)
+        conn = AppDatabase(raw, "postgres")
+    else:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        raw = sqlite3.connect(DB_PATH)
+        raw.row_factory = sqlite3.Row
+        conn = AppDatabase(raw, "sqlite")
     ensure_schema(conn)
     return conn
 
 
-def ensure_schema(conn: sqlite3.Connection) -> None:
+def db_integrity_error(exc: Exception) -> bool:
+    return isinstance(exc, sqlite3.IntegrityError) or exc.__class__.__name__ in {"IntegrityError", "UniqueViolation"}
+
+
+def table_columns(conn: AppDatabase, table: str) -> set[str]:
+    if conn.backend == "postgres":
+        rows = conn.execute(
+            "SELECT column_name AS name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = ?",
+            (table,),
+        ).fetchall()
+    else:
+        rows = conn.execute(f"PRAGMA table_info({table})").fetchall()
+    return {row["name"] for row in rows}
+
+
+def ensure_schema(conn: AppDatabase) -> None:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -464,6 +525,29 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         """
+        CREATE TABLE IF NOT EXISTS jobs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            project_id TEXT,
+            site_id TEXT,
+            module TEXT NOT NULL,
+            label TEXT NOT NULL,
+            url TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at REAL NOT NULL,
+            updated_at REAL NOT NULL,
+            command TEXT,
+            output_json TEXT,
+            error TEXT,
+            share_token TEXT UNIQUE,
+            FOREIGN KEY(user_id) REFERENCES users(id),
+            FOREIGN KEY(project_id) REFERENCES projects(id),
+            FOREIGN KEY(site_id) REFERENCES sites(id)
+        )
+        """
+    )
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS scheduled_audits (
             id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL,
@@ -486,30 +570,7 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
         )
         """
     )
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS jobs (
-            id TEXT PRIMARY KEY,
-            user_id TEXT,
-            project_id TEXT,
-            site_id TEXT,
-            module TEXT NOT NULL,
-            label TEXT NOT NULL,
-            url TEXT NOT NULL,
-            status TEXT NOT NULL,
-            created_at REAL NOT NULL,
-            updated_at REAL NOT NULL,
-            command TEXT,
-            output_json TEXT,
-            error TEXT,
-            share_token TEXT UNIQUE,
-            FOREIGN KEY(user_id) REFERENCES users(id),
-            FOREIGN KEY(project_id) REFERENCES projects(id),
-            FOREIGN KEY(site_id) REFERENCES sites(id)
-        )
-        """
-    )
-    existing = {row["name"] for row in conn.execute("PRAGMA table_info(jobs)").fetchall()}
+    existing = table_columns(conn, "jobs")
     migrations = {
         "user_id": "ALTER TABLE jobs ADD COLUMN user_id TEXT",
         "project_id": "ALTER TABLE jobs ADD COLUMN project_id TEXT",
@@ -519,7 +580,7 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     for column, statement in migrations.items():
         if column not in existing:
             conn.execute(statement)
-    user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+    user_columns = table_columns(conn, "users")
     if "plan" not in user_columns:
         conn.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
     if "email_verified" not in user_columns:
@@ -580,16 +641,20 @@ def create_session(user_id: str) -> str:
     return token
 
 
-def user_public(row: sqlite3.Row) -> dict[str, Any]:
+def row_keys(row: Any) -> set[str]:
+    return set(row.keys())
+
+
+def user_public(row: Any) -> dict[str, Any]:
     return {
         "id": row["id"],
         "email": row["email"],
         "name": row["name"],
-        "plan": row["plan"] if "plan" in row.keys() else "free",
-        "email_verified": bool(row["email_verified"]) if "email_verified" in row.keys() else False,
-        "role": row["role"] if "role" in row.keys() else "user",
-        "subscription_status": row["subscription_status"] if "subscription_status" in row.keys() else "dev",
-        "subscription_current_period_end": row["subscription_current_period_end"] if "subscription_current_period_end" in row.keys() else None,
+        "plan": row["plan"] if "plan" in row_keys(row) else "free",
+        "email_verified": bool(row["email_verified"]) if "email_verified" in row_keys(row) else False,
+        "role": row["role"] if "role" in row_keys(row) else "user",
+        "subscription_status": row["subscription_status"] if "subscription_status" in row_keys(row) else "dev",
+        "subscription_current_period_end": row["subscription_current_period_end"] if "subscription_current_period_end" in row_keys(row) else None,
         "created_at": row["created_at"],
     }
 
@@ -852,8 +917,10 @@ def event_already_processed(event_id: str) -> bool:
                 (event_id, "pending", now(), "{}"),
             )
             return False
-        except sqlite3.IntegrityError:
-            return True
+        except Exception as exc:
+            if db_integrity_error(exc):
+                return True
+            raise
 
 
 def store_stripe_event(event: dict[str, Any], error: str | None = None) -> None:
@@ -1035,13 +1102,14 @@ def enforce_site_limit(user: dict[str, Any]) -> None:
         raise HTTPException(status_code=402, detail="Site limit reached for current plan")
 
 
-def row_to_job(row: sqlite3.Row) -> JobRecord:
+def row_to_job(row: Any) -> JobRecord:
     output = json.loads(row["output_json"]) if row["output_json"] else None
+    keys = row_keys(row)
     return JobRecord(
         id=row["id"],
-        user_id=row["user_id"] if "user_id" in row.keys() else None,
-        project_id=row["project_id"] if "project_id" in row.keys() else None,
-        site_id=row["site_id"] if "site_id" in row.keys() else None,
+        user_id=row["user_id"] if "user_id" in keys else None,
+        project_id=row["project_id"] if "project_id" in keys else None,
+        site_id=row["site_id"] if "site_id" in keys else None,
         module=row["module"],
         label=row["label"],
         url=row["url"],
@@ -1051,7 +1119,7 @@ def row_to_job(row: sqlite3.Row) -> JobRecord:
         command=row["command"],
         output=output,
         error=row["error"],
-        share_token=row["share_token"] if "share_token" in row.keys() else None,
+        share_token=row["share_token"] if "share_token" in keys else None,
     )
 
 
@@ -1539,7 +1607,14 @@ async def ready() -> dict[str, Any]:
     with db() as conn:
         db_ok = conn.execute("SELECT 1 AS ok").fetchone()["ok"] == 1
         queued = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").fetchone()["n"]
-    return {"ready": bool(runtime.get("ready")) and db_ok, "database": db_ok, "runtime": runtime, "queued_jobs": queued}
+    return {
+        "ready": bool(runtime.get("ready")) and db_ok,
+        "database": db_ok,
+        "database_backend": DATABASE_BACKEND,
+        "database_location": "DATABASE_URL" if DATABASE_BACKEND == "postgres" else str(DB_PATH),
+        "runtime": runtime,
+        "queued_jobs": queued,
+    }
 
 
 @app.get("/api/modules")
@@ -1570,8 +1645,10 @@ async def signup(request: AuthRequest) -> dict[str, Any]:
                 (user_id, email, request.name or email.split("@")[0], hash_password(request.password), "free", 0, role, "dev", created),
             )
             row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
-    except sqlite3.IntegrityError as exc:
-        raise HTTPException(status_code=409, detail="An account already exists for this email") from exc
+    except Exception as exc:
+        if db_integrity_error(exc):
+            raise HTTPException(status_code=409, detail="An account already exists for this email") from exc
+        raise
     verification_token = create_email_verification_token(user_id)
     send_verification_email(user_id, email, verification_token)
     log_event(user_id, "auth.signup", "user", user_id, {"role": role})

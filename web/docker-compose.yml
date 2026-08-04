@@ -9,6 +9,7 @@ services:
       CLAUDE_SEO_WEB_AUTO_WORKER: "0"
       CLAUDE_SEO_WEB_DATA: /data
       CLAUDE_SEO_WEB_ORIGINS: http://127.0.0.1:8001,http://localhost:8001
+      DATABASE_URL: ${DATABASE_URL:-}
     ports:
       - "8001:8001"
     volumes:
@@ -23,6 +24,7 @@ services:
     environment:
       CLAUDE_SEO_WEB_AUTO_WORKER: "0"
       CLAUDE_SEO_WEB_DATA: /data
+      DATABASE_URL: ${DATABASE_URL:-}
     command: ["python", "-m", "web.worker"]
     volumes:
       - claude_seo_web_data:/data
