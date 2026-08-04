@@ -5,65 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Claude SEO Console</title>
   <style>
-    :root {
-      --bg:#edf2f4; --surface:#ffffff; --surface-2:#f7faf8; --soft:#e8f0ec; --ink:#101816; --muted:#65736d;
-      --line:#d8e0dc; --line-strong:#bfcac4; --green:#1f7a59; --green-strong:#175e46; --green-soft:#dff3ea;
-      --blue:#286aa8; --blue-soft:#ddebf8; --amber:#9f661e; --amber-soft:#f7ead8;
-      --red:#b13f3f; --red-soft:#f5dddd; --dark:#111816; --dark-2:#17211e; --dark-line:#2c3a36;
-      --shadow:0 20px 55px rgba(20,32,28,.12); --shadow-soft:0 10px 30px rgba(20,32,28,.08);
+    :root{
+      --ink:#0d1412;--muted:#6a7671;--line:#d9e1dd;--line-strong:#b8c5bf;
+      --surface:#ffffff;--surface-soft:#f6f9f7;--canvas:#eef3f1;
+      --dark:#0d1412;--dark-2:#111c18;--dark-3:#172620;--dark-line:#2a3934;
+      --green:#19a06f;--green-deep:#126a50;--green-soft:#def6eb;
+      --blue:#2b70b8;--blue-soft:#dfedfb;--gold:#b18133;--gold-soft:#f8ecd8;
+      --red:#b94a48;--red-soft:#f7dfdf;--shadow:0 24px 70px rgba(15,25,21,.14);
+      --shadow-soft:0 10px 28px rgba(15,25,21,.08);
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
-    *{box-sizing:border-box} body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink)}
-    body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(31,122,89,.07),transparent 28%,rgba(40,106,168,.08) 66%,transparent);opacity:.9}
-    button,input,select{font:inherit} button{cursor:pointer;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease}
-    button:hover{transform:translateY(-1px)} button:disabled{cursor:not-allowed;opacity:.65;transform:none}
-    .auth{min-height:100vh;display:grid;grid-template-columns:minmax(340px,510px) minmax(0,1fr);position:relative;overflow:hidden}
-    .auth-panel{padding:48px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(180deg,#111816,#17211e);border-right:1px solid var(--dark-line);color:#f8fbf9;position:relative;z-index:1}
-    .auth-panel:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(180deg,#000,transparent 82%);pointer-events:none}
-    .auth-panel>*{position:relative}.auth-art{display:grid;place-items:center;padding:52px;background:radial-gradient(circle at 18% 20%,rgba(31,122,89,.12),transparent 28%),linear-gradient(135deg,#f8fbf9,#e9f0ed);position:relative}
-    .brand{display:flex;align-items:center;gap:12px;margin-bottom:28px}.mark{width:42px;height:42px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,var(--green),#286aa8);color:#fff;font-weight:900;box-shadow:0 10px 28px rgba(31,122,89,.28)}
-    .brand strong{display:block;font-size:15px}.brand span{display:block;color:#9aa8a2;font-size:12px;margin-top:2px}
-    h1{margin:0;font-size:34px;line-height:1.08;letter-spacing:0}.auth-panel .subtitle{color:#aebbb5}
-    .subtitle{margin:10px 0 26px;color:var(--muted);font-size:14px;line-height:1.55;max-width:720px}
-    .card{background:rgba(255,255,255,.93);border:1px solid rgba(216,224,220,.9);border-radius:8px;box-shadow:var(--shadow);backdrop-filter:blur(12px)}
-    .form{padding:20px;display:grid;gap:13px;background:#f9fbfa;color:var(--ink);box-shadow:0 24px 70px rgba(0,0,0,.28)}
-    label{display:block;color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:8px}
-    input,select{width:100%;height:44px;border:1px solid var(--line-strong);border-radius:8px;padding:0 12px;background:#fff;color:var(--ink);outline:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
-    input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(31,122,89,.14)}
-    .primary{height:46px;border:0;border-radius:8px;padding:0 16px;background:linear-gradient(135deg,var(--green),var(--green-strong));color:#fff;font-weight:900;display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;box-shadow:0 14px 28px rgba(31,122,89,.26)}
-    .primary:hover{box-shadow:0 18px 36px rgba(31,122,89,.32)}.secondary{height:38px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);font-weight:850;padding:0 12px;box-shadow:var(--shadow-soft)}
-    .secondary:hover{border-color:#9db0a8;background:#f8fbf9}.auth-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--soft)}
-    .auth-switch button{height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-weight:900}.auth-switch button.active{background:var(--surface);color:var(--ink);box-shadow:0 2px 10px rgba(31,44,34,.08)}
-    .auth-note{border:1px solid var(--line);border-radius:8px;background:#f3f7f5;padding:12px;color:var(--muted);font-size:12px;line-height:1.45}.auth-note code{color:var(--ink);font-weight:800}
-    .link{border:0;background:transparent;color:var(--green);font-weight:900;padding:0}.muted{color:var(--muted);font-size:12px;line-height:1.45}
-    .system-map{width:min(760px,100%);min-height:560px;border:1px solid rgba(31,44,34,.12);border-radius:8px;background:#101816;box-shadow:0 34px 90px rgba(17,24,22,.25);position:relative;overflow:hidden;color:#dce8e2}
-    .system-map:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px);background-size:38px 38px;animation:gridshift 18s linear infinite;opacity:.75}
-    .system-map:after{content:"";position:absolute;left:-20%;right:-20%;height:170px;top:18%;background:linear-gradient(180deg,transparent,rgba(31,122,89,.24),transparent);animation:scan 6s ease-in-out infinite}
-    .map-panel{position:absolute;border:1px solid rgba(216,224,220,.16);border-radius:8px;background:rgba(247,250,248,.08);backdrop-filter:blur(14px);box-shadow:0 18px 50px rgba(0,0,0,.16);z-index:1}
-    .map-core{left:50%;top:50%;width:250px;min-height:170px;transform:translate(-50%,-50%);padding:20px}.map-core strong{display:block;font-size:28px;margin:8px 0}.map-core span,.map-panel p{color:#aebbb5;font-size:13px;line-height:1.45}
-    .map-stat{padding:16px;width:180px}.map-stat strong{display:block;font-size:24px}.map-stat span{color:#aebbb5;font-size:12px}.stat-a{left:36px;top:40px}.stat-b{right:42px;top:74px}.stat-c{left:70px;bottom:76px}.stat-d{right:64px;bottom:44px}
-    .rail{position:absolute;z-index:1;background:linear-gradient(90deg,transparent,rgba(70,154,207,.72),transparent);height:1px;animation:pulse 2.8s ease-in-out infinite}.rail.one{left:160px;right:220px;top:172px}.rail.two{left:126px;right:125px;bottom:166px}.rail.three{width:1px;height:210px;left:50%;top:172px;background:linear-gradient(180deg,transparent,rgba(31,122,89,.72),transparent)}
-    .app{min-height:100vh;display:grid;grid-template-columns:280px minmax(0,1fr);position:relative}.hidden{display:none!important}
-    .sidebar{position:sticky;top:0;height:100vh;padding:22px 18px;background:linear-gradient(180deg,#111816,#17211e);border-right:1px solid var(--dark-line);display:flex;flex-direction:column;gap:22px;color:#f8fbf9}
-    .brand.small{margin-bottom:0}.sidebar .brand span{color:#9aa8a2}.sidebar .mark{box-shadow:0 8px 24px rgba(40,106,168,.24)}
-    .nav{display:grid;gap:6px}.nav button{height:40px;border:1px solid transparent;background:transparent;border-radius:8px;color:#aebbb5;text-align:left;padding:0 10px;display:flex;align-items:center;gap:10px}.nav button.active,.nav button:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.08);color:#fff;font-weight:850}
-    .dot{width:8px;height:8px;border-radius:99px;background:#44534e;box-shadow:0 0 0 4px rgba(255,255,255,.03)}.active .dot{background:#49c897;box-shadow:0 0 0 4px rgba(73,200,151,.14)}
-    .runtime{margin-top:auto;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:14px;background:rgba(255,255,255,.06)}.runtime-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.runtime-title{font-size:13px;font-weight:900}.runtime .muted{color:#aebbb5}
-    .badge{display:inline-flex;align-items:center;height:24px;border-radius:99px;padding:0 9px;background:var(--amber-soft);color:var(--amber);font-size:11px;font-weight:900;white-space:nowrap;text-transform:uppercase}.badge.ok{background:var(--green-soft);color:var(--green)}.badge.bad{background:var(--red-soft);color:var(--red)}.badge.info{background:var(--blue-soft);color:var(--blue)}
-    main{min-width:0;padding:28px;background:linear-gradient(180deg,#f7faf8,#edf2f4)}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px}.topbar h1{font-size:28px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .icon-button{height:38px;min-width:38px;border:1px solid var(--line);background:var(--surface);border-radius:8px;color:var(--ink);box-shadow:var(--shadow-soft);font-size:12px;font-weight:900;padding:0 12px}
-    .launcher{padding:18px;display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.45fr) minmax(160px,.36fr) auto;gap:14px;align-items:end;margin-bottom:18px;border-top:3px solid var(--green)}
-    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.kpi{padding:15px;min-height:96px;position:relative;overflow:hidden}.kpi:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--green),var(--blue))}.kpi span{color:var(--muted);font-size:11px;font-weight:900;text-transform:uppercase}.kpi strong{display:block;font-size:25px;margin-top:10px;line-height:1}
-    .workspace{display:grid;grid-template-columns:minmax(330px,430px) minmax(0,1fr);gap:18px;align-items:start}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 10px}.section-title h2{margin:0;font-size:15px}
-    .stack{display:grid;gap:10px}.module{padding:14px;display:grid;gap:12px}.module>.badge{justify-self:start}.module-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.module h3{margin:0;font-size:14px;line-height:1.35}.module p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}.module:hover{border-color:#b7c6bf}
-    .results{min-height:690px;overflow:hidden}.results-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(180deg,#fff,#f7faf8)}.tabs{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px;background:var(--soft)}.tabs button{height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted);padding:0 10px;font-size:12px;font-weight:900}.tabs button.active{background:var(--surface);color:var(--ink);box-shadow:0 2px 8px rgba(31,44,34,.08)}
-    .result-body{padding:16px}.empty{min-height:560px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:40px;background:linear-gradient(135deg,rgba(31,122,89,.06),transparent)}.empty strong{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}.findings{display:grid;gap:10px}.finding{border:1px solid var(--line);border-radius:8px;background:#fbfcfa;padding:13px;box-shadow:0 4px 16px rgba(31,44,34,.04)}.finding-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}.finding-title{font-size:14px;font-weight:900}
-    pre{margin:0;max-height:420px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#111816;border:1px solid #2c3a36;border-radius:8px;padding:12px;color:#dce8e2;font-size:12px;line-height:1.55}
-    .toast{position:fixed;right:22px;bottom:22px;display:none;max-width:min(420px,calc(100vw - 44px));background:#111816;color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:13px 15px;box-shadow:var(--shadow);font-size:14px;z-index:10}
-    .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .85s linear infinite;display:none}.busy .spinner{display:inline-block}
-    @keyframes spin{to{transform:rotate(360deg)}}@keyframes scan{0%,100%{transform:translateY(-120px);opacity:.15}50%{transform:translateY(300px);opacity:.65}}@keyframes gridshift{to{background-position:38px 38px}}@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
-    @media(max-width:1080px){.auth,.app{grid-template-columns:1fr}.auth-art{display:none}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--dark-line)}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.runtime{margin-top:0}.launcher,.workspace{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:660px){main,.auth-panel{padding:20px}.topbar,.results-head,.module-top{display:grid}.toolbar{justify-content:flex-start}.kpis{grid-template-columns:1fr}.tabs{width:100%}.tabs button{flex:1}h1{font-size:28px}.topbar h1{font-size:24px}}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:var(--canvas)}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 22% 12%,rgba(25,160,111,.12),transparent 28%),radial-gradient(circle at 84% 4%,rgba(43,112,184,.10),transparent 25%),linear-gradient(180deg,#f8fbfa,#eef3f1)}
+    button,input,select{font:inherit}button{cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease,color .18s ease}button:hover{transform:translateY(-1px)}button:disabled{opacity:.62;cursor:not-allowed;transform:none}
+    .hidden{display:none!important}.view{display:none}.view.active{display:block}.muted{color:var(--muted);font-size:12px;line-height:1.5}.link{border:0;background:transparent;color:var(--green-deep);font-weight:900;padding:0;text-align:left}
+    .auth{min-height:100vh;display:grid;grid-template-columns:minmax(360px,520px) minmax(0,1fr);position:relative;overflow:hidden}
+    .auth-panel{padding:52px;background:linear-gradient(180deg,var(--dark),var(--dark-2));color:#f8fbfa;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--dark-line);position:relative}
+    .auth-panel:before,.sidebar:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(180deg,#000,transparent 86%);pointer-events:none}
+    .auth-panel>*{position:relative}.brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}.mark{width:44px;height:44px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,var(--green),var(--blue));color:#fff;font-weight:950;box-shadow:0 16px 34px rgba(25,160,111,.22)}
+    .brand strong{display:block;font-size:15px}.brand span{display:block;color:#9eaaa5;font-size:12px;margin-top:2px}
+    h1{margin:0;font-size:35px;line-height:1.08;letter-spacing:0}.subtitle{margin:10px 0 28px;color:var(--muted);font-size:14px;line-height:1.55;max-width:760px}.auth-panel .subtitle{color:#b8c5bf}
+    .card{background:rgba(255,255,255,.94);border:1px solid rgba(217,225,221,.9);border-radius:8px;box-shadow:var(--shadow);backdrop-filter:blur(14px)}
+    .form{padding:20px;display:grid;gap:13px;background:#f9fbfa;color:var(--ink);box-shadow:0 28px 90px rgba(0,0,0,.28)}
+    label{display:block;margin-bottom:8px;color:var(--muted);font-size:11px;font-weight:950;text-transform:uppercase}input,select{width:100%;height:44px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);padding:0 12px;outline:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(25,160,111,.16)}
+    .primary{height:46px;border:0;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--green-deep));color:#fff;font-weight:950;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 16px 34px rgba(25,160,111,.26);white-space:nowrap}.primary:hover{box-shadow:0 20px 42px rgba(25,160,111,.34)}
+    .secondary{height:38px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink);font-weight:900;padding:0 12px;box-shadow:var(--shadow-soft)}.secondary:hover{border-color:#91aaa0;background:#f9fbfa}
+    .auth-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:8px;background:#e9f0ec}.auth-switch button{height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-weight:950}.auth-switch button.active{background:#fff;color:var(--ink);box-shadow:0 2px 12px rgba(15,25,21,.08)}
+    .auth-note{border:1px solid var(--line);border-radius:8px;background:#f2f7f5;padding:12px;color:var(--muted);font-size:12px;line-height:1.45}.auth-note code{color:var(--ink);font-weight:850}
+    .auth-art{display:grid;place-items:center;padding:56px;position:relative}.system-map{width:min(780px,100%);min-height:580px;background:#0d1412;border:1px solid rgba(13,20,18,.16);border-radius:8px;box-shadow:0 36px 110px rgba(13,20,18,.26);position:relative;overflow:hidden;color:#e4eee9}
+    .system-map:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px);background-size:38px 38px;animation:gridshift 18s linear infinite}.system-map:after{content:"";position:absolute;left:-20%;right:-20%;height:170px;top:14%;background:linear-gradient(180deg,transparent,rgba(25,160,111,.25),transparent);animation:scan 6s ease-in-out infinite}
+    .map-panel{position:absolute;z-index:1;border:1px solid rgba(255,255,255,.16);border-radius:8px;background:rgba(255,255,255,.08);backdrop-filter:blur(14px);box-shadow:0 18px 55px rgba(0,0,0,.18)}.map-core{left:50%;top:50%;width:270px;min-height:178px;transform:translate(-50%,-50%);padding:20px}.map-core strong{display:block;font-size:30px;line-height:1.08;margin:8px 0}.map-core span,.map-panel p,.map-stat span{color:#b8c5bf;font-size:13px;line-height:1.45}.map-stat{padding:16px;width:182px}.map-stat strong{display:block;font-size:24px}.stat-a{left:38px;top:42px}.stat-b{right:44px;top:78px}.stat-c{left:76px;bottom:82px}.stat-d{right:66px;bottom:48px}.rail{position:absolute;z-index:1;height:1px;background:linear-gradient(90deg,transparent,rgba(43,112,184,.8),transparent);animation:pulse 2.8s ease-in-out infinite}.rail.one{left:160px;right:220px;top:176px}.rail.two{left:128px;right:128px;bottom:170px}.rail.three{width:1px;height:220px;left:50%;top:176px;background:linear-gradient(180deg,transparent,rgba(25,160,111,.8),transparent)}
+    .app{min-height:100vh;display:grid;grid-template-columns:292px minmax(0,1fr);position:relative}.sidebar{position:sticky;top:0;height:100vh;padding:22px 18px;background:linear-gradient(180deg,#0d1412,#121e1a);border-right:1px solid var(--dark-line);display:flex;flex-direction:column;gap:22px;color:#fff;overflow:hidden}.sidebar>*{position:relative}.brand.small{margin-bottom:0}.sidebar .brand span{color:#9eaaa5}
+    .nav{display:grid;gap:7px}.nav button{height:42px;border:1px solid transparent;background:transparent;border-radius:8px;color:#aebbb5;text-align:left;padding:0 10px;display:flex;align-items:center;gap:10px;font-weight:850}.nav button.active,.nav button:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.10);color:#fff}.dot{width:8px;height:8px;border-radius:99px;background:#43534d;box-shadow:0 0 0 4px rgba(255,255,255,.035)}.active .dot{background:#49d69d;box-shadow:0 0 0 4px rgba(73,214,157,.15)}
+    .runtime{margin-top:auto;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.06);padding:14px}.runtime-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.runtime-title{font-size:13px;font-weight:950}.runtime .muted{color:#aebbb5}
+    main{min-width:0;padding:28px;background:linear-gradient(180deg,#fbfcfb,#eef3f1)}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}.topbar h1{font-size:29px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.icon-button{height:38px;min-width:38px;border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--ink);box-shadow:var(--shadow-soft);font-size:12px;font-weight:950;padding:0 13px}
+    .badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 9px;background:var(--gold-soft);color:var(--gold);font-size:11px;font-weight:950;text-transform:uppercase;white-space:nowrap}.badge.ok{background:var(--green-soft);color:var(--green-deep)}.badge.bad{background:var(--red-soft);color:var(--red)}.badge.info{background:var(--blue-soft);color:var(--blue)}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.kpi{padding:15px;min-height:98px;position:relative;overflow:hidden}.kpi:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--green),var(--blue))}.kpi span{display:block;color:var(--muted);font-size:11px;font-weight:950;text-transform:uppercase}.kpi strong{display:block;margin-top:10px;font-size:25px;line-height:1}
+    .panel{padding:18px}.launcher{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.42fr) minmax(160px,.34fr) auto;gap:14px;align-items:end;margin-bottom:18px;border-top:3px solid var(--green)}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 12px}.section-title h2{margin:0;font-size:15px}.workspace{display:grid;grid-template-columns:minmax(330px,430px) minmax(0,1fr);gap:18px;align-items:start}.stack{display:grid;gap:10px}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.three-col{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .module{padding:14px;display:grid;gap:12px}.module>.badge{justify-self:start}.module-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.module h3,.entity h3{margin:0;font-size:14px;line-height:1.35}.module p,.entity p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}.module:hover,.entity:hover{border-color:#adc0b7}
+    .entity{padding:15px;display:grid;gap:12px}.entity-meta{display:flex;gap:8px;flex-wrap:wrap}.entity-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .results{min-height:690px;overflow:hidden}.results-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(180deg,#fff,#f7faf8)}.tabs{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px;background:#e9f0ec}.tabs button{height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted);padding:0 10px;font-size:12px;font-weight:950}.tabs button.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(15,25,21,.08)}
+    .result-body{padding:16px}.empty{min-height:560px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:40px;background:linear-gradient(135deg,rgba(25,160,111,.06),transparent)}.empty strong{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}.findings{display:grid;gap:10px}.finding{border:1px solid var(--line);border-radius:8px;background:#fbfcfa;padding:13px;box-shadow:0 4px 16px rgba(15,25,21,.04)}.finding-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}.finding-title{font-size:14px;font-weight:950}
+    pre{margin:0;max-height:420px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#0d1412;border:1px solid #2a3934;border-radius:8px;padding:12px;color:#dce8e2;font-size:12px;line-height:1.55}.toast{position:fixed;right:22px;bottom:22px;display:none;max-width:min(420px,calc(100vw - 44px));background:#0d1412;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:13px 15px;box-shadow:var(--shadow);font-size:14px;z-index:10}.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .85s linear infinite;display:none}.busy .spinner{display:inline-block}
+    @keyframes spin{to{transform:rotate(360deg)}}@keyframes scan{0%,100%{transform:translateY(-120px);opacity:.15}50%{transform:translateY(315px);opacity:.65}}@keyframes gridshift{to{background-position:38px 38px}}@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+    @media(max-width:1120px){.auth,.app{grid-template-columns:1fr}.auth-art{display:none}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--dark-line)}.nav{grid-template-columns:repeat(4,minmax(0,1fr))}.runtime{margin-top:0}.launcher,.workspace,.two-col,.three-col{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:660px){main,.auth-panel{padding:20px}.topbar,.results-head,.module-top{display:grid}.toolbar{justify-content:flex-start}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis{grid-template-columns:1fr}.tabs{width:100%}.tabs button{flex:1}h1{font-size:28px}.topbar h1{font-size:24px}.launcher{gap:12px}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
   </style>
 </head>
@@ -72,7 +59,7 @@
     <div class="auth-panel">
       <div class="brand"><div class="mark">CS</div><div><strong>Claude SEO Console</strong><span>Public SaaS workspace</span></div></div>
       <h1>Client SEO audits, packaged for teams.</h1>
-      <p class="subtitle">Create an account, add a client project, save a site, and run protected audits with shareable report links.</p>
+      <p class="subtitle">Premium workspaces for client sites, technical audits, protected reports, and shareable executive output.</p>
       <div class="card form">
         <div class="auth-switch"><button class="active" id="showSignupBtn" type="button">Create Account</button><button id="showLoginBtn" type="button">Log In</button></div>
         <div id="authNameWrap"><label for="authName">Name</label><input id="authName" placeholder="Agency or user name"></div>
@@ -85,14 +72,8 @@
     </div>
     <div class="auth-art">
       <div class="system-map" aria-hidden="true">
-        <div class="rail one"></div>
-        <div class="rail two"></div>
-        <div class="rail three"></div>
-        <div class="map-panel map-core">
-          <span>CLAUDE SEO</span>
-          <strong>Audit Control Plane</strong>
-          <p>Queued analysis, protected reports, account isolation, and billing state in one operational surface.</p>
-        </div>
+        <div class="rail one"></div><div class="rail two"></div><div class="rail three"></div>
+        <div class="map-panel map-core"><span>CLAUDE SEO</span><strong>Audit Control Plane</strong><p>Queued analysis, protected reports, account isolation, and billing state in one operational surface.</p></div>
         <div class="map-panel map-stat stat-a"><strong>11</strong><span>Audit modules</span></div>
         <div class="map-panel map-stat stat-b"><strong>Ready</strong><span>Runtime status</span></div>
         <div class="map-panel map-stat stat-c"><strong>Private</strong><span>Tenant sessions</span></div>
@@ -104,77 +85,137 @@
   <div class="app hidden" id="appView">
     <aside class="sidebar">
       <div class="brand small"><div class="mark">CS</div><div><strong>Claude SEO Console</strong><span id="userLine">Customer workspace</span></div></div>
-      <nav class="nav"><button class="active" type="button"><span class="dot"></span>Audit Desk</button><button type="button"><span class="dot"></span>Projects</button><button type="button"><span class="dot"></span>Sites</button><button type="button"><span class="dot"></span>Reports</button></nav>
+      <nav class="nav">
+        <button class="active" type="button" data-view="audit"><span class="dot"></span>Audit Desk</button>
+        <button type="button" data-view="projects"><span class="dot"></span>Projects</button>
+        <button type="button" data-view="sites"><span class="dot"></span>Sites</button>
+        <button type="button" data-view="reports"><span class="dot"></span>Reports</button>
+      </nav>
       <div class="runtime"><div class="runtime-top"><div class="runtime-title">Runtime</div><span class="badge" id="runtimeBadge">Checking</span></div><div class="muted" id="runtimeDetail">Connecting.</div></div>
     </aside>
     <main>
       <div class="topbar">
-        <div><h1>SEO audit command center</h1><p class="subtitle">Select a client project and site, run an audit, then share the completed report with stakeholders.</p></div>
+        <div><h1 id="viewTitle">SEO audit command center</h1><p class="subtitle" id="viewSubtitle">Select a client project and site, run an audit, then share the completed report with stakeholders.</p></div>
         <div class="toolbar"><button class="icon-button" id="copyBtn" type="button" title="Copy result">Copy</button><button class="icon-button" id="logoutBtn" type="button" title="Log out">Exit</button></div>
       </div>
-      <section class="card launcher">
-        <div><label for="projectSelect">Client Project</label><select id="projectSelect"></select></div>
-        <div><label for="newProject">New Project</label><input id="newProject" placeholder="Client name"></div>
-        <button class="secondary" id="createProjectBtn" type="button">Add Project</button>
-        <div></div>
-        <div><label for="siteSelect">Saved Site</label><select id="siteSelect"></select></div>
-        <div><label for="url">Website URL</label><input id="url" type="url" placeholder="https://client.com"></div>
-        <button class="secondary" id="saveSiteBtn" type="button">Save Site</button>
-        <div><label for="moduleSelect">Audit Skill</label><select id="moduleSelect"></select></div>
-        <button class="primary" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
-      </section>
-      <section class="card module">
-        <div class="section-title"><h2>Plan and Billing</h2><span class="badge info" id="planBadge">free</span></div>
-        <p class="muted" id="planDetail">Free plan. Upgrade buttons open hosted checkout when billing is configured.</p>
-        <div class="toolbar"><button class="secondary" data-plan="pro" type="button">Upgrade Pro</button><button class="secondary" data-plan="agency" type="button">Upgrade Agency</button></div>
-      </section>
       <section class="kpis">
         <div class="card kpi"><span>Total Runs</span><strong id="runsKpi">0</strong></div>
-        <div class="card kpi"><span>Active Status</span><strong id="statusKpi">Idle</strong></div>
+        <div class="card kpi"><span>Projects</span><strong id="projectsKpi">0</strong></div>
+        <div class="card kpi"><span>Sites</span><strong id="sitesKpi">0</strong></div>
         <div class="card kpi"><span>Runtime</span><strong id="runtimeKpi">--</strong></div>
-        <div class="card kpi"><span>Browser</span><strong id="browserKpi">--</strong></div>
       </section>
-      <div class="workspace">
-        <section>
-          <div class="section-title"><h2>Audit Modules</h2><span class="badge info" id="moduleCount">0 modules</span></div>
-          <div class="stack" id="modules"></div>
-          <section class="card module"><div class="section-title"><h2>Recent Runs</h2><span class="badge" id="historyCount">0 saved</span></div><div class="stack" id="historyList"></div></section>
+
+      <section class="view active" id="view-audit">
+        <section class="card panel launcher">
+          <div><label for="projectSelect">Client Project</label><select id="projectSelect"></select></div>
+          <div><label for="newProject">New Project</label><input id="newProject" placeholder="Client name"></div>
+          <button class="secondary" id="createProjectBtn" type="button">Add Project</button>
+          <div></div>
+          <div><label for="siteSelect">Saved Site</label><select id="siteSelect"></select></div>
+          <div><label for="url">Website URL</label><input id="url" type="url" placeholder="https://client.com"></div>
+          <button class="secondary" id="saveSiteBtn" type="button">Save Site</button>
+          <div><label for="moduleSelect">Audit Skill</label><select id="moduleSelect"></select></div>
+          <button class="primary" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
         </section>
-        <section class="card results">
-          <div class="results-head"><strong id="resultTitle">Analysis Output</strong><div class="tabs"><button class="active" type="button" data-tab="summary">Summary</button><button type="button" data-tab="raw">Raw JSON</button></div></div>
-          <div class="result-body"><div class="empty" id="emptyState"><div><strong>No audit selected</strong>Run a module or open a recent report.</div></div><div class="findings" id="summaryView" hidden></div><div class="finding" id="rawView" hidden><pre id="rawOutput"></pre></div></div>
+        <section class="card panel module">
+          <div class="section-title"><h2>Plan and Billing</h2><span class="badge info" id="planBadge">free</span></div>
+          <p class="muted" id="planDetail">Free plan. Upgrade buttons open hosted checkout when billing is configured.</p>
+          <div class="toolbar"><button class="secondary" data-plan="pro" type="button">Upgrade Pro</button><button class="secondary" data-plan="agency" type="button">Upgrade Agency</button></div>
         </section>
-      </div>
+        <div class="workspace">
+          <section>
+            <div class="section-title"><h2>Audit Modules</h2><span class="badge info" id="moduleCount">0 modules</span></div>
+            <div class="stack" id="modules"></div>
+          </section>
+          <section class="card results">
+            <div class="results-head"><strong id="resultTitle">Analysis Output</strong><div class="tabs"><button class="active" type="button" data-tab="summary">Summary</button><button type="button" data-tab="raw">Raw JSON</button></div></div>
+            <div class="result-body"><div class="empty" id="emptyState"><div><strong>No audit selected</strong>Run a module or open a recent report.</div></div><div class="findings" id="summaryView" hidden></div><div class="finding" id="rawView" hidden><pre id="rawOutput"></pre></div></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-projects">
+        <div class="two-col">
+          <section class="card panel">
+            <div class="section-title"><h2>Create Client Project</h2><span class="badge info">Workspace</span></div>
+            <div class="stack"><div><label for="projectNamePanel">Project Name</label><input id="projectNamePanel" placeholder="Enterprise client or brand"></div><button class="primary" id="createProjectPanelBtn" type="button">Create Project</button></div>
+          </section>
+          <section class="card panel">
+            <div class="section-title"><h2>Project Portfolio</h2><span class="badge" id="projectCount">0 active</span></div>
+            <p class="muted">Use projects to separate clients, campaigns, or business units before saving sites and running reports.</p>
+          </section>
+        </div>
+        <div class="section-title" style="margin-top:18px"><h2>All Projects</h2><span class="badge info" id="projectListCount">0 projects</span></div>
+        <div class="three-col" id="projectGrid"></div>
+      </section>
+
+      <section class="view" id="view-sites">
+        <div class="two-col">
+          <section class="card panel">
+            <div class="section-title"><h2>Save A Site</h2><span class="badge info">Inventory</span></div>
+            <div class="stack">
+              <div><label for="siteProjectPanel">Project</label><select id="siteProjectPanel"></select></div>
+              <div><label for="siteUrlPanel">Website URL</label><input id="siteUrlPanel" type="url" placeholder="https://client.com"></div>
+              <button class="primary" id="saveSitePanelBtn" type="button">Save Site</button>
+            </div>
+          </section>
+          <section class="card panel">
+            <div class="section-title"><h2>Site Coverage</h2><span class="badge" id="siteCount">0 saved</span></div>
+            <p class="muted">Saved sites can be selected from the Audit Desk, keeping repeat customer analysis quick and organized.</p>
+          </section>
+        </div>
+        <div class="section-title" style="margin-top:18px"><h2>All Sites</h2><span class="badge info" id="siteListCount">0 sites</span></div>
+        <div class="three-col" id="siteGrid"></div>
+      </section>
+
+      <section class="view" id="view-reports">
+        <div class="workspace">
+          <section>
+            <div class="section-title"><h2>Report History</h2><span class="badge" id="historyCount">0 saved</span></div>
+            <div class="stack" id="historyList"></div>
+          </section>
+          <section class="card results">
+            <div class="results-head"><strong>Report Preview</strong><span class="badge info">Shareable</span></div>
+            <div class="result-body"><div class="findings" id="reportPreview"></div></div>
+          </section>
+        </div>
+      </section>
     </main>
   </div>
   <div class="toast" id="toast"></div>
   <script>
-    const state={token:localStorage.getItem('seo_token'),user:null,modules:[],projects:[],sites:[],latest:null,activeTab:'summary',poll:null,authMode:'signup'};
-    const $=id=>document.getElementById(id);
-    const authHeaders=()=>state.token?{Authorization:`Bearer ${state.token}`}:{};
+    const state={token:localStorage.getItem('seo_token'),user:null,modules:[],projects:[],sites:[],history:[],latest:null,activeTab:'summary',poll:null,authMode:'signup',view:'audit'};
+    const viewMeta={audit:['SEO audit command center','Select a client project and site, run an audit, then share the completed report with stakeholders.'],projects:['Client project portfolio','Create and manage premium customer workspaces before running SEO analysis.'],sites:['Managed site inventory','Save customer domains and reuse them across repeat audits and reporting workflows.'],reports:['Executive report library','Review completed audits, open share links, and export deliverables for clients.']};
+    const $=id=>document.getElementById(id);const authHeaders=()=>state.token?{Authorization:`Bearer ${state.token}`}:{};
     async function fetchJson(url,options={}){const headers={...(options.headers||{}),...authHeaders()};const resp=await fetch(url,{...options,headers});const data=await resp.json();if(!resp.ok)throw new Error(data.detail||JSON.stringify(data));return data}
     async function init(){const billing=new URLSearchParams(location.search).get('billing');if(billing==='success')toast('Payment received. Your plan will update after Stripe confirms it.');if(billing==='cancelled')toast('Checkout cancelled.');await loadHealth();await loadModules();if(state.token){try{const me=await fetchJson('/api/me');state.user=me.user;showApp();renderPlan(me);await refreshWorkspace()}catch{localStorage.removeItem('seo_token');state.token=null}}}
-    async function loadHealth(){try{const d=await fetchJson('/api/health');$('runtimeBadge').textContent=d.ready?'Ready':'Setup';$('runtimeBadge').className=`badge ${d.ready?'ok':'bad'}`;$('runtimeKpi').textContent=d.ready?'Ready':'Setup';$('browserKpi').textContent=d.browser_ready?'Ready':'Off';$('runtimeDetail').textContent=d.ready?`Python ${d.python_version||'--'} · ${d.mode||'local'} mode`:(d.reasons||['Runtime setup required']).join(', ')}catch{}}
+    async function loadHealth(){try{const d=await fetchJson('/api/health');$('runtimeBadge').textContent=d.ready?'Ready':'Setup';$('runtimeBadge').className=`badge ${d.ready?'ok':'bad'}`;$('runtimeKpi').textContent=d.ready?'Ready':'Setup';$('runtimeDetail').textContent=d.ready?`Python ${d.python_version||'--'} · ${d.mode||'local'} mode`:(d.reasons||['Runtime setup required']).join(', ')}catch{}}
     async function loadModules(){state.modules=await fetchJson('/api/modules');$('moduleSelect').innerHTML=state.modules.map(m=>`<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');$('moduleCount').textContent=`${state.modules.length} modules`;$('modules').innerHTML=state.modules.map(m=>`<article class="card module"><div class="module-top"><div><h3>${esc(m.label)}</h3><p>${esc(m.description)}</p></div><button class="secondary" data-module="${esc(m.id)}" type="button">Run</button></div><span class="badge info">${esc(m.category)}</span></article>`).join('');document.querySelectorAll('[data-module]').forEach(b=>b.onclick=()=>startJob(b.dataset.module))}
-    function showApp(){$('authView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent=state.user?.email||'Customer workspace'}
+    function showApp(){$('authView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent=state.user?.email||'Customer workspace';setView(state.view)}
     function setAuthMode(mode){state.authMode=mode;$('showSignupBtn').classList.toggle('active',mode==='signup');$('showLoginBtn').classList.toggle('active',mode==='login');$('authNameWrap').classList.toggle('hidden',mode==='login');$('authSubmitBtn').textContent=mode==='signup'?'Create Account':'Log In';$('authHelp').textContent=mode==='signup'?'Already have an account? Click Log In above, then enter the same email and password.':'Log in with an account you already created in this local SQLite database.'}
     function authPayload(){const email=$('authEmail').value.trim().toLowerCase();const password=$('authPassword').value;if(!email||!email.includes('@')){toast('Enter a valid email address.');return null}if(password.length<8){toast('Password must be at least 8 characters.');return null}return{email,password,name:$('authName').value.trim()}}
     async function auth(mode){const payload=authPayload();if(!payload)return;try{const data=await fetchJson(`/api/auth/${mode}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});state.token=data.token;state.user=data.user;localStorage.setItem('seo_token',state.token);showApp();renderPlan({user:data.user});await refreshWorkspace();toast(mode==='signup'?'Account created.':'Logged in.')}catch(e){const message=mode==='login'&&e.message.includes('Invalid email or password')?'No matching account found. Create an account first, or check the email and password.':e.message;toast(message)}}
+    function setView(view){state.view=view;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${view}`));$('viewTitle').textContent=viewMeta[view][0];$('viewSubtitle').textContent=viewMeta[view][1];if(view==='reports')renderReportPreview(state.latest);if(view==='projects')renderProjects();if(view==='sites')renderSites()}
     function renderPlan(data){const user=data.user||state.user;const limits=data.plan_limits||{};$('planBadge').textContent=user?.plan||'free';$('planDetail').textContent=`${user?.email_verified?'Verified':'Email not verified'} · ${limits.hourly_jobs||'--'} audits/hour · ${limits.projects||'--'} projects · ${limits.sites||'--'} sites`}
     async function upgrade(plan){try{const checkout=await fetchJson('/api/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});if(checkout.checkout_url){location.assign(checkout.checkout_url);return}const data=await fetchJson('/api/billing/dev-upgrade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});state.user=data.user;renderPlan(data);toast(`Upgraded to ${plan}.`)}catch(e){toast(e.message)}}
-    async function refreshWorkspace(){await Promise.all([loadProjects(),loadSites(),loadHistory()])}
-    async function loadProjects(){state.projects=await fetchJson('/api/projects');$('projectSelect').innerHTML=state.projects.length?state.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join(''):'<option value="">No projects yet</option>'}
-    async function loadSites(){const project=$('projectSelect').value;const path=project?`/api/sites?project_id=${encodeURIComponent(project)}`:'/api/sites';state.sites=await fetchJson(path);$('siteSelect').innerHTML=state.sites.length?state.sites.map(s=>`<option value="${esc(s.id)}" data-url="${esc(s.url)}">${esc(s.name||s.url)}</option>`).join(''):'<option value="">No saved sites</option>';if(state.sites[0])$('url').value=state.sites[0].url}
-    async function createProject(){const name=$('newProject').value.trim();if(!name)return toast('Enter a client project name.');await fetchJson('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});$('newProject').value='';await loadProjects();await loadSites();toast('Project added.')}
-    async function saveSite(){const project_id=$('projectSelect').value;const url=targetUrl();if(!project_id)return toast('Create or select a project first.');if(!url)return;await fetchJson('/api/sites',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id,url,name:new URL(url).hostname})});await loadSites();toast('Site saved.')}
-    async function loadHistory(){const rows=await fetchJson('/api/history');$('historyCount').textContent=`${rows.length} saved`;$('runsKpi').textContent=String(rows.length);window.historyRows={};$('historyList').innerHTML=rows.length?rows.slice(0,8).map(r=>{window.historyRows[r.id]=r;return`<article class="finding"><div class="finding-top"><button class="link" data-history="${esc(r.id)}" type="button">${esc(r.label)}</button><span class="badge ${r.status==='complete'?'ok':r.status==='error'?'bad':''}">${esc(r.status)}</span></div><p class="muted">${esc(r.url)}</p></article>`}).join(''):'<p class="muted">Completed runs will appear here.</p>';document.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>renderJob(window.historyRows[b.dataset.history]))}
+    async function refreshWorkspace(){await Promise.all([loadProjects(),loadSites(),loadHistory()]);updateKpis()}
+    async function loadProjects(){state.projects=await fetchJson('/api/projects');const options=state.projects.length?state.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join(''):'<option value="">No projects yet</option>';$('projectSelect').innerHTML=options;$('siteProjectPanel').innerHTML=options;renderProjects()}
+    async function loadSites(){const project=$('projectSelect').value;state.sites=await fetchJson('/api/sites');const filtered=project?state.sites.filter(s=>s.project_id===project):state.sites;$('siteSelect').innerHTML=filtered.length?filtered.map(s=>`<option value="${esc(s.id)}" data-url="${esc(s.url)}">${esc(s.name||s.url)}</option>`).join(''):'<option value="">No saved sites</option>';if(filtered[0])$('url').value=filtered[0].url;renderSites()}
+    async function createProject(inputId='newProject'){const input=$(inputId);const name=input.value.trim();if(!name)return toast('Enter a client project name.');await fetchJson('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});input.value='';await refreshWorkspace();toast('Project added.')}
+    async function saveSite(projectId=null,urlValue=null){const project_id=projectId||$('projectSelect').value;const url=urlValue||targetUrl();if(!project_id)return toast('Create or select a project first.');if(!url)return;await fetchJson('/api/sites',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id,url,name:new URL(url).hostname})});await refreshWorkspace();toast('Site saved.')}
+    async function loadHistory(){state.history=await fetchJson('/api/history');renderHistory();renderReportPreview(state.latest||state.history[0]||null)}
+    function renderProjects(){if(!$('projectGrid'))return;$('projectCount').textContent=`${state.projects.length} active`;$('projectListCount').textContent=`${state.projects.length} projects`;$('projectGrid').innerHTML=state.projects.length?state.projects.map(p=>{const sites=state.sites.filter(s=>s.project_id===p.id).length;return`<article class="card entity"><div><h3>${esc(p.name)}</h3><p>${sites} saved sites · created ${date(p.created_at)}</p></div><div class="entity-meta"><span class="badge info">Project</span><span class="badge">${sites} sites</span></div><div class="entity-actions"><button class="secondary" data-open-project="${esc(p.id)}" type="button">Open Audit Desk</button></div></article>`}).join(''):'<article class="card entity"><h3>No projects yet</h3><p>Create your first client workspace to begin.</p></article>';document.querySelectorAll('[data-open-project]').forEach(b=>b.onclick=()=>{setView('audit');$('projectSelect').value=b.dataset.openProject;loadSites()})}
+    function renderSites(){if(!$('siteGrid'))return;$('siteCount').textContent=`${state.sites.length} saved`;$('siteListCount').textContent=`${state.sites.length} sites`;$('siteGrid').innerHTML=state.sites.length?state.sites.map(s=>{const project=state.projects.find(p=>p.id===s.project_id);return`<article class="card entity"><div><h3>${esc(s.name||new URL(s.url).hostname)}</h3><p>${esc(s.url)}</p></div><div class="entity-meta"><span class="badge info">${esc(project?.name||'Project')}</span></div><div class="entity-actions"><button class="secondary" data-audit-site="${esc(s.id)}" type="button">Audit Site</button></div></article>`}).join(''):'<article class="card entity"><h3>No sites saved</h3><p>Add a site here or from the Audit Desk.</p></article>';document.querySelectorAll('[data-audit-site]').forEach(b=>b.onclick=()=>{const s=state.sites.find(x=>x.id===b.dataset.auditSite);if(!s)return;setView('audit');$('projectSelect').value=s.project_id;loadSites().then(()=>{$('siteSelect').value=s.id;$('url').value=s.url})})}
+    function renderHistory(){const rows=state.history;$('historyCount').textContent=`${rows.length} saved`;$('historyList').innerHTML=rows.length?rows.map(r=>`<article class="card entity"><div class="finding-top"><button class="link" data-history="${esc(r.id)}" type="button">${esc(r.label)}</button><span class="badge ${r.status==='complete'?'ok':r.status==='error'?'bad':''}">${esc(r.status)}</span></div><p>${esc(r.url)}</p><div class="entity-actions"><button class="secondary" data-report-open="${esc(r.id)}" type="button">Preview</button></div></article>`).join(''):'<article class="card entity"><h3>No reports yet</h3><p>Completed audits will appear here.</p></article>';document.querySelectorAll('[data-history], [data-report-open]').forEach(b=>b.onclick=()=>{const job=state.history.find(r=>r.id===(b.dataset.history||b.dataset.reportOpen));renderJob(job);setView('reports');renderReportPreview(job)})}
+    function renderReportPreview(job){if(!$('reportPreview'))return;if(!job){$('reportPreview').innerHTML='<article class="finding"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select a report from history.</p></article>';return}const share=job.share_url?`${location.origin}${job.share_url}`:'Available after completion';$('reportPreview').innerHTML=`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status==='complete'?'ok':job.status==='error'?'bad':''}">${esc(job.status)}</span></div><pre>${esc(`${job.url}\nShare: ${share}\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json`)}</pre></article>${(job.findings||[]).slice(0,6).map(f=>`<article class="finding"><div class="finding-title">${esc(f.title)}</div><p class="muted">${esc(f.detail||'')}</p></article>`).join('')}`}
+    function updateKpis(){$('runsKpi').textContent=String(state.history.length);$('projectsKpi').textContent=String(state.projects.length);$('sitesKpi').textContent=String(state.sites.length)}
     function targetUrl(){const value=$('url').value.trim();if(!value){toast('Enter a website URL.');return null}try{return new URL(value).toString()}catch{toast('Use a full URL such as https://example.com.');return null}}
-    async function startJob(module=$('moduleSelect').value){const url=targetUrl();if(!url)return;setBusy(true);$('statusKpi').textContent='Queued';try{const payload={url,module,project_id:$('projectSelect').value||null,site_id:$('siteSelect').value||null};const job=await fetchJson('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});renderJob(job);pollJob(job.id)}catch(e){setBusy(false);$('statusKpi').textContent='Error';toast(e.message)}}
-    function pollJob(id){clearInterval(state.poll);state.poll=setInterval(async()=>{try{const job=await fetchJson(`/api/jobs/${id}`);renderJob(job);if(['complete','error'].includes(job.status)){clearInterval(state.poll);setBusy(false);await loadHistory()}}catch(e){clearInterval(state.poll);setBusy(false);toast(e.message)}},1200)}
-    function renderJob(job){state.latest=job;$('emptyState').hidden=true;$('resultTitle').textContent=`${job.label} · ${job.status}`;$('statusKpi').textContent=title(job.status);$('rawOutput').textContent=JSON.stringify(job,null,2);const share=job.share_url?`${location.origin}${job.share_url}`:'Available after completion';const exports=job.status==='complete'?`\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json`:'';$('summaryView').innerHTML=`<article class="finding"><div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status==='complete'?'ok':job.status==='error'?'bad':''}">${esc(job.status)}</span></div><pre>${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command||'Pending'}\nShare: ${share}${exports}`)}</pre></article>${(job.findings||[]).map(f=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${tone(f.severity)}">${esc(f.severity)}</span></div><pre>${esc(f.detail||'')}</pre></article>`).join('')}`;updateTabs()}
+    async function startJob(module=$('moduleSelect').value){const url=targetUrl();if(!url)return;setBusy(true);try{const payload={url,module,project_id:$('projectSelect').value||null,site_id:$('siteSelect').value||null};const job=await fetchJson('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});renderJob(job);pollJob(job.id)}catch(e){setBusy(false);toast(e.message)}}
+    function pollJob(id){clearInterval(state.poll);state.poll=setInterval(async()=>{try{const job=await fetchJson(`/api/jobs/${id}`);renderJob(job);if(['complete','error'].includes(job.status)){clearInterval(state.poll);setBusy(false);await loadHistory();updateKpis()}}catch(e){clearInterval(state.poll);setBusy(false);toast(e.message)}},1200)}
+    function renderJob(job){if(!job)return;state.latest=job;$('emptyState').hidden=true;$('resultTitle').textContent=`${job.label} · ${job.status}`;$('rawOutput').textContent=JSON.stringify(job,null,2);const share=job.share_url?`${location.origin}${job.share_url}`:'Available after completion';const exports=job.status==='complete'?`\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json`:'';$('summaryView').innerHTML=`<article class="finding"><div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status==='complete'?'ok':job.status==='error'?'bad':''}">${esc(job.status)}</span></div><pre>${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command||'Pending'}\nShare: ${share}${exports}`)}</pre></article>${(job.findings||[]).map(f=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${tone(f.severity)}">${esc(f.severity)}</span></div><pre>${esc(f.detail||'')}</pre></article>`).join('')}`;renderReportPreview(job);updateTabs()}
     function setBusy(v){$('startBtn').disabled=v;$('startBtn').classList.toggle('busy',v);document.querySelectorAll('[data-module]').forEach(b=>b.disabled=v)}
-    function updateTabs(){$('summaryView').hidden=state.activeTab!=='summary';$('rawView').hidden=state.activeTab!=='raw'} function tone(s){return ['critical','high'].includes(s)?'bad':s==='info'?'info':''} function title(v){return v?v.charAt(0).toUpperCase()+v.slice(1):''} function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))} function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',3300)}
-    $('showSignupBtn').onclick=()=>setAuthMode('signup');$('showLoginBtn').onclick=()=>setAuthMode('login');$('authSubmitBtn').onclick=()=>auth(state.authMode);$('logoutBtn').onclick=async()=>{try{await fetchJson('/api/auth/logout',{method:'POST'})}catch{}localStorage.removeItem('seo_token');location.reload()};$('createProjectBtn').onclick=createProject;$('saveSiteBtn').onclick=saveSite;$('projectSelect').onchange=loadSites;$('siteSelect').onchange=()=>{const o=$('siteSelect').selectedOptions[0];if(o?.dataset.url)$('url').value=o.dataset.url};$('startBtn').onclick=()=>startJob();document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>upgrade(b.dataset.plan));$('copyBtn').onclick=async()=>{if(!state.latest)return toast('Run or open an audit first.');await navigator.clipboard.writeText(JSON.stringify(state.latest,null,2));toast('Result copied.')};document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{state.activeTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateTabs()});
+    function updateTabs(){$('summaryView').hidden=state.activeTab!=='summary';$('rawView').hidden=state.activeTab!=='raw'}function tone(s){return['critical','high'].includes(s)?'bad':s==='info'?'info':''}function date(ts){return new Date(ts*1000).toLocaleDateString()}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',3300)}
+    $('showSignupBtn').onclick=()=>setAuthMode('signup');$('showLoginBtn').onclick=()=>setAuthMode('login');$('authSubmitBtn').onclick=()=>auth(state.authMode);$('logoutBtn').onclick=async()=>{try{await fetchJson('/api/auth/logout',{method:'POST'})}catch{}localStorage.removeItem('seo_token');location.reload()};$('createProjectBtn').onclick=()=>createProject('newProject');$('createProjectPanelBtn').onclick=()=>createProject('projectNamePanel');$('saveSiteBtn').onclick=()=>saveSite();$('saveSitePanelBtn').onclick=()=>saveSite($('siteProjectPanel').value,$('siteUrlPanel').value.trim());$('projectSelect').onchange=loadSites;$('siteSelect').onchange=()=>{const o=$('siteSelect').selectedOptions[0];if(o?.dataset.url)$('url').value=o.dataset.url};$('startBtn').onclick=()=>startJob();document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>upgrade(b.dataset.plan));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));$('copyBtn').onclick=async()=>{if(!state.latest)return toast('Run or open an audit first.');await navigator.clipboard.writeText(JSON.stringify(state.latest,null,2));toast('Result copied.')};document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{state.activeTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateTabs()});
     init();
   </script>
 </body>
