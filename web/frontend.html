@@ -696,7 +696,7 @@
               <label for="authPassword" id="authPasswordLabel">Password</label>
               <input class="input" id="authPassword" type="password" placeholder="At least 8 characters" autocomplete="current-password">
             </div>
-            <button class="btn btn-primary" id="authSubmitBtn" type="button">Create Account</button>
+            <button class="btn btn-primary" id="authSubmitBtn" type="button"><span class="spinner"></span><span>Create Account</span></button>
             <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
               <button class="btn btn-ghost btn-xs" id="forgotPasswordBtn" type="button">Forgot password?</button>
             </div>
@@ -1125,6 +1125,11 @@
       $('appView').classList.add('hidden');
       $('mobileNav').classList.add('hidden');
       setAuthMode(mode);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+        const input = mode === 'signup' ? ($('authName') || $('authEmail')) : $('authEmail');
+        input?.focus();
+      }, 100);
     }
 
     function enterApp() {
@@ -1158,7 +1163,13 @@
       $('authPasswordLabel').textContent = resetConf ? 'New Password' : 'Password';
       $('authTitle').textContent = login ? 'Welcome back' : signup ? 'Create your account' : resetReq ? 'Reset password' : 'Set new password';
       $('authSubtitle').textContent = login ? 'Log in to your workspace.' : signup ? 'Start running SEO audits in minutes.' : resetReq ? 'Enter your email to receive a reset link.' : 'Choose a new password.';
-      $('authSubmitBtn').textContent = login ? 'Log In' : signup ? 'Create Account' : resetReq ? 'Send Reset Link' : 'Reset Password';
+      
+      const btn = $('authSubmitBtn');
+      if (btn) {
+        const labelText = login ? 'Log In' : signup ? 'Create Account' : resetReq ? 'Send Reset Link' : 'Reset Password';
+        btn.innerHTML = `<span class="spinner"></span><span>${labelText}</span>`;
+      }
+      
       const authToggle = $('authToggle');
       if (authToggle) {
         authToggle.style.display = (login || signup) ? '' : 'none';
@@ -1182,10 +1193,15 @@
       const btn = $('authSubmitBtn');
       if (!btn) return;
       btn.disabled = active;
-      if (active) btn.textContent = 'Working...';
-      else {
+      btn.classList.toggle('busy', active);
+      const span = btn.querySelector('span:not(.spinner)');
+      if (span) {
         const mode = S.authMode;
-        btn.textContent = mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : mode === 'reset-request' ? 'Send Reset Link' : 'Reset Password';
+        if (active) {
+          span.textContent = mode === 'login' ? 'Logging in...' : mode === 'signup' ? 'Creating account...' : 'Processing...';
+        } else {
+          span.textContent = mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : mode === 'reset-request' ? 'Send Reset Link' : 'Reset Password';
+        }
       }
     }
 
@@ -1225,6 +1241,8 @@
         if (mode === 'signup') {
           await fetchJson('/api/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password, name: name || null }) });
           setAuthMode('login');
+          if ($('authEmail')) $('authEmail').value = email;
+          if ($('authPassword')) $('authPassword').value = '';
           showAuthError('Account created. Please log in.', 'ok');
           return;
         }
@@ -1234,6 +1252,7 @@
         enterApp(); renderPlan({ user: data.user });
         await refreshWorkspace();
         if (S.inviteToken) await acceptInvitation();
+        toast('Logged in successfully.');
       } catch(e) {
         let msg = e.message;
         if (mode === 'login' && msg.includes('Invalid email or password')) {
