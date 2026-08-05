@@ -1882,10 +1882,31 @@ def escape_html(value: object) -> str:
     )
 
 
-def render_report_html(job: JobRecord, print_auto: bool = False) -> str:
+def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: bool = False) -> str:
     public = public_job(job)
     findings = public.get("findings") or []
-    print_script = "<script>window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 500); });</script>" if print_auto else ""
+    print_script = ""
+    if download_pdf:
+        print_script = """
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const element = document.querySelector('main');
+                const opt = {
+                    margin:       10,
+                    filename:     'seovault_report.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0d1117' },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            }, 1000);
+        });
+        </script>
+        """
+    elif print_auto:
+        print_script = "<script>window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 500); });</script>"
     
     fix_html = ""
     article_html = ""
@@ -2701,9 +2722,9 @@ async def export_job_json(job_id: str, request: Request, token: str | None = Que
 
 
 @app.get("/api/jobs/{job_id}/report.html")
-async def export_job_html(job_id: str, request: Request, token: str | None = Query(None), print: int | None = Query(None)) -> HTMLResponse:
+async def export_job_html(job_id: str, request: Request, token: str | None = Query(None), print: int | None = Query(None), download_pdf: int | None = Query(None)) -> HTMLResponse:
     record = resolve_job_access(job_id, request, token)
-    return HTMLResponse(render_report_html(record, print_auto=bool(print)))
+    return HTMLResponse(render_report_html(record, print_auto=bool(print), download_pdf=bool(download_pdf)))
 
 
 @app.get("/api/history")
@@ -2787,12 +2808,12 @@ async def shared_report(share_token: str) -> dict[str, Any]:
 
 
 @app.get("/share/{share_token}")
-async def public_shared_report_page(share_token: str, print: int | None = Query(None)) -> HTMLResponse:
+async def public_shared_report_page(share_token: str, print: int | None = Query(None), download_pdf: int | None = Query(None)) -> HTMLResponse:
     with db() as conn:
         row = conn.execute("SELECT * FROM jobs WHERE share_token = ? AND status = 'complete'", (share_token,)).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Shared report not found")
-    return HTMLResponse(render_report_html(row_to_job(row), print_auto=bool(print)))
+    return HTMLResponse(render_report_html(row_to_job(row), print_auto=bool(print), download_pdf=bool(download_pdf)))
 
 
 @app.get("/api/share/{share_token}/export.json")
