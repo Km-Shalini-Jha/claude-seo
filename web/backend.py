@@ -1506,21 +1506,63 @@ def build_findings(module: str, output: dict[str, Any] | None, error: str | None
     data = parse_stdout(output)
     findings: list[dict[str, str]] = []
     if module == "overview" and isinstance(data, dict):
-        if not data.get("title"):
-            findings.append({"severity": "high", "title": "Missing title", "detail": "The page has no title tag."})
-        if not data.get("meta_description"):
-            findings.append({"severity": "medium", "title": "Missing meta description", "detail": "No meta description was detected."})
-        h1_count = len(data.get("h1") or [])
-        if h1_count != 1:
-            findings.append({"severity": "medium", "title": "H1 count needs review", "detail": f"Detected {h1_count} H1 tags."})
-        missing_alt = sum(1 for image in (data.get("images") or []) if not image.get("alt"))
+        images = data.get("images") or []
+        missing_alt = [img.get("src") for img in images if not img.get("alt")]
         if missing_alt:
-            findings.append({"severity": "medium", "title": "Image alt text gaps", "detail": f"{missing_alt} images are missing alt text."})
-        if not data.get("schema"):
-            findings.append({"severity": "low", "title": "No JSON-LD schema detected", "detail": "Structured data was not found in the page source."})
+            findings.append({
+                "severity": "medium",
+                "title": "Image alt text gaps",
+                "detail": "Images missing descriptive alt tags:\n" + "\n".join(f"- Source: {src}" for src in missing_alt[:10])
+            })
+            
+        title = data.get("title")
+        if not title:
+            findings.append({"severity": "high", "title": "Missing Title Tag", "detail": "The page has no title tag."})
+
+        desc = data.get("meta_description")
+        if not desc:
+            findings.append({"severity": "medium", "title": "Missing Meta Description", "detail": "No meta description tag was detected in HTML source."})
+            
+        if title:
+            findings.append({"severity": "info", "title": "On-Page Title Tag", "detail": f"Parsed Title: '{title}' ({len(title)} characters)."})
+            
+        if desc:
+            findings.append({"severity": "info", "title": "Meta Description Tag", "detail": f"Parsed Meta Description: '{desc}' ({len(desc)} characters)."})
+            
+        canonical = data.get("canonical")
+        if canonical:
+            findings.append({"severity": "info", "title": "Canonical Tag Configuration", "detail": f"Canonical URL: {canonical}"})
+            
+        h1_list = data.get("h1") or []
+        if h1_list:
+            findings.append({"severity": "info", "title": "H1 Headings Discovered", "detail": "Parsed H1 Tags:\n" + "\n".join(f"- {h}" for h in h1_list)})
+            if len(h1_list) > 1:
+                findings.append({"severity": "medium", "title": "H1 Count Review", "detail": f"Detected {len(h1_list)} H1 tags. Recommended: Keep exactly 1 H1 per page."})
+        else:
+            findings.append({"severity": "medium", "title": "Missing H1 Heading", "detail": "No H1 heading element was found."})
+            
+        h2_list = data.get("h2") or []
+        if h2_list:
+            findings.append({"severity": "info", "title": "H2 Headings Discovered", "detail": "Parsed H2 Tags:\n" + "\n".join(f"- {h}" for h in h2_list[:10])})
+            
+        if not missing_alt and images:
+            findings.append({"severity": "info", "title": "Image Alt Text Validation", "detail": f"All {len(images)} images have valid alt text tags."})
+            
+        schema = data.get("schema") or []
+        if schema:
+            findings.append({"severity": "info", "title": "Structured Data Verification", "detail": f"Detected {len(schema)} valid JSON-LD schema blocks."})
+        else:
+            findings.append({"severity": "low", "title": "No JSON-LD Schema Detected", "detail": "Structured data was not found in the page source."})
+            
+        word_count = data.get("word_count")
+        if word_count:
+            findings.append({"severity": "info", "title": "Content Word Count", "detail": f"Total page word count: {word_count} words."})
     elif module == "sitemap" and isinstance(data, dict):
         if data.get("error"):
             findings.append({"severity": "high", "title": "Sitemap discovery error", "detail": str(data["error"])})
+        elif data.get("sitemaps"):
+            s_list = data["sitemaps"] if isinstance(data["sitemaps"], list) else [data["sitemaps"]]
+            findings.append({"severity": "info", "title": f"Discovered Sitemaps ({len(s_list)})", "detail": "Sitemap URLs:\n" + "\n".join(f"- {s}" for s in s_list)})
         elif not data.get("found"):
             findings.append({"severity": "medium", "title": "No sitemap found", "detail": "No valid sitemap was discovered from robots.txt or common locations."})
     elif module == "full-audit" and isinstance(data, dict):
@@ -1538,11 +1580,27 @@ def build_findings(module: str, output: dict[str, Any] | None, error: str | None
     elif isinstance(data, dict):
         if data.get("error"):
             findings.append({"severity": "high", "title": "Module returned an error", "detail": str(data["error"])})
-        for key in ("issues", "warnings", "recommendations"):
+        if data.get("sitemaps"):
+            s_list = data["sitemaps"] if isinstance(data["sitemaps"], list) else [data["sitemaps"]]
+            findings.append({"severity": "info", "title": f"Discovered Sitemaps ({len(s_list)})", "detail": "Sitemap URLs:\n" + "\n".join(f"- {s}" for s in s_list)})
+        if data.get("backlinks"):
+            b_list = data["backlinks"] if isinstance(data["backlinks"], list) else [data["backlinks"]]
+            findings.append({"severity": "info", "title": f"Verified Backlinks List ({len(b_list)})", "detail": "\n".join(f"- {b}" for b in b_list[:10])})
+        if data.get("keywords"):
+            k_list = data["keywords"] if isinstance(data["keywords"], list) else [data["keywords"]]
+            findings.append({"severity": "info", "title": "Extracted Keywords & Density", "detail": "\n".join(f"- {k}" for k in k_list[:10])})
+        for key in ("issues", "warnings", "recommendations", "findings"):
             value = data.get(key)
             if isinstance(value, list):
                 for item in value[:8]:
-                    findings.append({"severity": "medium", "title": key.title(), "detail": str(item)})
+                    if isinstance(item, dict):
+                        findings.append({
+                            "severity": item.get("severity", "medium"),
+                            "title": item.get("title", key.title()),
+                            "detail": item.get("detail", str(item))
+                        })
+                    else:
+                        findings.append({"severity": "medium", "title": key.title(), "detail": str(item)})
     
     if not findings:
         domain = urllib.parse.urlparse(url).netloc or url.replace("https://", "").replace("http://", "").split("/")[0] or "Target Site"
@@ -1891,14 +1949,16 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         <script>
         window.addEventListener('load', function() {
+            document.body.classList.add('pdf-export-mode');
             setTimeout(function() {
                 const element = document.querySelector('main');
                 const opt = {
-                    margin:       10,
+                    margin:       [10, 10, 10, 10],
                     filename:     'seovault_report.pdf',
                     image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0d1117' },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
                 };
                 html2pdf().set(opt).from(element).save();
             }, 1000);
@@ -1946,7 +2006,7 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
         f"""
         <article class="finding">
           <div><strong>{escape_html(item.get('title'))}</strong><span class="badge">{escape_html(item.get('severity'))}</span></div>
-          <p>{escape_html(item.get('detail'))}</p>
+          <p style="white-space:pre-wrap">{escape_html(item.get('detail'))}</p>
         </article>
         """
         for item in findings
@@ -1965,10 +2025,28 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
     h1{{margin:0;font-size:28px;color:#f0f6fc;letter-spacing:-0.5px}} h2{{color:#58a6ff;font-size:20px;margin-top:24px}} p{{color:#8b949e;line-height:1.55}}
     .badge{{display:inline-flex;border-radius:99px;padding:4px 10px;background:rgba(46,160,67,0.15);color:#3fb950;font-weight:800;font-size:11px;text-transform:uppercase}}
     .grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}}
-    .card,.finding{{background:#161b22;border:1px solid #30363d;border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.4)}}
+    .card,.finding{{background:#161b22;border:1px solid #30363d;border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.4);page-break-inside:avoid !important;break-inside:avoid !important}}
     .card{{padding:16px}} .card span{{display:block;color:#8b949e;font-size:11px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;color:#f0f6fc;word-break:break-word}}
     .findings{{display:grid;gap:10px;margin-top:12px}} .finding{{padding:16px}} .finding div{{display:flex;justify-content:space-between;gap:12px}} .finding span{{color:#d29922;font-size:11px;font-weight:800;text-transform:uppercase}}
-    pre{{white-space:pre-wrap;word-break:break-word;background:#010409;border:1px solid #30363d;border-radius:8px;padding:14px;max-height:520px;overflow:auto;font-size:12px;color:#e6edf3}}
+    pre{{white-space:pre-wrap !important;word-break:break-all !important;background:#010409;border:1px solid #30363d;border-radius:8px;padding:14px;max-height:none !important;overflow:visible !important;font-size:12px;color:#e6edf3;page-break-inside:avoid !important;break-inside:avoid !important}}
+    
+    body.pdf-export-mode{{background:#ffffff !important;color:#0f172a !important}}
+    body.pdf-export-mode main{{padding:10px !important}}
+    body.pdf-export-mode h1,body.pdf-export-mode h2,body.pdf-export-mode h3{{color:#1e293b !important}}
+    body.pdf-export-mode p{{color:#334155 !important}}
+    body.pdf-export-mode .card,body.pdf-export-mode .finding{{background:#f8fafc !important;border:1px solid #cbd5e1 !important;color:#0f172a !important;box-shadow:none !important}}
+    body.pdf-export-mode .card strong{{color:#0f172a !important}}
+    body.pdf-export-mode pre{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid #cbd5e1 !important}}
+    body.pdf-export-mode .badge{{background:#dcfce7 !important;color:#15803d !important}}
+
+    @media print {{
+      body{{background:#ffffff !important;color:#0f172a !important}}
+      h1,h2,h3{{color:#1e293b !important}} p{{color:#334155 !important}}
+      .card,.finding{{background:#f8fafc !important;border:1px solid #cbd5e1 !important;color:#0f172a !important;box-shadow:none !important}}
+      .card strong{{color:#0f172a !important}}
+      pre{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid #cbd5e1 !important}}
+      .badge{{background:#dcfce7 !important;color:#15803d !important}}
+    }}
     @media(max-width:760px){{header,.grid{{display:grid;grid-template-columns:1fr}}}}
   </style>
 </head>
