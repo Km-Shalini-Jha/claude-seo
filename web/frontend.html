@@ -1,320 +1,1605 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="color-scheme: dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Claude SEO Console</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RankForge Command — Premium SEO intelligence platform. Run Client SEO audits, track performance, and generate actionable reports.">
+  <title>RankForge Command — SEO Intelligence Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --ink:#eef7f2;--muted:#94a49d;--line:rgba(255,255,255,.10);--line-strong:rgba(204,220,211,.24);
-      --surface:rgba(13,24,20,.92);--surface-soft:rgba(18,32,27,.86);--canvas:#07100d;
-      --dark:#07100d;--dark-2:#0c1713;--dark-3:#13231e;--dark-line:rgba(255,255,255,.10);
-      --green:#19a06f;--green-deep:#126a50;--green-soft:#def6eb;
-      --blue:#2b70b8;--blue-soft:#dfedfb;--gold:#b18133;--gold-soft:#f8ecd8;
-      --red:#e1716f;--red-soft:#3a1e20;--shadow:0 28px 80px rgba(0,0,0,.38);
-      --shadow-soft:0 14px 34px rgba(0,0,0,.22);
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    /* ═══════════════════════════════════════════
+       DESIGN SYSTEM
+       ═══════════════════════════════════════════ */
+    :root {
+      --font: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      /* Palette */
+      --bg: #030712; --bg-2: #0a0f1a; --bg-3: #111827;
+      --surface: rgba(15, 23, 42, 0.65); --surface-solid: #0f172a;
+      --surface-hover: rgba(15, 23, 42, 0.85);
+      --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.12);
+      --border-focus: rgba(16,185,129,0.5);
+      --text: #f1f5f9; --text-muted: #94a3b8; --text-dim: #64748b;
+      /* Accents */
+      --emerald: #10b981; --emerald-soft: rgba(16,185,129,0.15);
+      --cyan: #06b6d4; --cyan-soft: rgba(6,182,212,0.15);
+      --gold: #f59e0b; --gold-soft: rgba(245,158,11,0.15);
+      --red: #ef4444; --red-soft: rgba(239,68,68,0.15);
+      --blue: #3b82f6; --blue-soft: rgba(59,130,246,0.15);
+      --purple: #a855f7;
+      /* Gradients */
+      --grad-brand: linear-gradient(135deg, #06b6d4, #10b981 50%, #f59e0b);
+      --grad-hero: linear-gradient(135deg, #030712 0%, #0c1425 30%, #091a1f 60%, #030712 100%);
+      --grad-card: linear-gradient(180deg, rgba(15,23,42,0.7), rgba(10,15,26,0.7));
+      /* Effects */
+      --glass: blur(20px) saturate(1.6);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+      --shadow-glow: 0 0 40px rgba(16,185,129,0.15);
+      --radius: 12px; --radius-sm: 8px; --radius-pill: 999px;
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
     }
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:var(--canvas)}
-    body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 12%,rgba(25,160,111,.18),transparent 28%),radial-gradient(circle at 84% 0%,rgba(43,112,184,.16),transparent 26%),linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.026) 1px,transparent 1px),linear-gradient(180deg,#07100d,#0b1612 48%,#08120f);background-size:auto,auto,36px 36px,36px 36px,auto}
-    button,input,select{font:inherit}button{cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease,color .18s ease}button:hover{transform:translateY(-1px)}button:disabled{opacity:.62;cursor:not-allowed;transform:none}
-    .hidden{display:none!important}.view{display:none}.view.active{display:block}.muted{color:var(--muted);font-size:12px;line-height:1.5}.link{border:0;background:transparent;color:#60d39e;font-weight:900;padding:0;text-align:left}.danger{color:#ff9a98;border-color:rgba(225,113,111,.42)}.danger:hover{background:rgba(225,113,111,.12);border-color:rgba(225,113,111,.7)}.form-error{border:1px solid rgba(225,113,111,.48);border-radius:8px;background:rgba(225,113,111,.12);color:#ffc4c3;font-size:12px;font-weight:850;line-height:1.45;padding:10px 12px}.form-error.ok{border-color:rgba(73,214,157,.5);background:rgba(25,160,111,.13);color:#aef2d4}
-    .auth{height:100vh;min-height:700px;display:grid;place-items:center;position:relative;overflow:auto;padding:22px;background:linear-gradient(180deg,#050a08,#0b1713)}
-    .auth:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 20%,rgba(25,160,111,.24),transparent 26%),radial-gradient(circle at 78% 74%,rgba(43,112,184,.18),transparent 25%),linear-gradient(rgba(255,255,255,.042) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.032) 1px,transparent 1px);background-size:auto,auto,34px 34px,34px 34px;pointer-events:none}
-    .auth-panel{width:min(520px,calc(100vw - 36px));padding:0;color:#f8fbfa;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2}
-    .sidebar:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(180deg,#000,transparent 86%);pointer-events:none}
-    .auth-panel>*{position:relative}.auth-panel .brand{justify-content:center;margin-bottom:14px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}.mark{width:44px;height:44px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,var(--green),var(--blue));color:#fff;font-weight:950;box-shadow:0 16px 34px rgba(25,160,111,.22)}
-    .brand strong{display:block;font-size:15px}.brand span{display:block;color:#9eaaa5;font-size:12px;margin-top:2px}
-    h1{margin:0;font-size:35px;line-height:1.08;letter-spacing:0}.subtitle{margin:10px 0 28px;color:var(--muted);font-size:14px;line-height:1.55;max-width:760px}.auth-panel h1,.auth-panel .subtitle{text-align:center}.auth-panel .subtitle{color:#b8c5bf;margin:8px auto 18px}.auth-panel h1{font-size:34px}
-    .card{background:linear-gradient(180deg,rgba(18,31,27,.94),rgba(10,18,16,.94));border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);backdrop-filter:blur(18px)}
-    .form{padding:18px;display:grid;gap:11px;background:linear-gradient(180deg,rgba(18,31,27,.98),rgba(9,17,14,.98));color:var(--ink);box-shadow:0 28px 90px rgba(0,0,0,.38)}
-    label{display:block;margin-bottom:7px;color:var(--muted);font-size:11px;font-weight:950;text-transform:uppercase}input,select{width:100%;height:42px;border:1px solid var(--line-strong);border-radius:8px;background:rgba(255,255,255,.065);color:var(--ink);padding:0 12px;outline:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}input::placeholder{color:#74827c}input:focus,select:focus{border-color:#49d69d;box-shadow:0 0 0 3px rgba(25,160,111,.16)}select option{background:#0d1714;color:#eef7f2}input:disabled{opacity:.72}
-    .primary{height:46px;border:0;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--green-deep));color:#fff;font-weight:950;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 16px 34px rgba(25,160,111,.26);white-space:nowrap}.primary:hover{box-shadow:0 20px 42px rgba(25,160,111,.34)}
-    .secondary{height:38px;border:1px solid var(--line-strong);border-radius:8px;background:rgba(255,255,255,.055);color:var(--ink);font-weight:900;padding:0 12px;box-shadow:var(--shadow-soft)}.secondary:hover{border-color:rgba(73,214,157,.48);background:rgba(255,255,255,.09)}
-    .auth-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.055)}.auth-switch button{height:34px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-weight:950}.auth-switch button.active{background:rgba(255,255,255,.12);color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
-    .auth-note{display:none}.auth-art{position:absolute;inset:0;display:grid;place-items:center;padding:42px;opacity:.20;filter:saturate(.9);pointer-events:none}.system-map{width:min(1160px,90vw);min-height:min(640px,72vh);background:#0d1412;border:1px solid rgba(255,255,255,.12);border-radius:8px;box-shadow:0 36px 110px rgba(13,20,18,.26);position:relative;overflow:hidden;color:#e4eee9}
-    .system-map:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.055) 1px,transparent 1px);background-size:38px 38px;animation:gridshift 18s linear infinite}.system-map:after{content:"";position:absolute;left:-20%;right:-20%;height:170px;top:14%;background:linear-gradient(180deg,transparent,rgba(25,160,111,.25),transparent);animation:scan 6s ease-in-out infinite}
-    .map-panel{display:none}.rail{position:absolute;z-index:1;height:1px;background:linear-gradient(90deg,transparent,rgba(43,112,184,.8),transparent);animation:pulse 2.8s ease-in-out infinite}.rail.one{left:160px;right:220px;top:176px}.rail.two{left:128px;right:128px;bottom:170px}.rail.three{width:1px;height:220px;left:50%;top:176px;background:linear-gradient(180deg,transparent,rgba(25,160,111,.8),transparent)}
-    .app{min-height:100vh;display:grid;grid-template-columns:292px minmax(0,1fr);position:relative}.sidebar{position:sticky;top:0;height:100vh;padding:22px 18px;background:linear-gradient(180deg,rgba(7,16,13,.98),rgba(13,24,20,.96));border-right:1px solid var(--dark-line);display:flex;flex-direction:column;gap:22px;color:#fff;overflow:hidden}.sidebar>*{position:relative}.brand.small{margin-bottom:0}.sidebar .brand span{color:#9eaaa5}
-    .nav{display:grid;gap:7px}.nav button{height:42px;border:1px solid transparent;background:transparent;border-radius:8px;color:#aebbb5;text-align:left;padding:0 10px;display:flex;align-items:center;gap:10px;font-weight:850}.nav button.active,.nav button:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.10);color:#fff}.dot{width:8px;height:8px;border-radius:99px;background:#43534d;box-shadow:0 0 0 4px rgba(255,255,255,.035)}.active .dot{background:#49d69d;box-shadow:0 0 0 4px rgba(73,214,157,.15)}
-    .runtime{margin-top:auto;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(255,255,255,.06);padding:14px}.runtime-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.runtime-title{font-size:13px;font-weight:950}.runtime .muted{color:#aebbb5}
-    main{min-width:0;padding:28px;background:radial-gradient(circle at 22% 0%,rgba(25,160,111,.16),transparent 26%),radial-gradient(circle at 90% 8%,rgba(43,112,184,.16),transparent 24%),linear-gradient(180deg,#08110f,#0b1512 52%,#08110f);color:var(--ink)}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}.topbar h1{font-size:29px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.icon-button{height:38px;min-width:38px;border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:8px;color:var(--ink);box-shadow:var(--shadow-soft);font-size:12px;font-weight:950;padding:0 13px}
-    .badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 9px;background:rgba(177,129,51,.16);color:#e7bd75;font-size:11px;font-weight:950;text-transform:uppercase;white-space:nowrap}.badge.ok{background:rgba(25,160,111,.18);color:#9ff0cf}.badge.bad{background:rgba(225,113,111,.18);color:#ffaaa8}.badge.info{background:rgba(43,112,184,.20);color:#9dccff}
-    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.kpi{padding:15px;min-height:98px;position:relative;overflow:hidden}.kpi:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--green),var(--blue))}.kpi span{display:block;color:var(--muted);font-size:11px;font-weight:950;text-transform:uppercase}.kpi strong{display:block;margin-top:10px;font-size:25px;line-height:1}
-    .panel{padding:18px}.launcher{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.42fr) minmax(160px,.34fr) auto;gap:14px;align-items:end;margin-bottom:18px;border-top:3px solid var(--green)}
-    .section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 12px}.section-title h2{margin:0;font-size:15px}.workspace{display:grid;grid-template-columns:minmax(330px,430px) minmax(0,1fr);gap:18px;align-items:start}.stack{display:grid;gap:10px}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.three-col{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-    .module{padding:14px;display:grid;gap:12px}.module>.badge{justify-self:start}.module-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.module h3,.entity h3{margin:0;font-size:14px;line-height:1.35}.module p,.entity p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}.module:hover,.entity:hover{border-color:rgba(73,214,157,.38)}
-    .entity{padding:15px;display:grid;gap:12px}.entity-meta{display:flex;gap:8px;flex-wrap:wrap}.entity-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .results{min-height:690px;overflow:hidden}.results-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03))}.tabs{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px;background:rgba(255,255,255,.045)}.tabs button{height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted);padding:0 10px;font-size:12px;font-weight:950}.tabs button.active{background:rgba(255,255,255,.12);color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
-    .result-body{padding:16px}.empty{min-height:560px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:40px;background:radial-gradient(circle at 50% 20%,rgba(25,160,111,.10),transparent 30%)}.empty strong{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}.findings{display:grid;gap:10px}.finding{border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.045);padding:13px;box-shadow:0 4px 16px rgba(0,0,0,.12)}.finding-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}.finding-title{font-size:14px;font-weight:950}
-    pre{margin:0;max-height:420px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#050908;border:1px solid rgba(255,255,255,.10);border-radius:8px;padding:12px;color:#dce8e2;font-size:12px;line-height:1.55}.db-shell{display:grid;gap:14px}.db-controls{display:grid;grid-template-columns:minmax(220px,.35fr) auto auto;gap:10px;align-items:end}.db-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.035);max-height:440px}.data-table{width:100%;border-collapse:collapse;font-size:12px;min-width:760px}.data-table th,.data-table td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top;max-width:320px}.data-table th{position:sticky;top:0;background:#101d19;color:var(--muted);font-size:11px;text-transform:uppercase;z-index:1}.data-table td{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.toast{position:fixed;right:22px;bottom:22px;display:none;max-width:min(420px,calc(100vw - 44px));background:#0d1412;color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:13px 15px;box-shadow:var(--shadow);font-size:14px;z-index:10}.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .85s linear infinite;display:none}.busy .spinner{display:inline-block}
-    @keyframes spin{to{transform:rotate(360deg)}}@keyframes scan{0%,100%{transform:translateY(-120px);opacity:.15}50%{transform:translateY(315px);opacity:.65}}@keyframes gridshift{to{background-position:38px 38px}}@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
-    @media(max-width:1120px){.app{grid-template-columns:1fr}.auth-art{opacity:.18}.sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--dark-line)}.nav{grid-template-columns:repeat(4,minmax(0,1fr))}.runtime{margin-top:0}.launcher,.workspace,.two-col,.three-col{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:660px){main,.auth-panel{padding:20px}.topbar,.results-head,.module-top{display:grid}.toolbar{justify-content:flex-start}.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.kpis{grid-template-columns:1fr}.tabs{width:100%}.tabs button{flex:1}h1{font-size:28px}.topbar h1{font-size:24px}.launcher{gap:12px}}
-    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+    /* ═══════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font); color: var(--text); background: var(--bg);
+      min-height: 100vh; line-height: 1.6; -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+    a { color: var(--cyan); text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    ::selection { background: var(--emerald-soft); color: var(--emerald); }
+
+    /* ═══════════════════════════════════════════
+       UTILITIES
+       ═══════════════════════════════════════════ */
+    .hidden { display: none !important; }
+    .muted { color: var(--text-muted); font-size: 0.8125rem; line-height: 1.5; }
+    .dim { color: var(--text-dim); }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ═══════════════════════════════════════════
+       COMPONENTS
+       ═══════════════════════════════════════════ */
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      height: 44px; padding: 0 20px; border-radius: var(--radius-sm);
+      font-weight: 700; font-size: 0.875rem; white-space: nowrap;
+      transition: all var(--transition); position: relative; overflow: hidden;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--grad-brand); color: #fff; font-weight: 800;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.25);
+    }
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(16,185,129,0.35); }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--border-hover); }
+
+    .btn-ghost { background: transparent; color: var(--text-muted); }
+    .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .btn-danger { color: var(--red); border-color: rgba(239,68,68,0.3); }
+    .btn-danger:hover:not(:disabled) { background: var(--red-soft); border-color: rgba(239,68,68,0.5); }
+    .btn-sm { height: 36px; padding: 0 14px; font-size: 0.8125rem; }
+    .btn-xs { height: 30px; padding: 0 10px; font-size: 0.75rem; border-radius: 6px; }
+    .btn-icon { width: 44px; padding: 0; }
+
+    /* Inputs */
+    .input-wrap { display: grid; gap: 6px; }
+    .input-wrap label { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .input, select {
+      width: 100%; height: 44px; padding: 0 14px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      transition: all var(--transition); outline: none;
+    }
+    .input::placeholder { color: var(--text-dim); }
+    .input:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .input:disabled { opacity: 0.6; }
+    select { cursor: pointer; }
+    select option { background: var(--bg-3); color: var(--text); }
+
+    /* Cards */
+    .card {
+      background: var(--grad-card); border: 1px solid var(--border);
+      border-radius: var(--radius); backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      transition: all var(--transition); position: relative;
+    }
+    .card:hover { border-color: var(--border-hover); }
+    .card-glow:hover { box-shadow: var(--shadow-glow); }
+
+    /* Badges */
+    .badge {
+      display: inline-flex; align-items: center; height: 24px; padding: 0 10px;
+      border-radius: var(--radius-pill); font-size: 0.6875rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap;
+    }
+    .badge-emerald { background: var(--emerald-soft); color: var(--emerald); }
+    .badge-cyan { background: var(--cyan-soft); color: var(--cyan); }
+    .badge-gold { background: var(--gold-soft); color: var(--gold); }
+    .badge-red { background: var(--red-soft); color: var(--red); }
+    .badge-blue { background: var(--blue-soft); color: var(--blue); }
+    .badge-dim { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+    /* Toast */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast-item {
+      pointer-events: auto;
+      background: var(--surface-solid); border: 1px solid var(--border-hover);
+      border-radius: var(--radius-sm); padding: 14px 18px;
+      box-shadow: var(--shadow-lg); font-size: 0.875rem; font-weight: 600;
+      animation: toastIn 0.3s ease-out;
+      max-width: min(420px, calc(100vw - 48px));
+    }
+    .toast-item.out { animation: toastOut 0.25s ease-in forwards; }
+
+    /* Spinner */
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite; display: none;
+    }
+    .busy .spinner { display: inline-block; }
+
+    /* Skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%; border-radius: var(--radius-sm);
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+
+    /* ═══════════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════════ */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.96); } }
+    @keyframes toastOut { to { opacity: 0; transform: translateY(-8px) scale(0.96); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+    @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+    @keyframes countUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @keyframes orbit { to { transform: rotate(360deg); } }
+    @keyframes borderGlow {
+      0%,100% { border-color: rgba(16,185,129,0.2); }
+      50% { border-color: rgba(6,182,212,0.4); }
+    }
+    @keyframes heroGlow {
+      0%,100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       LANDING PAGE
+       ═══════════════════════════════════════════ */
+    .landing { min-height: 100vh; }
+
+    /* Nav */
+    .landing-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(20px, 4vw, 48px); height: 72px;
+      background: rgba(3,7,18,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 12px; }
+    .nav-mark {
+      width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+      background: var(--grad-brand); color: #fff; font-weight: 900; font-size: 0.8125rem;
+      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+    }
+    .nav-brand strong { font-size: 1rem; font-weight: 800; }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-links a {
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
+      transition: all var(--transition);
+    }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh; display: grid; grid-template-columns: 1.2fr 1fr; align-items: center;
+      gap: 40px; padding: 120px clamp(20px, 4vw, 48px) 80px; position: relative; overflow: hidden;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(6,182,212,0.15), transparent),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(16,185,129,0.1), transparent),
+        radial-gradient(ellipse 30% 30% at 80% 60%, rgba(245,158,11,0.08), transparent);
+      animation: heroGlow 8s ease-in-out infinite;
+    }
+    .hero::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 40px 40px; mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000, transparent);
+    }
+    .hero-left { text-align: left; position: relative; z-index: 1; }
+    .hero-right { position: relative; z-index: 1; display: flex; justify-content: center; min-width: 320px; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 34px; padding: 0 16px; border-radius: var(--radius-pill);
+      background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2);
+      color: var(--cyan); font-size: 0.75rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 24px; animation: fadeIn 0.6s ease-out;
+    }
+    .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); animation: pulse 2s infinite; }
+    .hero h1 {
+      font-size: clamp(2.25rem, 5vw, 3.25rem); font-weight: 900;
+      line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 20px;
+      animation: fadeInUp 0.7s ease-out 0.1s both;
+    }
+    .hero h1 .gradient-text {
+      background: var(--grad-brand); background-size: 200% auto;
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      animation: gradientShift 4s ease-in-out infinite;
+    }
+    .hero p {
+      font-size: 0.9375rem; color: var(--text-muted);
+      margin-bottom: 24px; line-height: 1.6;
+      animation: fadeInUp 0.7s ease-out 0.2s both;
+    }
+    .hero-actions {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+      animation: fadeInUp 0.7s ease-out 0.3s both;
+    }
+    .hero-actions .btn { height: 52px; padding: 0 28px; font-size: 1rem; border-radius: var(--radius); }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex; justify-content: center; gap: clamp(24px, 5vw, 64px);
+      padding: 48px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: rgba(15,23,42,0.4);
+    }
+    .stat-item { text-align: center; animation: fadeIn 0.5s ease-out both; }
+    .stat-item:nth-child(2) { animation-delay: 0.1s; }
+    .stat-item:nth-child(3) { animation-delay: 0.2s; }
+    .stat-item:nth-child(4) { animation-delay: 0.3s; }
+    .stat-number { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 900; color: var(--text); }
+    .stat-label { font-size: 0.8125rem; color: var(--text-dim); margin-top: 4px; }
+
+    /* Features */
+    .section { padding: clamp(64px, 10vw, 120px) clamp(20px, 4vw, 48px); }
+    .section-header { text-align: center; margin-bottom: 56px; }
+    .section-header h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .section-header p { font-size: 1.0625rem; color: var(--text-muted); max-width: 560px; margin: 0 auto; }
+
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px; max-width: 1100px; margin: 0 auto;
+    }
+    .feature-card {
+      padding: 28px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .feature-card:hover { border-color: var(--emerald); box-shadow: var(--shadow-glow); transform: translateY(-2px); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center;
+      font-size: 1.25rem; flex-shrink: 0;
+    }
+    .feature-card h3 { font-size: 1.0625rem; font-weight: 800; }
+    .feature-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* How it works */
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 32px; max-width: 900px; margin: 0 auto; }
+    .step-card { text-align: center; padding: 32px 24px; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--grad-brand); color: #fff; font-size: 1.25rem; font-weight: 900;
+      margin: 0 auto 20px; box-shadow: 0 4px 24px rgba(16,185,129,0.3);
+    }
+    .step-card h3 { font-size: 1.125rem; font-weight: 800; margin-bottom: 8px; }
+    .step-card p { font-size: 0.875rem; color: var(--text-muted); }
+
+    /* Pricing */
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
+    .pricing-card { padding: 32px 28px; display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; }
+    .pricing-card.featured {
+      border-color: var(--emerald); box-shadow: 0 0 40px rgba(16,185,129,0.12);
+    }
+    .pricing-card.featured::before {
+      content: 'Most Popular'; position: absolute; top: 16px; right: -28px;
+      background: var(--grad-brand); color: #fff; font-size: 0.6875rem; font-weight: 800;
+      padding: 4px 36px; transform: rotate(45deg); text-transform: uppercase;
+    }
+    .pricing-card .price { font-size: 2.5rem; font-weight: 900; }
+    .pricing-card .price span { font-size: 1rem; font-weight: 600; color: var(--text-muted); }
+    .pricing-features { list-style: none; display: grid; gap: 10px; flex: 1; }
+    .pricing-features li { font-size: 0.875rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .pricing-features li::before { content: '✓'; color: var(--emerald); font-weight: 900; }
+
+    /* CTA */
+    .cta-section {
+      text-align: center; padding: 80px 24px;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(16,185,129,0.08), transparent);
+    }
+    .cta-section h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); font-weight: 900; margin-bottom: 12px; }
+    .cta-section p { color: var(--text-muted); margin-bottom: 28px; }
+
+    /* Footer */
+    .landing-footer {
+      padding: 32px clamp(20px, 4vw, 48px);
+      border-top: 1px solid var(--border); display: flex;
+      align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .landing-footer .muted a { color: var(--text-dim); }
+    .landing-footer .muted a:hover { color: var(--text); }
+
+    /* ═══════════════════════════════════════════
+       AUTH SCREEN
+       ═══════════════════════════════════════════ */
+    .auth-screen {
+      min-height: 100vh; display: grid; place-items: center;
+      padding: 24px; position: relative; overflow: hidden;
+    }
+    .auth-screen::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 50% 40% at 50% 20%, rgba(6,182,212,0.12), transparent),
+        radial-gradient(ellipse 40% 30% at 80% 70%, rgba(245,158,11,0.08), transparent),
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: auto, auto, 36px 36px, 36px 36px;
+    }
+    .auth-panel {
+      width: min(480px, 100%); position: relative; z-index: 1;
+      animation: fadeInUp 0.5s ease-out;
+    }
+    .auth-brand { display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 32px; }
+    .auth-brand strong { font-size: 1.125rem; font-weight: 800; }
+    .auth-brand span { display: block; color: var(--text-dim); font-size: 0.75rem; margin-top: 2px; }
+    .auth-card {
+      padding: 32px; border-radius: 16px; display: grid; gap: 16px;
+      box-shadow: var(--shadow-lg);
+    }
+    .auth-card h1 { font-size: 1.5rem; font-weight: 900; text-align: center; }
+    .auth-card .subtitle { text-align: center; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 4px; }
+    .auth-card .btn { width: 100%; }
+    .auth-toggle { text-align: center; margin-top: 16px; color: var(--text-muted); font-size: 0.875rem; }
+    .auth-toggle button { color: var(--cyan); font-weight: 700; text-decoration: underline; }
+    .form-error {
+      padding: 12px; border-radius: var(--radius-sm); font-size: 0.8125rem; font-weight: 700;
+      border: 1px solid rgba(239,68,68,0.4); background: var(--red-soft); color: #fca5a5;
+      margin-bottom: 4px;
+    }
+    .form-error.hidden { display: none; }
+    .form-error.ok { border-color: rgba(16,185,129,0.4); background: var(--emerald-soft); color: #6ee7b7; }
+
+    /* ═══════════════════════════════════════════
+       APP SHELL
+       ═══════════════════════════════════════════ */
+    .app-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+      background: rgba(3,7,18,0.95); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 20px 14px; gap: 24px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+    .sidebar-brand strong { font-size: 0.9375rem; font-weight: 800; }
+    .sidebar-brand span { display: block; font-size: 0.6875rem; color: var(--text-dim); margin-top: 1px; }
+
+    .sidebar-nav { display: grid; gap: 4px; flex: 1; align-content: start; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; height: 42px;
+      padding: 0 12px; border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
+      transition: all var(--transition); position: relative;
+    }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .nav-item.active { color: var(--text); background: rgba(16,185,129,0.1); }
+    .nav-item.active::before {
+      content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+      background: var(--emerald); border-radius: 0 3px 3px 0;
+    }
+    .nav-icon {
+      width: 20px; height: 20px; display: grid; place-items: center;
+      font-size: 0.8125rem; flex-shrink: 0;
+    }
+    .nav-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim);
+      transition: all var(--transition);
+    }
+    .nav-item.active .nav-dot { background: var(--emerald); box-shadow: 0 0 8px rgba(16,185,129,0.4); }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--border); padding-top: 16px;
+      display: grid; gap: 10px;
+    }
+    .sidebar-plan {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.04); font-size: 0.8125rem;
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 10px; padding: 0 8px;
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--grad-brand); color: #fff; font-size: 0.6875rem; font-weight: 900;
+      flex-shrink: 0;
+    }
+    .sidebar-user .info { min-width: 0; }
+    .sidebar-user .name { font-size: 0.8125rem; font-weight: 700; }
+    .sidebar-user .email { font-size: 0.6875rem; color: var(--text-dim); }
+
+    /* Mobile nav */
+    .mobile-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(3,7,18,0.95); border-top: 1px solid var(--border);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    }
+    .mobile-nav-inner { display: flex; justify-content: space-around; }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 6px 12px; font-size: 0.625rem; font-weight: 700; color: var(--text-dim);
+      transition: all var(--transition); min-width: 56px;
+    }
+    .mobile-nav-item.active { color: var(--emerald); }
+    .mobile-nav-item .nav-dot { width: 6px; height: 6px; }
+    .mobile-nav-item.active .nav-dot { background: var(--emerald); }
+
+    /* Main content */
+    .main-content {
+      min-width: 0; padding: 28px clamp(20px, 3vw, 36px);
+      background: var(--bg);
+      position: relative;
+    }
+    .main-content::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px;
+      background: radial-gradient(ellipse 60% 60% at 30% 0%, rgba(6,182,212,0.06), transparent),
+                  radial-gradient(ellipse 40% 50% at 80% 10%, rgba(245,158,11,0.04), transparent);
+      pointer-events: none;
+    }
+    .main-content > * { position: relative; }
+
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: clamp(1.375rem, 2.5vw, 1.75rem); font-weight: 900; letter-spacing: -0.02em; }
+    .page-header p { color: var(--text-muted); font-size: 0.875rem; margin-top: 4px; }
+
+    /* ═══════════════════════════════════════════
+       DASHBOARD VIEWS
+       ═══════════════════════════════════════════ */
+    .view { display: none; animation: fadeIn 0.3s ease-out; }
+    .view.active { display: block; }
+
+    /* KPI strip */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .kpi-card { padding: 20px; position: relative; overflow: hidden; }
+    .kpi-card::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+      background: var(--grad-brand); background-size: 200% auto;
+      animation: gradientShift 4s ease-in-out infinite;
+    }
+    .kpi-label { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; }
+    .kpi-value { font-size: 1.75rem; font-weight: 900; margin-top: 8px; animation: countUp 0.5s ease-out; }
+
+    /* Launcher */
+    .launcher-panel { padding: 20px; margin-bottom: 20px; }
+    .launcher-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px; align-items: end;
+    }
+
+    /* Modules grid */
+    .modules-section { margin-top: 20px; }
+    .section-title {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px; gap: 12px;
+    }
+    .section-title h2 { font-size: 1rem; font-weight: 800; }
+    .modules-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;
+    }
+    .module-card { padding: 18px; cursor: pointer; }
+    .module-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+    .module-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .module-card h3 { font-size: 0.9375rem; font-weight: 800; }
+    .module-card p { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+
+    /* Results panel */
+    .results-panel { margin-top: 20px; overflow: hidden; }
+    .results-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .results-header strong { font-size: 0.9375rem; font-weight: 800; }
+    .tab-group {
+      display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 3px; gap: 2px; background: rgba(255,255,255,0.03);
+    }
+    .tab-btn {
+      height: 30px; padding: 0 12px; border-radius: 6px;
+      font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+      transition: all var(--transition);
+    }
+    .tab-btn.active { background: rgba(255,255,255,0.1); color: var(--text); }
+    .results-body { padding: 18px; min-height: 300px; }
+    .empty-state {
+      min-height: 300px; display: grid; place-items: center; text-align: center;
+      color: var(--text-dim); padding: 40px;
+    }
+    .empty-state strong { display: block; color: var(--text); font-size: 1.0625rem; margin-bottom: 6px; }
+    .findings-list { display: grid; gap: 10px; }
+    .finding-item {
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.03); padding: 14px;
+    }
+    .finding-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .finding-title { font-size: 0.9375rem; font-weight: 800; }
+    pre.code-block {
+      margin: 0; padding: 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); overflow: auto; max-height: 400px;
+      white-space: pre-wrap; word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem; line-height: 1.6; color: #c4d3e0;
+    }
+
+    /* Entity cards (projects, sites) */
+    .entity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .entity-card { padding: 20px; display: grid; gap: 12px; }
+    .entity-card h3 { font-size: 1rem; font-weight: 800; }
+    .entity-card p { font-size: 0.8125rem; color: var(--text-muted); }
+    .entity-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .entity-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Two / Three column layouts */
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .stack { display: grid; gap: 10px; }
+
+    /* Workspace (sidebar+main in reports) */
+    .workspace-layout { display: grid; grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); gap: 20px; align-items: start; }
+
+    /* Schedule section */
+    .schedule-section { margin-top: 16px; }
+    .schedule-bar { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 12px; }
+
+    /* Settings panels */
+    .settings-grid { display: grid; gap: 16px; }
+    .settings-panel { padding: 24px; display: grid; gap: 14px; }
+    .settings-panel h2 { font-size: 1rem; font-weight: 800; }
+
+    /* Admin */
+    .admin-section { margin-top: 20px; }
+    .db-controls { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 14px; }
+    .data-table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 400px; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; min-width: 700px; }
+    .data-table th, .data-table td {
+      border-bottom: 1px solid var(--border); padding: 10px 12px;
+      text-align: left; vertical-align: top;
+    }
+    .data-table th {
+      position: sticky; top: 0; background: var(--bg-3);
+      font-size: 0.6875rem; font-weight: 800; text-transform: uppercase;
+      color: var(--text-dim); z-index: 1;
+    }
+    .data-table td {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════ */
+    @media (max-width: 1023px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .mobile-nav { display: block; }
+      .main-content { padding-bottom: 80px; }
+      .workspace-layout { grid-template-columns: 1fr; }
+      .nav-links .desktop-only { display: none; }
+    }
+    @media (max-width: 991px) {
+      .hero { grid-template-columns: 1fr; padding-top: 100px; text-align: center; }
+      .hero-left { text-align: center; margin-bottom: 30px; }
+      .hero-right { width: 100%; }
+    }
+    @media (max-width: 767px) {
+      .hero h1 { font-size: 2rem; }
+      .stats-bar { flex-wrap: wrap; gap: 24px; }
+      .features-grid, .pricing-grid, .steps-grid { grid-template-columns: 1fr; }
+      .launcher-grid { grid-template-columns: 1fr; }
+      .entity-grid, .modules-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .page-header h1 { font-size: 1.25rem; }
+    }
   </style>
 </head>
 <body>
-  <section class="auth" id="authView">
-    <div class="auth-panel">
-      <div class="brand"><div class="mark">CS</div><div><strong>Claude SEO Console</strong><span>Public SaaS workspace</span></div></div>
-      <h1>Client SEO audits, packaged for teams.</h1>
-      <p class="subtitle">Premium workspaces for client sites, technical audits, protected reports, and shareable executive output.</p>
-      <div class="card form">
-        <div class="auth-switch"><button class="active" id="showSignupBtn" type="button">Create Account</button><button id="showLoginBtn" type="button">Log In</button></div>
-        <div id="authNameWrap"><label for="authName">Name</label><input id="authName" placeholder="Agency or user name"></div>
-        <div id="authEmailWrap"><label for="authEmail">Email</label><input id="authEmail" type="email" placeholder="you@example.com"></div>
-        <div id="authPasswordWrap"><label for="authPassword" id="authPasswordLabel">Password</label><input id="authPassword" type="password" placeholder="At least 8 characters"></div>
-        <button class="primary" id="authSubmitBtn" type="button">Create Account</button>
-        <div class="form-error hidden" id="authError" role="alert"></div>
-        <p class="muted" id="authHelp">Already have an account? Click Log In above, then enter the same email and password.</p>
-        <button class="link" id="forgotPasswordBtn" type="button">Forgot password?</button>
-      </div>
-    </div>
-    <div class="auth-art">
-      <div class="system-map" aria-hidden="true">
-        <div class="rail one"></div><div class="rail two"></div><div class="rail three"></div>
-      </div>
-    </div>
-  </section>
 
-  <div class="app hidden" id="appView">
+  <!-- ═══════════════════════════════════════════
+       LANDING PAGE
+       ═══════════════════════════════════════════ -->
+  <div class="landing" id="landingView">
+    <nav class="landing-nav">
+      <div class="nav-brand"><div class="nav-mark">RF</div><strong>RankForge</strong></div>
+      <div class="nav-links">
+        <a href="#features" class="desktop-only">Features</a>
+        <a href="#pricing" class="desktop-only">Pricing</a>
+        <button class="btn btn-ghost btn-sm" id="landingLoginBtn">Log In</button>
+        <button class="btn btn-primary btn-sm" id="landingSignupBtn">Get Started</button>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow"><span class="dot"></span> AI-Powered SEO Intelligence</div>
+        <h1>Client SEO audits in <span class="gradient-text">minutes, not hours.</span></h1>
+        <p>RankForge Command deploys 15 parallel AI agents to analyze technical SEO, content quality, schema markup, and AI search readiness — with every finding backed by a falsifiability check.</p>
+        <div class="stats-mini" style="display: flex; gap: 24px; margin-top: 32px;">
+          <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">25</strong><span style="font-size: 0.75rem; color: var(--text-muted)">AI Skills</span></div>
+          <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">18</strong><span style="font-size: 0.75rem; color: var(--text-muted)">Specialist Agents</span></div>
+          <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">410+</strong><span style="font-size: 0.75rem; color: var(--text-muted)">Test Cases</span></div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <!-- Auth Card embedded directly here -->
+        <div class="auth-panel" id="authView" style="width: 100%; max-width: 400px;">
+          <div class="card auth-card" style="padding: 28px; border-radius: 16px; display: grid; gap: 14px; box-shadow: var(--shadow-lg);">
+            <div class="auth-switch" style="display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; gap: 2px; background: rgba(255,255,255,0.03); margin-bottom: 6px;">
+              <button id="showSignupBtn" type="button" class="active" onclick="setAuthMode('signup')" style="flex: 1; height: 36px; border-radius: 6px; font-size: 0.8125rem; font-weight: 700; color: var(--text-muted); transition: all var(--transition);">Create Account</button>
+              <button id="showLoginBtn" type="button" onclick="setAuthMode('login')" style="flex: 1; height: 36px; border-radius: 6px; font-size: 0.8125rem; font-weight: 700; color: var(--text-muted); transition: all var(--transition);">Log In</button>
+            </div>
+            <h1 id="authTitle" style="font-size: 1.25rem; font-weight: 800; text-align: center; margin-top: 8px;">Create your account</h1>
+            <p class="subtitle" id="authSubtitle" style="text-align: center; color: var(--text-muted); font-size: 0.8125rem; margin-bottom: 4px;">Start running SEO audits in minutes.</p>
+            <div class="form-error hidden" id="authError" role="alert"></div>
+            <div class="input-wrap" id="authNameWrap">
+              <label for="authName">Full Name</label>
+              <input class="input" id="authName" placeholder="Your name or agency">
+            </div>
+            <div class="input-wrap" id="authEmailWrap">
+              <label for="authEmail">Email</label>
+              <input class="input" id="authEmail" type="email" placeholder="you@agency.com" autocomplete="email">
+            </div>
+            <div class="input-wrap" id="authPasswordWrap">
+              <label for="authPassword" id="authPasswordLabel">Password</label>
+              <input class="input" id="authPassword" type="password" placeholder="At least 8 characters" autocomplete="current-password">
+            </div>
+            <button class="btn btn-primary" id="authSubmitBtn" type="button">Create Account</button>
+            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-xs" id="forgotPasswordBtn" type="button">Forgot password?</button>
+            </div>
+            <p class="muted" id="authHelp" style="text-align: center; font-size: 0.75rem; color: var(--text-dim);">Already have an account? Click Log In above, then enter the same email and password.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features" style="border-top: 1px solid var(--border);">
+      <div class="section-header">
+        <h2>Everything you need to dominate search.</h2>
+        <p>From technical audits to AI search optimization, all in one intelligent platform.</p>
+      </div>
+      <div class="features-grid">
+        <article class="card card-glow feature-card">
+          <div class="feature-icon" style="background:var(--emerald-soft);color:var(--emerald)">⚡</div>
+          <h3>Full Site Audit</h3>
+          <p>Parallel agents fan out across your entire site — technical SEO, content, schema, performance, and visual rendering in one pass.</p>
+        </article>
+        <article class="card card-glow feature-card">
+          <div class="feature-icon" style="background:var(--cyan-soft);color:var(--cyan)">🧬</div>
+          <h3>Schema.org Markup</h3>
+          <p>Detect, validate, and auto-generate JSON-LD structured data. Tracks Google's deprecation timeline so you stay current.</p>
+        </article>
+        <article class="card card-glow feature-card">
+          <div class="feature-icon" style="background:var(--gold-soft);color:var(--gold)">📝</div>
+          <h3>E-E-A-T Content Quality</h3>
+          <p>Score experience, expertise, authoritativeness, and trust against the latest Quality Rater Guidelines.</p>
+        </article>
+        <article class="card card-glow feature-card">
+          <div class="feature-icon" style="background:var(--blue-soft);color:var(--blue)">🤖</div>
+          <h3>AI Search / GEO</h3>
+          <p>Optimize for AI Overviews and AI Mode. Passage citability scoring, entity presence analysis, and evidence-based myth busting.</p>
+        </article>
+        <article class="card card-glow feature-card">
+          <div class="feature-icon" style="background:rgba(168,85,247,0.15);color:var(--purple)">📍</div>
+          <h3>Local SEO & Maps</h3>
+          <p>Google Business Profile audit, NAP consistency checks, review intelligence, and geo-grid rank tracking.</p>
+        </article>
+        <article class="card card-glow feature-card">
+          <div class="feature-icon" style="background:var(--red-soft);color:var(--red)">📊</div>
+          <h3>Performance & CWV</h3>
+          <p>LCP, INP, CLS with subpart decomposition. Field data from CrUX when available, lab data via PageSpeed Insights.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" style="background:rgba(15,23,42,0.3)">
+      <div class="section-header">
+        <h2>How it works</h2>
+        <p>Three steps to actionable SEO intelligence.</p>
+      </div>
+      <div class="steps-grid">
+        <article class="card step-card"><div class="step-num">1</div><h3>Enter your URL</h3><p>Paste any website URL and choose an audit module — or run a full analysis.</p></article>
+        <article class="card step-card"><div class="step-num">2</div><h3>AI agents analyze</h3><p>Up to 15 specialist agents work in parallel, each covering a different SEO domain.</p></article>
+        <article class="card step-card"><div class="step-num">3</div><h3>Get your report</h3><p>Prioritized findings with dependency graphs, falsifiability checks, and export options.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="pricing">
+      <div class="section-header">
+        <h2>Simple, transparent pricing</h2>
+        <p>Start free. Upgrade when your agency grows.</p>
+      </div>
+      <div class="pricing-grid">
+        <article class="card pricing-card">
+          <div><span class="badge badge-dim">Free</span></div>
+          <div class="price">$0<span>/mo</span></div>
+          <p class="muted">Perfect for solo freelancers getting started.</p>
+          <ul class="pricing-features">
+            <li>10 audits per hour</li><li>3 projects</li><li>10 saved sites</li>
+            <li>All core audit modules</li><li>HTML & JSON export</li>
+          </ul>
+          <button class="btn btn-secondary" onclick="showAuth('signup')">Get Started</button>
+        </article>
+        <article class="card pricing-card featured">
+          <div><span class="badge badge-emerald">Pro</span></div>
+          <div class="price">$49<span>/mo</span></div>
+          <p class="muted">For growing consultants and in-house teams.</p>
+          <ul class="pricing-features">
+            <li>60 audits per hour</li><li>25 projects</li><li>100 saved sites</li>
+            <li>Scheduled recurring audits</li><li>Team collaboration</li><li>Priority support</li>
+          </ul>
+          <button class="btn btn-primary" onclick="showAuth('signup')">Start Pro Trial</button>
+        </article>
+        <article class="card pricing-card">
+          <div><span class="badge badge-gold">Agency</span></div>
+          <div class="price">$149<span>/mo</span></div>
+          <p class="muted">For agencies managing multiple client portfolios.</p>
+          <ul class="pricing-features">
+            <li>240 audits per hour</li><li>250 projects</li><li>1,000 saved sites</li>
+            <li>White-label reports</li><li>Unlimited team seats</li><li>API access</li>
+          </ul>
+          <button class="btn btn-secondary" onclick="showAuth('signup')">Contact Sales</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <h2>Ready to transform your SEO workflow?</h2>
+      <p>Join hundreds of agencies and consultants running smarter audits.</p>
+      <button class="btn btn-primary" style="height:52px;padding:0 32px;font-size:1rem" onclick="showAuth('signup')">Create Free Account</button>
+    </section>
+
+    <footer class="landing-footer">
+      <p class="muted">© 2026 RankForge Command. Built on <a href="https://github.com/AgriciDaniel/claude-seo" target="_blank" rel="noopener">Claude SEO</a>.</p>
+      <p class="muted"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></p>
+    </footer>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       APP SHELL
+       ═══════════════════════════════════════════ -->
+  <div class="app-shell hidden" id="appView">
     <aside class="sidebar">
-      <div class="brand small"><div class="mark">CS</div><div><strong>Claude SEO Console</strong><span id="userLine">Customer workspace</span></div></div>
-      <nav class="nav">
-        <button class="active" type="button" data-view="audit"><span class="dot"></span>Audit Desk</button>
-        <button type="button" data-view="projects"><span class="dot"></span>Projects</button>
-        <button type="button" data-view="sites"><span class="dot"></span>Sites</button>
-        <button type="button" data-view="reports"><span class="dot"></span>Reports</button>
-        <button type="button" data-view="settings"><span class="dot"></span>Settings</button>
-        <button class="hidden" type="button" data-view="admin" id="adminNavBtn"><span class="dot"></span>Admin</button>
+      <div class="sidebar-brand"><div class="nav-mark">RF</div><div><strong>RankForge</strong><span id="userLine">Command</span></div></div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="audit"><span class="nav-dot"></span>Audit Desk</button>
+        <button class="nav-item" data-view="projects"><span class="nav-dot"></span>Projects</button>
+        <button class="nav-item" data-view="sites"><span class="nav-dot"></span>Sites</button>
+        <button class="nav-item" data-view="reports"><span class="nav-dot"></span>Reports</button>
+        <button class="nav-item" data-view="settings"><span class="nav-dot"></span>Settings</button>
+        <button class="nav-item hidden" data-view="admin" id="adminNavBtn"><span class="nav-dot"></span>Admin</button>
       </nav>
-      <div class="runtime"><div class="runtime-top"><div class="runtime-title">Runtime</div><span class="badge" id="runtimeBadge">Checking</span></div><div class="muted" id="runtimeDetail">Connecting.</div><button class="secondary" id="sidebarLogoutBtn" type="button" style="width:100%;margin-top:12px">Log Out</button></div>
-    </aside>
-    <main>
-      <div class="topbar">
-        <div><h1 id="viewTitle">SEO audit command center</h1><p class="subtitle" id="viewSubtitle">Select a client project and site, run an audit, then share the completed report with stakeholders.</p></div>
+      <div class="sidebar-footer">
+        <div class="sidebar-plan"><span class="muted">Plan</span><span class="badge badge-emerald" id="sidebarPlan">Free</span></div>
+        <div class="sidebar-user"><div class="avatar" id="userAvatar">?</div><div class="info"><div class="name truncate" id="userName">User</div><div class="email truncate dim" id="userEmail" style="text-transform: capitalize;">Member</div></div></div>
+        <button class="btn btn-secondary btn-sm" id="sidebarLogoutBtn">Log Out</button>
       </div>
-      <section class="kpis">
-        <div class="card kpi"><span>Total Runs</span><strong id="runsKpi">0</strong></div>
-        <div class="card kpi"><span>Projects</span><strong id="projectsKpi">0</strong></div>
-        <div class="card kpi"><span>Sites</span><strong id="sitesKpi">0</strong></div>
-        <div class="card kpi"><span>Runtime</span><strong id="runtimeKpi">--</strong></div>
-      </section>
+    </aside>
 
+    <main class="main-content">
+      <div class="page-header">
+        <h1 id="pageTitle">Audit Desk</h1>
+        <p id="pageSubtitle">Run AI-powered SEO audits and review findings.</p>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="card kpi-card"><div class="kpi-label">Total Runs</div><div class="kpi-value" id="kpiRuns">0</div></div>
+        <div class="card kpi-card"><div class="kpi-label">Projects</div><div class="kpi-value" id="kpiProjects">0</div></div>
+        <div class="card kpi-card"><div class="kpi-label">Sites</div><div class="kpi-value" id="kpiSites">0</div></div>
+        <div class="card kpi-card"><div class="kpi-label">Runtime</div><div class="kpi-value" id="kpiRuntime" style="font-size:1rem">--</div></div>
+      </div>
+
+      <!-- AUDIT VIEW -->
       <section class="view active" id="view-audit">
-        <section class="card panel launcher">
-          <div><label for="projectSelect">Client Project</label><select id="projectSelect"></select></div>
-          <div><label for="newProject">New Project</label><input id="newProject" placeholder="Client name"></div>
-          <button class="secondary" id="createProjectBtn" type="button">Add Project</button>
-          <div></div>
-          <div><label for="siteSelect">Saved Site</label><select id="siteSelect"></select></div>
-          <div><label for="url">Website URL</label><input id="url" type="url" placeholder="https://client.com"></div>
-          <button class="secondary" id="saveSiteBtn" type="button">Save Site</button>
-          <div><label for="moduleSelect">Audit Skill</label><select id="moduleSelect"></select></div>
-          <button class="primary" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
-        </section>
-        <section class="card panel module">
-          <div class="section-title"><h2>Plan and Billing</h2><span class="badge info" id="planBadge">free</span></div>
-          <p class="muted" id="planDetail">Free plan. Upgrade buttons open hosted checkout when billing is configured.</p>
-          <div class="toolbar"><button class="secondary" data-plan="pro" type="button">Upgrade Pro</button><button class="secondary" data-plan="agency" type="button">Upgrade Agency</button></div>
-        </section>
-        <section class="card panel module">
-          <div class="section-title"><h2>Recurring Audits</h2><span class="badge info" id="scheduleCount">0 active</span></div>
-          <div class="launcher" style="margin:0;border-top:0;padding:0">
-            <div><label for="scheduleFrequency">Frequency</label><select id="scheduleFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="hourly">Hourly</option></select></div>
-            <button class="secondary" id="createScheduleBtn" type="button">Schedule Current Audit</button>
+        <div class="card launcher-panel" style="display: grid; gap: 16px;">
+          <div class="launcher-grid">
+            <div class="input-wrap"><label for="projectSelect">Project</label><select id="projectSelect"></select></div>
+            <div class="input-wrap"><label for="siteSelect">Site</label><select id="siteSelect"></select></div>
+            <div class="input-wrap"><label for="url">URL</label><input class="input" id="url" type="url" placeholder="https://example.com"></div>
+            <div class="input-wrap"><label for="moduleSelect">Module</label><select id="moduleSelect"></select></div>
+            <button class="btn btn-primary" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
           </div>
-          <div class="stack" id="scheduleList"></div>
-        </section>
-        <div class="workspace">
-          <section>
-            <div class="section-title"><h2>Audit Modules</h2><span class="badge info" id="moduleCount">0 modules</span></div>
-            <div class="stack" id="modules"></div>
-          </section>
-          <section class="card results">
-            <div class="results-head"><strong id="resultTitle">Analysis Output</strong><div class="tabs"><button class="active" type="button" data-tab="summary">Summary</button><button type="button" data-tab="raw">Raw JSON</button></div></div>
-            <div class="result-body"><div class="empty" id="emptyState"><div><strong>No audit selected</strong>Run a module or open a recent report.</div></div><div class="findings" id="summaryView" hidden></div><div class="finding" id="rawView" hidden><pre id="rawOutput"></pre></div></div>
-          </section>
+          <div style="display: flex; gap: 16px; border-top: 1px solid var(--border); padding-top: 16px; flex-wrap: wrap; align-items: flex-end;">
+            <div class="input-wrap" style="flex: 1; min-width: 200px;">
+              <label for="newProject">New Project</label>
+              <input class="input" id="newProject" placeholder="Client name">
+            </div>
+            <button class="btn btn-secondary" id="createProjectBtn" type="button" style="height: 38px;">Add Project</button>
+            <button class="btn btn-secondary" id="saveSiteBtn" type="button" style="height: 38px; margin-left: auto;">Save Site</button>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="section-title"><h2>Audit Modules</h2><span class="badge badge-cyan" id="moduleCount">0</span></div>
+            <div class="modules-grid" id="modulesGrid"></div>
+            <div class="schedule-section">
+              <div class="section-title"><h2>Recurring Audits</h2><span class="badge badge-cyan" id="scheduleCount">0</span></div>
+              <div class="schedule-bar">
+                <div class="input-wrap" style="min-width:140px"><label for="scheduleFrequency">Frequency</label><select id="scheduleFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="hourly">Hourly</option></select></div>
+                <button class="btn btn-secondary btn-sm" id="createScheduleBtn">Schedule</button>
+              </div>
+              <div class="stack" id="scheduleList"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card results-panel">
+              <div class="results-header"><h2 id="resultTitle" style="font-size: 0.9375rem; font-weight: 800; margin: 0;">Analysis Output</h2>
+                <div class="tab-group"><button class="tab-btn active" data-tab="summary">Summary</button><button class="tab-btn" data-tab="raw">Raw JSON</button></div>
+              </div>
+              <div class="results-body">
+                <div class="empty-state" id="emptyState"><div><strong>No audit selected</strong><p>Run a module or open a recent report.</p></div></div>
+                <div class="findings-list" id="summaryView" hidden></div>
+                <div id="rawView" hidden><pre class="code-block" id="rawOutput"></pre></div>
+              </div>
+            </div>
+            <div class="card" style="padding:18px;margin-top:14px">
+              <div class="section-title"><h2>Plan and Billing</h2><span class="badge badge-cyan" id="planBadge">free</span></div>
+              <p class="muted" id="planDetail">Free plan.</p>
+              <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
+            </div>
+          </div>
         </div>
       </section>
 
+      <!-- PROJECTS VIEW -->
       <section class="view" id="view-projects">
-        <div class="two-col">
-          <section class="card panel">
-            <div class="section-title"><h2>Create Client Project</h2><span class="badge info">Workspace</span></div>
-            <div class="stack"><div><label for="projectNamePanel">Project Name</label><input id="projectNamePanel" placeholder="Enterprise client or brand"></div><button class="primary" id="createProjectPanelBtn" type="button">Create Project</button></div>
-          </section>
-          <section class="card panel">
-            <div class="section-title"><h2>Project Portfolio</h2><span class="badge" id="projectCount">0 active</span></div>
-            <p class="muted">Use projects to separate clients, campaigns, or business units before saving sites and running reports.</p>
-          </section>
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card" style="padding:20px">
+            <div class="section-title"><h2>New Project</h2><span class="badge badge-cyan">Workspace</span></div>
+            <div class="stack">
+              <div class="input-wrap"><label for="projectNamePanel">Project Name</label><input class="input" id="projectNamePanel" placeholder="Client name or brand"></div>
+              <button class="btn btn-primary btn-sm" id="createProjectPanelBtn">Create Project</button>
+            </div>
+          </div>
+          <div class="card" style="padding:20px">
+            <div class="section-title"><h2>Portfolio</h2><span class="badge badge-emerald" id="projectCount">0</span></div>
+            <p class="muted">Organize clients, campaigns, and business units into projects for structured auditing.</p>
+          </div>
         </div>
-        <div class="section-title" style="margin-top:18px"><h2>All Projects</h2><span class="badge info" id="projectListCount">0 projects</span></div>
-        <div class="three-col" id="projectGrid"></div>
+        <div class="section-title"><h2>All Projects</h2><span class="badge badge-dim" id="projectListCount">0</span></div>
+        <div class="entity-grid" id="projectGrid"></div>
       </section>
 
+      <!-- SITES VIEW -->
       <section class="view" id="view-sites">
-        <div class="two-col">
-          <section class="card panel">
-            <div class="section-title"><h2>Save A Site</h2><span class="badge info">Inventory</span></div>
+        <div class="grid-2" style="margin-bottom:20px">
+          <div class="card" style="padding:20px">
+            <div class="section-title"><h2>Add Site</h2><span class="badge badge-cyan">Inventory</span></div>
             <div class="stack">
-              <div><label for="siteProjectPanel">Project</label><select id="siteProjectPanel"></select></div>
-              <div><label for="siteUrlPanel">Website URL</label><input id="siteUrlPanel" type="url" placeholder="https://client.com"></div>
-              <button class="primary" id="saveSitePanelBtn" type="button">Save Site</button>
+              <div class="input-wrap"><label for="siteProjectPanel">Project</label><select id="siteProjectPanel"></select></div>
+              <div class="input-wrap"><label for="siteUrlPanel">Website URL</label><input class="input" id="siteUrlPanel" type="url" placeholder="https://client.com"></div>
+              <button class="btn btn-primary btn-sm" id="saveSitePanelBtn">Save Site</button>
             </div>
-          </section>
-          <section class="card panel">
-            <div class="section-title"><h2>Site Coverage</h2><span class="badge" id="siteCount">0 saved</span></div>
-            <p class="muted">Saved sites can be selected from the Audit Desk, keeping repeat customer analysis quick and organized.</p>
-          </section>
+          </div>
+          <div class="card" style="padding:20px">
+            <div class="section-title"><h2>Coverage</h2><span class="badge badge-emerald" id="siteCount">0</span></div>
+            <p class="muted">Saved sites can be reused across audits for faster repeat analysis.</p>
+          </div>
         </div>
-        <div class="section-title" style="margin-top:18px"><h2>All Sites</h2><span class="badge info" id="siteListCount">0 sites</span></div>
-        <div class="three-col" id="siteGrid"></div>
+        <div class="section-title"><h2>All Sites</h2><span class="badge badge-dim" id="siteListCount">0</span></div>
+        <div class="entity-grid" id="siteGrid"></div>
       </section>
 
+      <!-- REPORTS VIEW -->
       <section class="view" id="view-reports">
-        <div class="workspace">
-          <section>
-            <div class="section-title"><h2>Report History</h2><span class="badge" id="historyCount">0 saved</span></div>
+        <div class="workspace-layout">
+          <div>
+            <div class="section-title"><h2>Report History</h2><span class="badge badge-emerald" id="historyCount">0</span></div>
             <div class="stack" id="historyList"></div>
-          </section>
-          <section class="card results">
-            <div class="results-head"><strong>Report Preview</strong><span class="badge info">Shareable</span></div>
-            <div class="result-body"><div class="findings" id="reportPreview"></div></div>
-          </section>
+          </div>
+          <div class="card results-panel">
+            <div class="results-header"><strong>Report Preview</strong><span class="badge badge-cyan">Shareable</span></div>
+            <div class="results-body"><div class="findings-list" id="reportPreview"></div></div>
+          </div>
         </div>
       </section>
 
+      <!-- SETTINGS VIEW -->
       <section class="view" id="view-settings">
-        <div class="two-col">
-          <section class="card panel">
-            <div class="section-title"><h2>Account Profile</h2><span class="badge info" id="settingsRole">User</span></div>
-            <div class="stack">
-              <div><label for="settingsName">Name</label><input id="settingsName" placeholder="Your name or agency"></div>
-              <div><label>Email</label><input id="settingsEmail" disabled></div>
-              <button class="primary" id="saveProfileBtn" type="button">Save Profile</button>
+        <div class="settings-grid">
+          <div class="grid-2">
+            <div class="card settings-panel">
+              <div class="section-title"><h2>Profile</h2><span class="badge badge-cyan" id="settingsRole">User</span></div>
+              <div class="input-wrap"><label for="settingsName">Name</label><input class="input" id="settingsName" placeholder="Your name or agency"></div>
+              <div class="input-wrap"><label>Email</label><input class="input" id="settingsEmail" disabled></div>
+              <button class="btn btn-primary btn-sm" id="saveProfileBtn">Save Profile</button>
             </div>
-          </section>
-          <section class="card panel">
-            <div class="section-title"><h2>Security</h2><span class="badge" id="verifyBadge">Email</span></div>
-            <div class="stack">
-              <div><label for="currentPassword">Current Password</label><input id="currentPassword" type="password" placeholder="Current password"></div>
-              <div><label for="newPassword">New Password</label><input id="newPassword" type="password" placeholder="At least 8 characters"></div>
-              <div class="toolbar"><button class="secondary" id="changePasswordBtn" type="button">Change Password</button><button class="secondary" id="resendVerifyBtn" type="button">Resend Verification</button></div>
+            <div class="card settings-panel">
+              <div class="section-title"><h2>Security</h2><span class="badge" id="verifyBadge">Email</span></div>
+              <div class="input-wrap"><label for="currentPassword">Current Password</label><input class="input" id="currentPassword" type="password"></div>
+              <div class="input-wrap"><label for="newPassword">New Password</label><input class="input" id="newPassword" type="password"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-secondary btn-sm" id="changePasswordBtn">Change Password</button>
+                <button class="btn btn-secondary btn-sm" id="resendVerifyBtn">Resend Verification</button>
+              </div>
             </div>
-          </section>
+          </div>
+          <div class="card settings-panel">
+            <div class="section-title"><h2>Subscription</h2><span class="badge badge-cyan" id="settingsPlan">free</span></div>
+            <p class="muted" id="settingsSubscription">Local development subscription state.</p>
+            <div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
+          </div>
+          <div class="card settings-panel">
+            <div class="section-title"><h2>Team Access</h2><span class="badge badge-cyan" id="teamCount">0 members</span></div>
+            <div class="schedule-bar">
+              <div class="input-wrap" style="flex:1"><label for="inviteEmail">Invite Email</label><input class="input" id="inviteEmail" type="email" placeholder="teammate@agency.com"></div>
+              <div class="input-wrap"><label for="inviteRole">Role</label><select id="inviteRole"><option value="member">Member</option><option value="manager">Manager</option></select></div>
+              <button class="btn btn-secondary btn-sm" id="sendInviteBtn">Send Invite</button>
+            </div>
+            <div class="grid-2">
+              <div><div class="section-title"><h2>Members</h2><span class="badge badge-dim" id="memberCount">0</span></div><div class="stack" id="memberList"></div></div>
+              <div><div class="section-title"><h2>Invitations</h2><span class="badge badge-dim" id="inviteCount">0</span></div><div class="stack" id="inviteList"></div></div>
+            </div>
+          </div>
         </div>
-        <section class="card panel" style="margin-top:14px">
-          <div class="section-title"><h2>Subscription</h2><span class="badge info" id="settingsPlan">free</span></div>
-          <p class="muted" id="settingsSubscription">Local development subscription state.</p>
-          <div class="toolbar"><button class="secondary" data-plan="pro" type="button">Upgrade Pro</button><button class="secondary" data-plan="agency" type="button">Upgrade Agency</button></div>
-        </section>
-        <section class="card panel" style="margin-top:14px">
-          <div class="section-title"><h2>Team Access</h2><span class="badge info" id="teamCount">0 members</span></div>
-          <div class="launcher" style="margin:0 0 14px;border-top:0;padding:0">
-            <div><label for="inviteEmail">Invite Email</label><input id="inviteEmail" type="email" placeholder="teammate@example.com"></div>
-            <div><label for="inviteRole">Role</label><select id="inviteRole"><option value="member">Member</option><option value="manager">Manager</option></select></div>
-            <button class="secondary" id="sendInviteBtn" type="button">Send Invite</button>
-          </div>
-          <div class="two-col">
-            <div><div class="section-title"><h2>Members</h2><span class="badge" id="memberCount">0 active</span></div><div class="stack" id="memberList"></div></div>
-            <div><div class="section-title"><h2>Invitations</h2><span class="badge" id="inviteCount">0 pending</span></div><div class="stack" id="inviteList"></div></div>
-          </div>
-        </section>
       </section>
 
+      <!-- ADMIN VIEW -->
       <section class="view" id="view-admin">
-        <div class="kpis">
-          <div class="card kpi"><span>Users</span><strong id="adminUsersKpi">0</strong></div>
-          <div class="card kpi"><span>Jobs</span><strong id="adminJobsKpi">0</strong></div>
-          <div class="card kpi"><span>Queued</span><strong id="adminQueuedKpi">0</strong></div>
-          <div class="card kpi"><span>Complete</span><strong id="adminCompleteKpi">0</strong></div>
+        <div class="kpi-grid" style="margin-bottom:0">
+          <div class="card kpi-card"><div class="kpi-label">Users</div><div class="kpi-value" id="adminUsersKpi">0</div></div>
+          <div class="card kpi-card"><div class="kpi-label">Jobs</div><div class="kpi-value" id="adminJobsKpi">0</div></div>
+          <div class="card kpi-card"><div class="kpi-label">Queued</div><div class="kpi-value" id="adminQueuedKpi">0</div></div>
+          <div class="card kpi-card"><div class="kpi-label">Complete</div><div class="kpi-value" id="adminCompleteKpi">0</div></div>
         </div>
-        <section class="card panel" style="margin-bottom:18px">
-          <div class="section-title"><h2>Database Tables</h2><span class="badge info" id="dbRowCount">0 rows</span></div>
-          <div class="db-shell">
+        <div class="admin-section">
+          <div class="card" style="padding:20px;margin-bottom:18px">
+            <div class="section-title"><h2>Database Tables</h2><span class="badge badge-cyan" id="dbRowCount">0 rows</span></div>
             <div class="db-controls">
-              <div><label for="dbTableSelect">Table</label><select id="dbTableSelect"></select></div>
-              <button class="secondary" id="dbRefreshBtn" type="button">Refresh Data</button>
-              <button class="secondary" id="dbDownloadBtn" type="button">Open JSON</button>
+              <div class="input-wrap"><label for="dbTableSelect">Table</label><select id="dbTableSelect"></select></div>
+              <button class="btn btn-secondary btn-sm" id="dbRefreshBtn">Refresh</button>
+              <button class="btn btn-secondary btn-sm" id="dbDownloadBtn">Export JSON</button>
             </div>
-            <div class="db-table-wrap" id="dbTable"></div>
-            <pre id="dbJson"></pre>
+            <div class="data-table-wrap" id="dbTable"></div>
+            <pre class="code-block" id="dbJson" style="margin-top:12px;max-height:240px"></pre>
           </div>
-        </section>
-        <div class="workspace">
-          <section>
-            <div class="section-title"><h2>Users</h2><span class="badge info" id="adminUserCount">0 users</span></div>
-            <div class="stack" id="adminUsers"></div>
-          </section>
-          <section>
-            <div class="section-title"><h2>Audit Log</h2><span class="badge" id="adminLogCount">0 events</span></div>
-            <div class="stack" id="adminLogs"></div>
-          </section>
+          <div class="grid-2">
+            <div>
+              <div class="section-title"><h2>Users</h2><span class="badge badge-dim" id="adminUserCount">0</span></div>
+              <div class="stack" id="adminUsers"></div>
+            </div>
+            <div>
+              <div class="section-title"><h2>Audit Log</h2><span class="badge badge-dim" id="adminLogCount">0</span></div>
+              <div class="stack" id="adminLogs"></div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
   </div>
-  <div class="toast" id="toast"></div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="mobile-nav hidden" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <button class="mobile-nav-item active" data-view="audit"><span class="nav-dot"></span>Audit</button>
+      <button class="mobile-nav-item" data-view="projects"><span class="nav-dot"></span>Projects</button>
+      <button class="mobile-nav-item" data-view="sites"><span class="nav-dot"></span>Sites</button>
+      <button class="mobile-nav-item" data-view="reports"><span class="nav-dot"></span>Reports</button>
+      <button class="mobile-nav-item" data-view="settings"><span class="nav-dot"></span>More</button>
+    </div>
+  </nav>
+
+  <div class="toast-container" id="toastContainer"></div>
+
   <script>
-    const state={token:localStorage.getItem('seo_token'),user:null,modules:[],projects:[],sites:[],history:[],schedules:[],team:{invitations:[],members:[],memberships:[]},database:null,dbTable:null,latest:null,activeTab:'summary',poll:null,authMode:'signup',view:'audit',resetToken:null,inviteToken:null};
-    const viewMeta={audit:['SEO audit command center','Select a client project and site, run an audit, then share the completed report with stakeholders.'],projects:['Client project portfolio','Create and manage premium customer workspaces before running SEO analysis.'],sites:['Managed site inventory','Save customer domains and reuse them across repeat audits and reporting workflows.'],reports:['Executive report library','Review completed audits, open share links, and export deliverables for clients.'],settings:['Account and security settings','Manage profile details, email verification, password changes, and subscription state.'],admin:['Admin operations console','Monitor users, jobs, plans, and audit activity across the SaaS workspace.']};
-    const $=id=>document.getElementById(id);const authHeaders=()=>state.token?{Authorization:`Bearer ${state.token}`}:{};
-    async function fetchJson(url,options={}){const headers={...(options.headers||{}),...authHeaders()};const resp=await fetch(url,{...options,headers});const data=await resp.json();if(!resp.ok)throw new Error(data.detail||JSON.stringify(data));return data}
-    async function init(){const params=new URLSearchParams(location.search);state.inviteToken=params.get('invite_token');const billing=params.get('billing');if(billing==='success')toast('Payment received. Your plan will update after Stripe confirms it.');if(billing==='cancelled')toast('Checkout cancelled.');if(state.inviteToken&&!state.token){setAuthMode('login');$('authHelp').textContent='Log in or create an account with the invited email to accept this team invitation.'}if(location.pathname==='/verify-email'&&params.get('token')){try{await fetchJson('/api/auth/verify-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:params.get('token')})});toast('Email verified. You can log in now.')}catch(e){toast(e.message)}history.replaceState(null,'','/')}if(location.pathname==='/reset-password'&&params.get('token')){state.resetToken=params.get('token');setAuthMode('reset-confirm')}await loadHealth();await loadModules();if(state.token){try{const me=await fetchJson('/api/me');state.user=me.user;showApp();renderPlan(me);await refreshWorkspace();if(state.inviteToken)await acceptInvitation()}catch{localStorage.removeItem('seo_token');state.token=null}}}
-    async function loadHealth(){try{const status=await fetchJson('/api/ready');const d=status.runtime||status;const backend=status.database_backend==='postgres'?'Supabase Postgres':'Local SQLite';$('runtimeBadge').textContent=status.ready?'Ready':'Setup';$('runtimeBadge').className=`badge ${status.ready?'ok':'bad'}`;$('runtimeKpi').textContent=status.ready?'Ready':'Setup';$('runtimeDetail').textContent=status.ready?`${backend} · Python ${d.python_version||'--'} · ${d.mode||'local'} mode`:(d.reasons||['Runtime setup required']).join(', ')}catch{}}
-    async function loadModules(){state.modules=await fetchJson('/api/modules');$('moduleSelect').innerHTML=state.modules.map(m=>`<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');$('moduleCount').textContent=`${state.modules.length} modules`;$('modules').innerHTML=state.modules.map(m=>`<article class="card module"><div class="module-top"><div><h3>${esc(m.label)}</h3><p>${esc(m.description)}</p></div><button class="secondary" data-module="${esc(m.id)}" type="button">Run</button></div><span class="badge info">${esc(m.category)}</span></article>`).join('');document.querySelectorAll('[data-module]').forEach(b=>b.onclick=()=>startJob(b.dataset.module))}
-    function showApp(){$('authView').classList.add('hidden');$('appView').classList.remove('hidden');$('userLine').textContent=state.user?.email||'Customer workspace';$('adminNavBtn').classList.toggle('hidden',state.user?.role!=='admin');renderSettings();setView(state.view)}
-    function setAuthMode(mode){state.authMode=mode;showAuthError('');const login=mode==='login',signup=mode==='signup',resetRequest=mode==='reset-request',resetConfirm=mode==='reset-confirm';$('showSignupBtn').classList.toggle('active',signup);$('showLoginBtn').classList.toggle('active',login);$('authNameWrap').classList.toggle('hidden',!signup);$('authEmailWrap').classList.toggle('hidden',resetConfirm);$('authPasswordWrap').classList.toggle('hidden',resetRequest);$('forgotPasswordBtn').classList.toggle('hidden',resetRequest||resetConfirm);$('authPasswordLabel').textContent=resetConfirm?'New Password':'Password';$('authSubmitBtn').textContent=signup?'Create Account':login?'Log In':resetRequest?'Send Reset Link':'Reset Password';$('authHelp').textContent=signup?'Already have an account? Click Log In above, then enter the same email and password.':login?'Log in with an account in the configured application database.':resetRequest?'Enter your account email. In development, reset tokens are stored in the email outbox.':'Enter a new password for this reset link.'}
-    function setAuthBusy(active){$('authSubmitBtn').disabled=active;$('showSignupBtn').disabled=active;$('showLoginBtn').disabled=active;$('forgotPasswordBtn').disabled=active;if(active){$('authSubmitBtn').textContent='Working...'}else{$('authSubmitBtn').textContent=state.authMode==='signup'?'Create Account':state.authMode==='login'?'Log In':state.authMode==='reset-request'?'Send Reset Link':'Reset Password'}}
-    function showAuthError(message,type='error'){$('authError').textContent=message;$('authError').classList.toggle('hidden',!message);$('authError').classList.toggle('ok',type==='ok')}
-    function authPayload(requirePassword=true){showAuthError('');const email=$('authEmail').value.trim().toLowerCase();const password=$('authPassword').value;if(!email||!email.includes('@')){showAuthError('Enter a valid email address.');return null}if(requirePassword&&password.length<8){showAuthError('Password must be at least 8 characters.');return null}return{email,password,name:$('authName').value.trim()}}
-    async function auth(mode){setAuthBusy(true);try{if(mode==='reset-request'){const payload=authPayload(false);if(!payload)return;await fetchJson('/api/auth/password-reset/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:payload.email})});setAuthMode('login');showAuthError('Password reset email queued. Check your email or development outbox.','ok');return}if(mode==='reset-confirm'){const password=$('authPassword').value;if(password.length<8){showAuthError('Password must be at least 8 characters.');return}await fetchJson('/api/auth/password-reset/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:state.resetToken,password})});history.replaceState(null,'','/');setAuthMode('login');showAuthError('Password reset. Log in with the new password.','ok');return}const payload=authPayload(true);if(!payload)return;const data=await fetchJson(`/api/auth/${mode}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(mode==='signup'){localStorage.removeItem('seo_token');state.token=null;state.user=null;$('authPassword').value='';setAuthMode('login');$('authHelp').textContent=state.inviteToken?'Account created. Log in with this email to accept the team invitation.':'Account created successfully. Log in with the same email and password to continue.';showAuthError('Account created. Please log in.','ok');return}state.token=data.token;state.user=data.user;localStorage.setItem('seo_token',state.token);showApp();renderPlan({user:data.user});await refreshWorkspace();if(state.inviteToken){await acceptInvitation();return}}catch(e){const message=mode==='login'&&e.message.includes('Invalid email or password')?'No matching account found. Create an account first, or check the email and password.':e.message;showAuthError(message)}finally{setAuthBusy(false)}}
-    function setView(view){if(view==='admin'&&state.user?.role!=='admin'){toast('Admin access required.');return}state.view=view;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${view}`));$('viewTitle').textContent=viewMeta[view][0];$('viewSubtitle').textContent=viewMeta[view][1];if(view==='reports')renderReportPreview(state.latest);if(view==='projects')renderProjects();if(view==='sites')renderSites();if(view==='settings'){renderSettings();loadTeam()}if(view==='admin')loadAdmin()}
-    function renderPlan(data){const user=data.user||state.user;const limits=data.plan_limits||{};$('planBadge').textContent=user?.plan||'free';$('planDetail').textContent=`${user?.email_verified?'Verified':'Email not verified'} · ${limits.hourly_jobs||'--'} audits/hour · ${limits.projects||'--'} projects · ${limits.sites||'--'} sites`;renderSettings()}
-    async function upgrade(plan){try{const checkout=await fetchJson('/api/billing/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});if(checkout.checkout_url){location.assign(checkout.checkout_url);return}const data=await fetchJson('/api/billing/dev-upgrade',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});state.user=data.user;renderPlan(data);toast(`Upgraded to ${plan}.`)}catch(e){toast(e.message)}}
-    async function refreshWorkspace(){await Promise.all([loadProjects(),loadSites(),loadHistory(),loadSchedules(),loadTeam()]);updateKpis()}
-    async function loadProjects(){state.projects=await fetchJson('/api/projects');const options=state.projects.length?state.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join(''):'<option value="">No projects yet</option>';$('projectSelect').innerHTML=options;$('siteProjectPanel').innerHTML=options;renderProjects()}
-    async function loadSites(){const project=$('projectSelect').value;state.sites=await fetchJson('/api/sites');const filtered=project?state.sites.filter(s=>s.project_id===project):state.sites;$('siteSelect').innerHTML=filtered.length?filtered.map(s=>`<option value="${esc(s.id)}" data-url="${esc(s.url)}">${esc(s.name||s.url)}</option>`).join(''):'<option value="">No saved sites</option>';if(filtered[0])$('url').value=filtered[0].url;renderSites()}
-    async function createProject(inputId='newProject'){const input=$(inputId);const name=input.value.trim();if(!name)return toast('Enter a client project name.');await fetchJson('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});input.value='';await refreshWorkspace();toast('Project added.')}
-    async function saveSite(projectId=null,urlValue=null){const project_id=projectId||$('projectSelect').value;const url=urlValue||targetUrl();if(!project_id)return toast('Create or select a project first.');if(!url)return;await fetchJson('/api/sites',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project_id,url,name:new URL(url).hostname})});await refreshWorkspace();toast('Site saved.')}
-    async function loadHistory(){state.history=await fetchJson('/api/history');renderHistory();renderReportPreview(state.latest||state.history[0]||null)}
-    function renderProjects(){if(!$('projectGrid'))return;$('projectCount').textContent=`${state.projects.length} active`;$('projectListCount').textContent=`${state.projects.length} projects`;$('projectGrid').innerHTML=state.projects.length?state.projects.map(p=>{const sites=state.sites.filter(s=>s.project_id===p.id).length;return`<article class="card entity"><div><h3>${esc(p.name)}</h3><p>${sites} saved sites · created ${date(p.created_at)}</p></div><div class="entity-meta"><span class="badge info">Project</span><span class="badge">${sites} sites</span></div><div class="entity-actions"><button class="secondary" data-open-project="${esc(p.id)}" type="button">Open Audit Desk</button><button class="secondary" data-edit-project="${esc(p.id)}" type="button">Edit</button><button class="secondary danger" data-delete-project="${esc(p.id)}" type="button">Delete</button></div></article>`}).join(''):'<article class="card entity"><h3>No projects yet</h3><p>Create your first client workspace to begin.</p></article>';document.querySelectorAll('[data-open-project]').forEach(b=>b.onclick=()=>{setView('audit');$('projectSelect').value=b.dataset.openProject;loadSites()});document.querySelectorAll('[data-edit-project]').forEach(b=>b.onclick=()=>editProject(b.dataset.editProject));document.querySelectorAll('[data-delete-project]').forEach(b=>b.onclick=()=>deleteProject(b.dataset.deleteProject))}
-    function renderSites(){if(!$('siteGrid'))return;$('siteCount').textContent=`${state.sites.length} saved`;$('siteListCount').textContent=`${state.sites.length} sites`;$('siteGrid').innerHTML=state.sites.length?state.sites.map(s=>{const project=state.projects.find(p=>p.id===s.project_id);return`<article class="card entity"><div><h3>${esc(s.name||new URL(s.url).hostname)}</h3><p>${esc(s.url)}</p></div><div class="entity-meta"><span class="badge info">${esc(project?.name||'Project')}</span></div><div class="entity-actions"><button class="secondary" data-audit-site="${esc(s.id)}" type="button">Audit Site</button><button class="secondary" data-edit-site="${esc(s.id)}" type="button">Edit</button><button class="secondary danger" data-delete-site="${esc(s.id)}" type="button">Delete</button></div></article>`}).join(''):'<article class="card entity"><h3>No sites saved</h3><p>Add a site here or from the Audit Desk.</p></article>';document.querySelectorAll('[data-audit-site]').forEach(b=>b.onclick=()=>{const s=state.sites.find(x=>x.id===b.dataset.auditSite);if(!s)return;setView('audit');$('projectSelect').value=s.project_id;loadSites().then(()=>{$('siteSelect').value=s.id;$('url').value=s.url})});document.querySelectorAll('[data-edit-site]').forEach(b=>b.onclick=()=>editSite(b.dataset.editSite));document.querySelectorAll('[data-delete-site]').forEach(b=>b.onclick=()=>deleteSite(b.dataset.deleteSite))}
-    function renderHistory(){const rows=state.history;$('historyCount').textContent=`${rows.length} saved`;$('historyList').innerHTML=rows.length?rows.map(r=>`<article class="card entity"><div class="finding-top"><button class="link" data-history="${esc(r.id)}" type="button">${esc(r.label)}</button><span class="badge ${r.status==='complete'?'ok':r.status==='error'?'bad':''}">${esc(r.status)}</span></div><p>${esc(r.url)}</p><div class="entity-actions"><button class="secondary" data-report-open="${esc(r.id)}" type="button">Preview</button></div></article>`).join(''):'<article class="card entity"><h3>No reports yet</h3><p>Completed audits will appear here.</p></article>';document.querySelectorAll('[data-history], [data-report-open]').forEach(b=>b.onclick=()=>{const job=state.history.find(r=>r.id===(b.dataset.history||b.dataset.reportOpen));renderJob(job);setView('reports');renderReportPreview(job)})}
-    function renderReportPreview(job){if(!$('reportPreview'))return;if(!job){$('reportPreview').innerHTML='<article class="finding"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select a report from history.</p></article>';return}const share=job.share_url?`${location.origin}${job.share_url}`:'Available after completion';$('reportPreview').innerHTML=`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status==='complete'?'ok':job.status==='error'?'bad':''}">${esc(job.status)}</span></div><pre>${esc(`${job.url}\nShare: ${share}\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json`)}</pre></article>${(job.findings||[]).slice(0,6).map(f=>`<article class="finding"><div class="finding-title">${esc(f.title)}</div><p class="muted">${esc(f.detail||'')}</p></article>`).join('')}`}
-    function updateKpis(){$('runsKpi').textContent=String(state.history.length);$('projectsKpi').textContent=String(state.projects.length);$('sitesKpi').textContent=String(state.sites.length)}
-    async function editProject(id){const p=state.projects.find(x=>x.id===id);if(!p)return;const name=prompt('Project name',p.name);if(name===null)return;await fetchJson(`/api/projects/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});await refreshWorkspace();toast('Project updated.')}
-    async function deleteProject(id){if(!confirm('Delete this project and its saved sites? Projects with audit history are protected.'))return;try{await fetchJson(`/api/projects/${id}`,{method:'DELETE'});await refreshWorkspace();toast('Project deleted.')}catch(e){toast(e.message)}}
-    async function editSite(id){const s=state.sites.find(x=>x.id===id);if(!s)return;const url=prompt('Website URL',s.url);if(url===null)return;const name=prompt('Site name',s.name||new URL(s.url).hostname);if(name===null)return;await fetchJson(`/api/sites/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,name,project_id:s.project_id})});await refreshWorkspace();toast('Site updated.')}
-    async function deleteSite(id){if(!confirm('Delete this saved site? Sites with audit history are protected.'))return;try{await fetchJson(`/api/sites/${id}`,{method:'DELETE'});await refreshWorkspace();toast('Site deleted.')}catch(e){toast(e.message)}}
-    async function loadSchedules(){state.schedules=await fetchJson('/api/schedules');renderSchedules()}
-    function renderSchedules(){const active=state.schedules.filter(s=>s.status==='active');$('scheduleCount').textContent=`${active.length} active`;$('scheduleList').innerHTML=state.schedules.length?state.schedules.map(s=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(s.label)}</div><span class="badge ${s.status==='active'?'ok':''}">${esc(s.frequency)} · ${esc(s.status)}</span></div><p class="muted">${esc(s.url)} · next ${dateTime(s.next_run_at)}</p><div class="entity-actions"><button class="secondary danger" data-pause-schedule="${esc(s.id)}" type="button">Pause</button></div></article>`).join(''):'<article class="finding"><div class="finding-title">No recurring audits</div><p class="muted">Schedule the current URL and selected skill for hands-off repeat checks.</p></article>';document.querySelectorAll('[data-pause-schedule]').forEach(b=>b.onclick=()=>pauseSchedule(b.dataset.pauseSchedule))}
-    async function createSchedule(){const url=targetUrl();if(!url)return;try{await fetchJson('/api/schedules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,module:$('moduleSelect').value,frequency:$('scheduleFrequency').value,project_id:$('projectSelect').value||null,site_id:$('siteSelect').value||null})});await loadSchedules();toast('Recurring audit scheduled.')}catch(e){toast(e.message)}}
-    async function pauseSchedule(id){try{await fetchJson(`/api/schedules/${id}`,{method:'DELETE'});await loadSchedules();toast('Schedule paused.')}catch(e){toast(e.message)}}
-    async function loadTeam(){state.team=await fetchJson('/api/team');renderTeam()}
-    function renderTeam(){const team=state.team||{invitations:[],members:[],memberships:[]};const owned=team.members||[];const joined=team.memberships||[];const invites=team.invitations||[];const pending=invites.filter(i=>i.status==='pending');$('teamCount').textContent=`${owned.length+joined.length} members`;$('memberCount').textContent=`${owned.length} active`;$('inviteCount').textContent=`${pending.length} pending`;$('memberList').innerHTML=(owned.length||joined.length)?`${owned.map(m=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(m.email)}</div><span class="badge info">${esc(m.role)}</span></div><p class="muted">${esc(m.status)} · added ${date(m.created_at)}</p></article>`).join('')}${joined.map(m=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(m.email)}</div><span class="badge ok">Joined</span></div><p class="muted">Workspace role ${esc(m.role)}</p></article>`).join('')}`:'<article class="finding"><div class="finding-title">No teammates yet</div><p class="muted">Invite operators, analysts, or account managers by email.</p></article>';$('inviteList').innerHTML=invites.length?invites.map(i=>{const link=`${location.origin}/?invite_token=${encodeURIComponent(i.token)}`;return`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(i.email)}</div><span class="badge ${i.status==='pending'?'info':i.status==='accepted'?'ok':'bad'}">${esc(i.status)}</span></div><p class="muted">${esc(i.role)} · expires ${date(i.expires_at)}</p><pre>${esc(link)}</pre>${i.status==='pending'?`<div class="entity-actions"><button class="secondary danger" data-revoke-invite="${esc(i.id)}" type="button">Revoke</button></div>`:''}</article>`}).join(''):'<article class="finding"><div class="finding-title">No invitations</div><p class="muted">Pending invite links will appear here and are also stored in the email outbox.</p></article>';document.querySelectorAll('[data-revoke-invite]').forEach(b=>b.onclick=()=>revokeInvite(b.dataset.revokeInvite))}
-    async function sendInvite(){const email=$('inviteEmail').value.trim().toLowerCase();if(!email||!email.includes('@'))return toast('Enter a valid teammate email.');try{await fetchJson('/api/team/invitations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,role:$('inviteRole').value})});$('inviteEmail').value='';await loadTeam();toast('Invite queued.')}catch(e){toast(e.message)}}
-    async function revokeInvite(id){try{await fetchJson(`/api/team/invitations/${id}/revoke`,{method:'POST'});await loadTeam();toast('Invitation revoked.')}catch(e){toast(e.message)}}
-    async function acceptInvitation(){try{await fetchJson('/api/team/accept',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:state.inviteToken})});state.inviteToken=null;history.replaceState(null,'','/');await loadTeam();toast('Team invitation accepted.')}catch(e){toast(e.message)}}
-    function renderSettings(){if(!state.user||!$('settingsName'))return;$('settingsName').value=state.user.name||'';$('settingsEmail').value=state.user.email||'';$('settingsRole').textContent=state.user.role||'user';$('verifyBadge').textContent=state.user.email_verified?'Verified':'Unverified';$('verifyBadge').className=`badge ${state.user.email_verified?'ok':'bad'}`;$('settingsPlan').textContent=state.user.plan||'free';$('settingsSubscription').textContent=`${state.user.subscription_status||'dev'} subscription · ${state.user.email_verified?'email verified':'email not verified'}`}
-    async function saveProfile(){try{const data=await fetchJson('/api/me/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('settingsName').value})});state.user=data.user;showApp();toast('Profile saved.')}catch(e){toast(e.message)}}
-    async function changePassword(){try{await fetchJson('/api/me/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password:$('currentPassword').value,new_password:$('newPassword').value})});$('currentPassword').value='';$('newPassword').value='';toast('Password changed.')}catch(e){toast(e.message)}}
-    async function resendVerification(){try{const data=await fetchJson('/api/me/resend-verification',{method:'POST'});toast(data.already_verified?'Email already verified.':'Verification email queued.')}catch(e){toast(e.message)}}
-    async function loadAdmin(){try{const [summary,users,logs,backup]=await Promise.all([fetchJson('/api/admin/summary'),fetchJson('/api/admin/users'),fetchJson('/api/admin/audit-logs'),fetchJson('/api/admin/backup.json')]);$('adminUsersKpi').textContent=summary.counts.users;$('adminJobsKpi').textContent=summary.counts.jobs;$('adminQueuedKpi').textContent=summary.counts.queued_jobs;$('adminCompleteKpi').textContent=summary.counts.completed_jobs;$('adminUserCount').textContent=`${users.length} users`;$('adminUsers').innerHTML=users.map(u=>`<article class="card entity"><div><h3>${esc(u.email)}</h3><p>${esc(u.name||'')} · ${esc(u.subscription_status)}</p></div><div class="entity-meta"><span class="badge info">${esc(u.role)}</span><span class="badge">${esc(u.plan)}</span></div><div class="entity-actions"><button class="secondary" data-admin-plan="${esc(u.id)}" data-plan-value="pro" type="button">Set Pro</button><button class="secondary" data-admin-plan="${esc(u.id)}" data-plan-value="agency" type="button">Set Agency</button></div></article>`).join('');$('adminLogCount').textContent=`${logs.length} events`;$('adminLogs').innerHTML=logs.slice(0,40).map(l=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(l.action)}</div><span class="badge">${date(l.created_at)}</span></div><p class="muted">${esc(l.target_type||'system')} · ${esc(l.target_id||'')}</p></article>`).join('');state.database=backup.tables||{};if(!state.dbTable||!state.database[state.dbTable])state.dbTable=Object.keys(state.database)[0]||null;renderDatabase();document.querySelectorAll('[data-admin-plan]').forEach(b=>b.onclick=()=>adminSetPlan(b.dataset.adminPlan,b.dataset.planValue))}catch(e){toast(e.message)}}
-    function renderDatabase(){const tables=Object.keys(state.database||{});$('dbTableSelect').innerHTML=tables.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');if(state.dbTable)$('dbTableSelect').value=state.dbTable;const rows=(state.database&&state.dbTable?state.database[state.dbTable]:[])||[];$('dbRowCount').textContent=`${rows.length} rows`;const columns=[...new Set(rows.flatMap(row=>Object.keys(row)))];$('dbTable').innerHTML=rows.length?`<table class="data-table"><thead><tr>${columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${columns.map(c=>`<td title="${esc(cell(row[c]))}">${esc(cell(row[c]))}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<div class="empty" style="min-height:160px"><div><strong>No rows</strong>This table is currently empty.</div></div>';$('dbJson').textContent=JSON.stringify({table:state.dbTable,rows},null,2)}
-    function changeDatabaseTable(){state.dbTable=$('dbTableSelect').value;renderDatabase()}
-    function openDatabaseJson(){const payload={created_at:Date.now()/1000,tables:state.database||{}};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});window.open(URL.createObjectURL(blob))}
-    async function adminSetPlan(userId,plan){try{await fetchJson(`/api/admin/users/${userId}/plan`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});await loadAdmin();toast('User plan updated.')}catch(e){toast(e.message)}}
-    async function logout(){try{await fetchJson('/api/auth/logout',{method:'POST'})}catch{}localStorage.removeItem('seo_token');location.reload()}
-    function targetUrl(){const value=$('url').value.trim();if(!value){toast('Enter a website URL.');return null}try{return new URL(value).toString()}catch{toast('Use a full URL such as https://example.com.');return null}}
-    async function startJob(module=$('moduleSelect').value){const url=targetUrl();if(!url)return;setBusy(true);try{const payload={url,module,project_id:$('projectSelect').value||null,site_id:$('siteSelect').value||null};const job=await fetchJson('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});renderJob(job);pollJob(job.id)}catch(e){setBusy(false);toast(e.message)}}
-    function pollJob(id){clearInterval(state.poll);state.poll=setInterval(async()=>{try{const job=await fetchJson(`/api/jobs/${id}`);renderJob(job);if(['complete','error'].includes(job.status)){clearInterval(state.poll);setBusy(false);await loadHistory();updateKpis()}}catch(e){clearInterval(state.poll);setBusy(false);toast(e.message)}},1200)}
-    function renderJob(job){if(!job)return;state.latest=job;$('emptyState').hidden=true;$('resultTitle').textContent=`${job.label} · ${job.status}`;$('rawOutput').textContent=JSON.stringify(job,null,2);const share=job.share_url?`${location.origin}${job.share_url}`:'Available after completion';const exports=job.status==='complete'?`\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json`:'';$('summaryView').innerHTML=`<article class="finding"><div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status==='complete'?'ok':job.status==='error'?'bad':''}">${esc(job.status)}</span></div><pre>${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command||'Pending'}\nShare: ${share}${exports}`)}</pre></article>${(job.findings||[]).map(f=>`<article class="finding"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${tone(f.severity)}">${esc(f.severity)}</span></div><pre>${esc(f.detail||'')}</pre></article>`).join('')}`;renderReportPreview(job);updateTabs()}
-    function setBusy(v){$('startBtn').disabled=v;$('startBtn').classList.toggle('busy',v);document.querySelectorAll('[data-module]').forEach(b=>b.disabled=v)}
-    function updateTabs(){$('summaryView').hidden=state.activeTab!=='summary';$('rawView').hidden=state.activeTab!=='raw'}function tone(s){return['critical','high'].includes(s)?'bad':s==='info'?'info':''}function date(ts){return ts?new Date(ts*1000).toLocaleDateString():'--'}function dateTime(ts){return ts?new Date(ts*1000).toLocaleString():'--'}function cell(v){return typeof v==='object'&&v!==null?JSON.stringify(v):String(v??'')}function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',3300)}
-    $('showSignupBtn').onclick=()=>setAuthMode('signup');$('showLoginBtn').onclick=()=>setAuthMode('login');$('forgotPasswordBtn').onclick=()=>setAuthMode('reset-request');$('authSubmitBtn').onclick=()=>auth(state.authMode);$('sidebarLogoutBtn').onclick=logout;$('createProjectBtn').onclick=()=>createProject('newProject');$('createProjectPanelBtn').onclick=()=>createProject('projectNamePanel');$('saveSiteBtn').onclick=()=>saveSite();$('saveSitePanelBtn').onclick=()=>saveSite($('siteProjectPanel').value,$('siteUrlPanel').value.trim());$('projectSelect').onchange=loadSites;$('siteSelect').onchange=()=>{const o=$('siteSelect').selectedOptions[0];if(o?.dataset.url)$('url').value=o.dataset.url};$('startBtn').onclick=()=>startJob();$('createScheduleBtn').onclick=createSchedule;$('saveProfileBtn').onclick=saveProfile;$('changePasswordBtn').onclick=changePassword;$('resendVerifyBtn').onclick=resendVerification;$('sendInviteBtn').onclick=sendInvite;$('dbTableSelect').onchange=changeDatabaseTable;$('dbRefreshBtn').onclick=loadAdmin;$('dbDownloadBtn').onclick=openDatabaseJson;document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>upgrade(b.dataset.plan));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{state.activeTab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateTabs()});
+    /* ═══════════════════════════════════════════
+       STATE & CONFIG
+       ═══════════════════════════════════════════ */
+    const S = {
+      token: localStorage.getItem('seo_token'), user: null,
+      modules: [], projects: [], sites: [], history: [], schedules: [],
+      team: { invitations: [], members: [], memberships: [] },
+      database: null, dbTable: null, latest: null, activeTab: 'summary',
+      poll: null, authMode: 'signup', view: 'audit',
+      resetToken: null, inviteToken: null,
+    };
+
+    const viewMeta = {
+      audit:    ['SEO audit command center', 'Select a client project and site, run an audit, then share the completed report with stakeholders.'],
+      projects: ['Client project portfolio', 'Manage client workspaces and campaign portfolios.'],
+      sites:    ['Managed site inventory', 'Save and organize customer domains for repeat analysis.'],
+      reports:  ['Executive report library', 'Review completed audits, export deliverables, and share links.'],
+      settings: ['Account and security settings', 'Manage your profile, security, subscription, and team.'],
+      admin:    ['Admin operations console', 'Monitor users, jobs, and system activity.'],
+    };
+
+    /* ═══════════════════════════════════════════
+       HELPERS
+       ═══════════════════════════════════════════ */
+    const $ = id => document.getElementById(id);
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
+    const date = ts => ts ? new Date(ts * 1000).toLocaleDateString() : '--';
+    const dateTime = ts => ts ? new Date(ts * 1000).toLocaleString() : '--';
+    const cell = v => typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v ?? '');
+    const authHeaders = () => S.token ? { Authorization: `Bearer ${S.token}` } : {};
+
+    function toast(msg) {
+      const c = $('toastContainer');
+      const el = document.createElement('div');
+      el.className = 'toast-item'; el.textContent = msg; c.appendChild(el);
+      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 3200);
+    }
+
+    async function fetchJson(url, opts = {}) {
+      const headers = { ...(opts.headers || {}), ...authHeaders() };
+      const resp = await fetch(url, { ...opts, headers });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.detail || JSON.stringify(data));
+      return data;
+    }
+
+    /* ═══════════════════════════════════════════
+       INIT
+       ═══════════════════════════════════════════ */
+    async function init() {
+      const params = new URLSearchParams(location.search);
+      S.inviteToken = params.get('invite_token');
+      const billing = params.get('billing');
+      if (billing === 'success') toast('Payment received. Your plan will update shortly.');
+      if (billing === 'cancelled') toast('Checkout cancelled.');
+
+      if (S.inviteToken && !S.token) {
+        showAuth('login');
+      }
+
+      if (location.pathname === '/verify-email' && params.get('token')) {
+        try {
+          await fetchJson('/api/auth/verify-email', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: params.get('token') }) });
+          toast('Email verified. You can log in now.');
+        } catch(e) { toast(e.message); }
+        history.replaceState(null, '', '/');
+      }
+
+      if (location.pathname === '/reset-password' && params.get('token')) {
+        S.resetToken = params.get('token');
+        showAuth('reset-confirm');
+      }
+
+      await loadHealth();
+      await loadModules();
+
+      if (S.token) {
+        try {
+          const me = await fetchJson('/api/me');
+          S.user = me.user;
+          enterApp();
+          renderPlan(me);
+          await refreshWorkspace();
+          if (S.inviteToken) await acceptInvitation();
+        } catch {
+          localStorage.removeItem('seo_token');
+          S.token = null;
+          showLanding();
+        }
+      } else {
+        showLanding();
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       NAVIGATION (LANDING / AUTH / APP)
+       ═══════════════════════════════════════════ */
+    function showLanding() {
+      $('landingView').classList.remove('hidden');
+      $('authView').classList.remove('hidden');
+      $('appView').classList.add('hidden');
+      $('mobileNav').classList.add('hidden');
+      setAuthMode(S.authMode || 'signup');
+    }
+
+    function showAuth(mode = 'login') {
+      $('landingView').classList.remove('hidden');
+      $('authView').classList.remove('hidden');
+      $('appView').classList.add('hidden');
+      $('mobileNav').classList.add('hidden');
+      setAuthMode(mode);
+    }
+
+    function enterApp() {
+      $('landingView').classList.add('hidden');
+      $('authView').classList.add('hidden');
+      $('appView').classList.remove('hidden');
+      $('mobileNav').classList.remove('hidden');
+      $('adminNavBtn').classList.toggle('hidden', S.user?.role !== 'admin');
+
+      const initial = S.user?.name?.[0] || S.user?.email?.[0] || '?';
+      $('userAvatar').textContent = initial.toUpperCase();
+      $('userName').textContent = S.user?.name || 'User';
+      $('userEmail').textContent = S.user?.role || 'Member';
+      $('userLine').textContent = S.user?.email || 'Command';
+      renderSettings();
+      setView(S.view);
+    }
+
+    /* ═══════════════════════════════════════════
+       AUTH
+       ═══════════════════════════════════════════ */
+    function setAuthMode(mode) {
+      S.authMode = mode;
+      showAuthError('');
+      const login = mode === 'login', signup = mode === 'signup';
+      const resetReq = mode === 'reset-request', resetConf = mode === 'reset-confirm';
+
+      $('authNameWrap').style.display = signup ? '' : 'none';
+      $('authEmailWrap').style.display = resetConf ? 'none' : '';
+      $('authPasswordWrap').style.display = resetReq ? 'none' : '';
+      $('forgotPasswordBtn').classList.toggle('hidden', resetReq || resetConf || signup);
+      $('authPasswordLabel').textContent = resetConf ? 'New Password' : 'Password';
+      $('authTitle').textContent = login ? 'Welcome back' : signup ? 'Create your account' : resetReq ? 'Reset password' : 'Set new password';
+      $('authSubtitle').textContent = login ? 'Log in to your workspace.' : signup ? 'Start running SEO audits in minutes.' : resetReq ? 'Enter your email to receive a reset link.' : 'Choose a new password.';
+      $('authSubmitBtn').textContent = login ? 'Log In' : signup ? 'Create Account' : resetReq ? 'Send Reset Link' : 'Reset Password';
+      const authToggle = $('authToggle');
+      if (authToggle) {
+        authToggle.style.display = (login || signup) ? '' : 'none';
+        authToggle.innerHTML = login
+          ? "Don't have an account? <button id=\"authSwitchBtn\" onclick=\"setAuthMode('signup')\">Sign up</button>"
+          : "Already have an account? <button id=\"authSwitchBtn\" onclick=\"setAuthMode('login')\">Log in</button>";
+      }
+      $('showSignupBtn')?.classList.toggle('active', signup);
+      $('showLoginBtn')?.classList.toggle('active', login);
+    }
+
+    function showAuthError(message, type = 'error') {
+      const el = $('authError');
+      if (!el) return;
+      el.textContent = message;
+      el.classList.toggle('hidden', !message);
+      el.classList.toggle('ok', type === 'ok');
+    }
+
+    function setAuthBusy(active) {
+      const btn = $('authSubmitBtn');
+      if (!btn) return;
+      btn.disabled = active;
+      if (active) btn.textContent = 'Working...';
+      else {
+        const mode = S.authMode;
+        btn.textContent = mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : mode === 'reset-request' ? 'Send Reset Link' : 'Reset Password';
+      }
+    }
+
+    async function handleAuth() {
+      console.log('handleAuth called, mode:', S.authMode);
+      const mode = S.authMode;
+      showAuthError('');
+      const email = $('authEmail')?.value.trim().toLowerCase();
+      const password = $('authPassword')?.value;
+      const name = $('authName')?.value.trim();
+
+      if (mode === 'reset-request') {
+        if (!email || !email.includes('@')) { showAuthError('Enter a valid email.'); return; }
+        setAuthBusy(true);
+        try {
+          await fetchJson('/api/auth/password-reset/request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+          setAuthMode('login'); showAuthError('Reset email queued. Check your inbox.', 'ok');
+        } catch(e) { showAuthError(e.message); } finally { setAuthBusy(false); }
+        return;
+      }
+
+      if (mode === 'reset-confirm') {
+        if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+        setAuthBusy(true);
+        try {
+          await fetchJson('/api/auth/password-reset/confirm', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: S.resetToken, password }) });
+          history.replaceState(null, '', '/');
+          setAuthMode('login'); showAuthError('Password reset. Log in with the new password.', 'ok');
+        } catch(e) { showAuthError(e.message); } finally { setAuthBusy(false); }
+        return;
+      }
+
+      if (!email || !email.includes('@')) { showAuthError('Enter a valid email.'); return; }
+      if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+      setAuthBusy(true);
+      try {
+        if (mode === 'signup') {
+          await fetchJson('/api/auth/signup', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password, name: name || null }) });
+          setAuthMode('login');
+          showAuthError('Account created. Please log in.', 'ok');
+          return;
+        }
+        const data = await fetchJson('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) });
+        S.token = data.token; S.user = data.user;
+        localStorage.setItem('seo_token', S.token);
+        enterApp(); renderPlan({ user: data.user });
+        await refreshWorkspace();
+        if (S.inviteToken) await acceptInvitation();
+      } catch(e) {
+        let msg = e.message;
+        if (mode === 'login' && msg.includes('Invalid email or password')) {
+          msg = 'No matching account found. Check the email and password.';
+        }
+        showAuthError(msg);
+      } finally {
+        setAuthBusy(false);
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       APP VIEWS
+       ═══════════════════════════════════════════ */
+    function setView(view) {
+      if (view === 'admin' && S.user?.role !== 'admin') { toast('Admin access required.'); return; }
+      S.view = view;
+      document.querySelectorAll('[data-view]').forEach(b => {
+        b.classList.toggle('active', b.dataset.view === view);
+      });
+      document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${view}`));
+      $('pageTitle').textContent = viewMeta[view][0];
+      $('pageSubtitle').textContent = viewMeta[view][1];
+      if (view === 'reports') renderReportPreview(S.latest);
+      if (view === 'projects') renderProjects();
+      if (view === 'sites') renderSites();
+      if (view === 'settings') { renderSettings(); loadTeam(); }
+      if (view === 'admin') loadAdmin();
+    }
+
+    /* ═══════════════════════════════════════════
+       DATA LOADING
+       ═══════════════════════════════════════════ */
+    async function loadHealth() {
+      try {
+        const s = await fetchJson('/api/ready');
+        const d = s.runtime || s;
+        const backend = s.database_backend === 'postgres' ? 'Postgres' : 'SQLite';
+        $('kpiRuntime').textContent = s.ready ? 'Ready' : 'Setup';
+        $('kpiRuntime').style.color = s.ready ? 'var(--emerald)' : 'var(--red)';
+      } catch {}
+    }
+
+    async function loadModules() {
+      S.modules = await fetchJson('/api/modules');
+      $('moduleSelect').innerHTML = S.modules.map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');
+      $('moduleCount').textContent = S.modules.length;
+      $('modulesGrid').innerHTML = S.modules.map(m => `
+        <article class="card card-glow module-card" data-module="${esc(m.id)}">
+          <div class="module-top"><div><h3>${esc(m.label)}</h3><p>${esc(m.description)}</p></div><span class="badge badge-dim">${esc(m.category)}</span></div>
+        </article>
+      `).join('');
+      document.querySelectorAll('[data-module]').forEach(b => b.onclick = () => startJob(b.dataset.module));
+    }
+
+    async function refreshWorkspace() {
+      await Promise.all([loadProjects(), loadSites(), loadHistory(), loadSchedules(), loadTeam()]);
+      updateKpis();
+    }
+
+    async function loadProjects() {
+      S.projects = await fetchJson('/api/projects');
+      const opts = S.projects.length ? S.projects.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('') : '<option value="">No projects</option>';
+      $('projectSelect').innerHTML = opts;
+      $('siteProjectPanel').innerHTML = opts;
+      renderProjects();
+    }
+
+    async function loadSites() {
+      const project = $('projectSelect').value;
+      S.sites = await fetchJson('/api/sites');
+      const filtered = project ? S.sites.filter(s => s.project_id === project) : S.sites;
+      $('siteSelect').innerHTML = filtered.length ? filtered.map(s => `<option value="${esc(s.id)}" data-url="${esc(s.url)}">${esc(s.name || s.url)}</option>`).join('') : '<option value="">No sites</option>';
+      if (filtered[0]) $('url').value = filtered[0].url;
+      renderSites();
+    }
+
+    async function loadHistory() { S.history = await fetchJson('/api/history'); renderHistory(); renderReportPreview(S.latest || S.history[0] || null); }
+    async function loadSchedules() { S.schedules = await fetchJson('/api/schedules'); renderSchedules(); }
+    async function loadTeam() { S.team = await fetchJson('/api/team'); renderTeam(); }
+
+    function updateKpis() {
+      $('kpiRuns').textContent = S.history.length;
+      $('kpiProjects').textContent = S.projects.length;
+      $('kpiSites').textContent = S.sites.length;
+    }
+
+    /* ═══════════════════════════════════════════
+       RENDER FUNCTIONS
+       ═══════════════════════════════════════════ */
+    function renderPlan(data) {
+      const user = data.user || S.user; const limits = data.plan_limits || {};
+      const plan = user?.plan || 'free';
+      $('planBadge').textContent = plan;
+      $('sidebarPlan').textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+      $('sidebarPlan').className = `badge ${plan === 'agency' ? 'badge-gold' : plan === 'pro' ? 'badge-emerald' : 'badge-dim'}`;
+      $('planDetail').textContent = `${user?.email_verified ? 'Verified' : 'Unverified'} · ${limits.hourly_jobs || '--'} audits/hr · ${limits.projects || '--'} projects · ${limits.sites || '--'} sites`;
+      renderSettings();
+    }
+
+    function renderProjects() {
+      $('projectCount').textContent = S.projects.length;
+      $('projectListCount').textContent = S.projects.length + ' projects';
+      $('projectGrid').innerHTML = S.projects.length ? S.projects.map(p => {
+        const sites = S.sites.filter(s => s.project_id === p.id).length;
+        return `<article class="card card-glow entity-card"><h3>${esc(p.name)}</h3><p>${sites} sites · Created ${date(p.created_at)}</p><div class="entity-meta"><span class="badge badge-cyan">Project</span><span class="badge badge-dim">${sites} sites</span></div><div class="entity-actions"><button class="btn btn-secondary btn-xs" data-open-project="${esc(p.id)}">Open</button><button class="btn btn-secondary btn-xs" data-edit-project="${esc(p.id)}">Edit</button><button class="btn btn-secondary btn-xs btn-danger" data-delete-project="${esc(p.id)}">Delete</button></div></article>`;
+      }).join('') : '<div class="card entity-card"><h3>No projects yet</h3><p class="muted">Create your first workspace.</p></div>';
+      document.querySelectorAll('[data-open-project]').forEach(b => b.onclick = () => { setView('audit'); $('projectSelect').value = b.dataset.openProject; loadSites(); });
+      document.querySelectorAll('[data-edit-project]').forEach(b => b.onclick = () => editProject(b.dataset.editProject));
+      document.querySelectorAll('[data-delete-project]').forEach(b => b.onclick = () => deleteProject(b.dataset.deleteProject));
+    }
+
+    function renderSites() {
+      $('siteCount').textContent = S.sites.length;
+      $('siteListCount').textContent = S.sites.length + ' sites';
+      $('siteGrid').innerHTML = S.sites.length ? S.sites.map(s => {
+        const project = S.projects.find(p => p.id === s.project_id);
+        return `<article class="card card-glow entity-card"><h3>${esc(s.name || new URL(s.url).hostname)}</h3><p>${esc(s.url)}</p><div class="entity-meta"><span class="badge badge-cyan">${esc(project?.name || 'Project')}</span></div><div class="entity-actions"><button class="btn btn-secondary btn-xs" data-audit-site="${esc(s.id)}">Audit</button><button class="btn btn-secondary btn-xs" data-edit-site="${esc(s.id)}">Edit</button><button class="btn btn-secondary btn-xs btn-danger" data-delete-site="${esc(s.id)}">Delete</button></div></article>`;
+      }).join('') : '<div class="card entity-card"><h3>No sites saved</h3><p class="muted">Add sites here or from the Audit Desk.</p></div>';
+      document.querySelectorAll('[data-audit-site]').forEach(b => b.onclick = () => { const s = S.sites.find(x => x.id === b.dataset.auditSite); if (!s) return; setView('audit'); $('projectSelect').value = s.project_id; loadSites().then(() => { $('siteSelect').value = s.id; $('url').value = s.url; }); });
+      document.querySelectorAll('[data-edit-site]').forEach(b => b.onclick = () => editSite(b.dataset.editSite));
+      document.querySelectorAll('[data-delete-site]').forEach(b => b.onclick = () => deleteSite(b.dataset.deleteSite));
+    }
+
+    function renderHistory() {
+      $('historyCount').textContent = S.history.length;
+      $('historyList').innerHTML = S.history.length ? S.history.map(r => `
+        <article class="card entity-card" style="padding:14px">
+          <div class="finding-top"><button class="btn btn-ghost btn-xs" data-history="${esc(r.id)}" style="color:var(--cyan);font-weight:800">${esc(r.label)}</button><span class="badge ${r.status === 'complete' ? 'badge-emerald' : r.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(r.status)}</span></div>
+          <p class="muted truncate">${esc(r.url)}</p>
+        </article>
+      `).join('') : '<div class="card entity-card"><h3>No reports yet</h3><p class="muted">Completed audits appear here.</p></div>';
+      document.querySelectorAll('[data-history]').forEach(b => b.onclick = () => { const job = S.history.find(r => r.id === b.dataset.history); renderJob(job); setView('reports'); renderReportPreview(job); });
+    }
+
+    function renderReportPreview(job) {
+      if (!$('reportPreview')) return;
+      if (!job) { $('reportPreview').innerHTML = '<div class="finding-item"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select from history.</p></div>'; return; }
+      const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
+      $('reportPreview').innerHTML = `
+        <div class="finding-item"><div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
+        <pre class="code-block">${esc(`${job.url}\nShare: ${share}\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json`)}</pre></div>
+        ${(job.findings || []).slice(0, 8).map(f => `<div class="finding-item"><div class="finding-title">${esc(f.title)}</div><p class="muted">${esc(f.detail || '')}</p></div>`).join('')}
+      `;
+    }
+
+    function renderSchedules() {
+      const active = S.schedules.filter(s => s.status === 'active');
+      $('scheduleCount').textContent = active.length;
+      $('scheduleList').innerHTML = S.schedules.length ? S.schedules.map(s => `
+        <div class="card" style="padding:14px"><div class="finding-top"><div class="finding-title">${esc(s.label)}</div><span class="badge ${s.status === 'active' ? 'badge-emerald' : 'badge-dim'}">${esc(s.frequency)} · ${esc(s.status)}</span></div><p class="muted">${esc(s.url)} · next ${dateTime(s.next_run_at)}</p><div class="entity-actions" style="margin-top:8px"><button class="btn btn-secondary btn-xs btn-danger" data-pause-schedule="${esc(s.id)}">Pause</button></div></div>
+      `).join('') : '<div class="card" style="padding:14px"><p class="muted">No recurring audits. Schedule one from above.</p></div>';
+      document.querySelectorAll('[data-pause-schedule]').forEach(b => b.onclick = () => pauseSchedule(b.dataset.pauseSchedule));
+    }
+
+    function renderTeam() {
+      const team = S.team || { invitations: [], members: [], memberships: [] };
+      const owned = team.members || []; const joined = team.memberships || []; const invites = team.invitations || [];
+      $('teamCount').textContent = `${owned.length + joined.length} members`;
+      $('memberCount').textContent = owned.length;
+      $('inviteCount').textContent = invites.filter(i => i.status === 'pending').length;
+      $('memberList').innerHTML = (owned.length || joined.length)
+        ? [...owned.map(m => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(m.email)}</strong><span class="badge badge-cyan">${esc(m.role)}</span></div><p class="muted">${esc(m.status)}</p></div>`),
+           ...joined.map(m => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(m.email)}</strong><span class="badge badge-emerald">Joined</span></div></div>`)].join('')
+        : '<div class="card" style="padding:12px"><p class="muted">No teammates yet.</p></div>';
+      $('inviteList').innerHTML = invites.length ? invites.map(i => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(i.email)}</strong><span class="badge ${i.status === 'pending' ? 'badge-gold' : i.status === 'accepted' ? 'badge-emerald' : 'badge-red'}">${esc(i.status)}</span></div>${i.status === 'pending' ? `<button class="btn btn-secondary btn-xs btn-danger" data-revoke-invite="${esc(i.id)}" style="margin-top:6px">Revoke</button>` : ''}</div>`).join('') : '<div class="card" style="padding:12px"><p class="muted">No invitations.</p></div>';
+      document.querySelectorAll('[data-revoke-invite]').forEach(b => b.onclick = () => revokeInvite(b.dataset.revokeInvite));
+    }
+
+    function renderSettings() {
+      if (!S.user || !$('settingsName')) return;
+      $('settingsName').value = S.user.name || '';
+      $('settingsEmail').value = S.user.email || '';
+      $('settingsRole').textContent = S.user.role || 'user';
+      $('settingsRole').className = `badge ${S.user.role === 'admin' ? 'badge-gold' : 'badge-cyan'}`;
+      $('verifyBadge').textContent = S.user.email_verified ? 'Verified' : 'Unverified';
+      $('verifyBadge').className = `badge ${S.user.email_verified ? 'badge-emerald' : 'badge-red'}`;
+      $('settingsPlan').textContent = S.user.plan || 'free';
+      $('settingsSubscription').textContent = `${S.user.subscription_status || 'dev'} subscription · ${S.user.email_verified ? 'verified' : 'unverified'}`;
+    }
+
+    /* ═══════════════════════════════════════════
+       ACTIONS
+       ═══════════════════════════════════════════ */
+    function targetUrl() {
+      const v = $('url').value.trim();
+      if (!v) { toast('Enter a website URL.'); return null; }
+      try { return new URL(v).toString(); } catch { toast('Use a full URL: https://example.com'); return null; }
+    }
+
+    async function createProject(inputId = 'projectNamePanel') {
+      const input = $(inputId); const name = input.value.trim();
+      if (!name) return toast('Enter a project name.');
+      await fetchJson('/api/projects', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+      input.value = ''; await refreshWorkspace(); toast('Project created.');
+    }
+
+    async function saveSite(projId = null, urlVal = null) {
+      const project_id = projId || $('projectSelect').value; const url = urlVal || targetUrl();
+      if (!project_id) return toast('Select a project first.'); if (!url) return;
+      await fetchJson('/api/sites', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ project_id, url, name: new URL(url).hostname }) });
+      await refreshWorkspace(); toast('Site saved.');
+    }
+
+    async function editProject(id) { const p = S.projects.find(x => x.id === id); if (!p) return; const name = prompt('Project name', p.name); if (name === null) return; await fetchJson(`/api/projects/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) }); await refreshWorkspace(); toast('Updated.'); }
+    async function deleteProject(id) { if (!confirm('Delete this project?')) return; try { await fetchJson(`/api/projects/${id}`, { method:'DELETE' }); await refreshWorkspace(); toast('Deleted.'); } catch(e) { toast(e.message); } }
+    async function editSite(id) { const s = S.sites.find(x => x.id === id); if (!s) return; const url = prompt('URL', s.url); if (url === null) return; const name = prompt('Name', s.name || new URL(s.url).hostname); if (name === null) return; await fetchJson(`/api/sites/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url, name, project_id: s.project_id }) }); await refreshWorkspace(); toast('Updated.'); }
+    async function deleteSite(id) { if (!confirm('Delete this site?')) return; try { await fetchJson(`/api/sites/${id}`, { method:'DELETE' }); await refreshWorkspace(); toast('Deleted.'); } catch(e) { toast(e.message); } }
+
+    async function startJob(module = $('moduleSelect').value) {
+      const url = targetUrl(); if (!url) return;
+      setBusy(true);
+      try {
+        const job = await fetchJson('/api/jobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url, module, project_id: $('projectSelect').value || null, site_id: $('siteSelect').value || null }) });
+        renderJob(job); pollJob(job.id);
+      } catch(e) { setBusy(false); toast(e.message); }
+    }
+
+    function pollJob(id) {
+      clearInterval(S.poll);
+      S.poll = setInterval(async () => {
+        try {
+          const job = await fetchJson(`/api/jobs/${id}`);
+          renderJob(job);
+          if (['complete', 'error'].includes(job.status)) { clearInterval(S.poll); setBusy(false); await loadHistory(); updateKpis(); }
+        } catch(e) { clearInterval(S.poll); setBusy(false); toast(e.message); }
+      }, 1200);
+    }
+
+    function renderJob(job) {
+      if (!job) return; S.latest = job;
+      $('emptyState').hidden = true;
+      $('resultTitle').textContent = `${job.label} · ${job.status}`;
+      $('rawOutput').textContent = JSON.stringify(job, null, 2);
+      const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
+      const exports = job.status === 'complete' ? `\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json` : '';
+      $('summaryView').innerHTML = `
+        <div class="finding-item"><div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div><pre class="code-block">${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command || 'Pending'}\nShare: ${share}${exports}`)}</pre></div>
+        ${(job.findings || []).map(f => `<div class="finding-item"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${f.severity === 'critical' || f.severity === 'high' ? 'badge-red' : f.severity === 'info' ? 'badge-cyan' : 'badge-dim'}">${esc(f.severity)}</span></div><pre class="code-block">${esc(f.detail || '')}</pre></div>`).join('')}
+      `;
+      renderReportPreview(job); updateTabs();
+    }
+
+    function setBusy(v) {
+      $('startBtn').disabled = v; $('startBtn').classList.toggle('busy', v);
+      document.querySelectorAll('.module-card').forEach(b => b.style.pointerEvents = v ? 'none' : '');
+    }
+
+    function updateTabs() {
+      $('summaryView').hidden = S.activeTab !== 'summary';
+      $('rawView').hidden = S.activeTab !== 'raw';
+    }
+
+    async function upgrade(plan) {
+      try {
+        const checkout = await fetchJson('/api/billing/checkout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan }) });
+        if (checkout.checkout_url) { location.assign(checkout.checkout_url); return; }
+        const data = await fetchJson('/api/billing/dev-upgrade', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan }) });
+        S.user = data.user; renderPlan(data); toast(`Upgraded to ${plan}.`);
+      } catch(e) { toast(e.message); }
+    }
+
+    async function createSchedule() {
+      const url = targetUrl(); if (!url) return;
+      try { await fetchJson('/api/schedules', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url, module: $('moduleSelect').value, frequency: $('scheduleFrequency').value, project_id: $('projectSelect').value || null, site_id: $('siteSelect').value || null }) }); await loadSchedules(); toast('Recurring audit scheduled.'); } catch(e) { toast(e.message); }
+    }
+    async function pauseSchedule(id) { try { await fetchJson(`/api/schedules/${id}`, { method:'DELETE' }); await loadSchedules(); toast('Schedule paused.'); } catch(e) { toast(e.message); } }
+
+    async function saveProfile() { try { const data = await fetchJson('/api/me/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: $('settingsName').value }) }); S.user = data.user; enterApp(); toast('Profile saved.'); } catch(e) { toast(e.message); } }
+    async function changePassword() { try { await fetchJson('/api/me/password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ current_password: $('currentPassword').value, new_password: $('newPassword').value }) }); $('currentPassword').value = ''; $('newPassword').value = ''; toast('Password changed.'); } catch(e) { toast(e.message); } }
+    async function resendVerification() { try { const data = await fetchJson('/api/me/resend-verification', { method:'POST' }); toast(data.already_verified ? 'Already verified.' : 'Verification email queued.'); } catch(e) { toast(e.message); } }
+
+    async function sendInvite() { const email = $('inviteEmail').value.trim().toLowerCase(); if (!email || !email.includes('@')) return toast('Enter a valid email.'); try { await fetchJson('/api/team/invitations', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, role: $('inviteRole').value }) }); $('inviteEmail').value = ''; await loadTeam(); toast('Invite queued.'); } catch(e) { toast(e.message); } }
+    async function revokeInvite(id) { try { await fetchJson(`/api/team/invitations/${id}/revoke`, { method:'POST' }); await loadTeam(); toast('Invitation revoked.'); } catch(e) { toast(e.message); } }
+    async function acceptInvitation() { try { await fetchJson('/api/team/accept', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token: S.inviteToken }) }); S.inviteToken = null; history.replaceState(null, '', '/'); await loadTeam(); toast('Invitation accepted.'); } catch(e) { toast(e.message); } }
+
+    async function logout() { try { await fetchJson('/api/auth/logout', { method:'POST' }); } catch {} localStorage.removeItem('seo_token'); location.reload(); }
+
+    /* Admin */
+    async function loadAdmin() {
+      try {
+        const [summary, users, logs, backup] = await Promise.all([fetchJson('/api/admin/summary'), fetchJson('/api/admin/users'), fetchJson('/api/admin/audit-logs'), fetchJson('/api/admin/backup.json')]);
+        $('adminUsersKpi').textContent = summary.counts.users; $('adminJobsKpi').textContent = summary.counts.jobs;
+        $('adminQueuedKpi').textContent = summary.counts.queued_jobs; $('adminCompleteKpi').textContent = summary.counts.completed_jobs;
+        $('adminUserCount').textContent = users.length;
+        $('adminUsers').innerHTML = users.map(u => `<article class="card entity-card" style="padding:14px"><h3>${esc(u.email)}</h3><p class="muted">${esc(u.name || '')} · ${esc(u.subscription_status)}</p><div class="entity-meta"><span class="badge badge-cyan">${esc(u.role)}</span><span class="badge badge-dim">${esc(u.plan)}</span></div><div class="entity-actions"><button class="btn btn-secondary btn-xs" data-admin-plan="${esc(u.id)}" data-plan-value="pro">Set Pro</button><button class="btn btn-secondary btn-xs" data-admin-plan="${esc(u.id)}" data-plan-value="agency">Set Agency</button></div></article>`).join('');
+        $('adminLogCount').textContent = logs.length;
+        $('adminLogs').innerHTML = logs.slice(0, 40).map(l => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(l.action)}</strong><span class="badge badge-dim">${date(l.created_at)}</span></div><p class="muted">${esc(l.target_type || 'system')} · ${esc(l.target_id || '')}</p></div>`).join('');
+        S.database = backup.tables || {};
+        if (!S.dbTable || !S.database[S.dbTable]) S.dbTable = Object.keys(S.database)[0] || null;
+        renderDatabase();
+        document.querySelectorAll('[data-admin-plan]').forEach(b => b.onclick = () => adminSetPlan(b.dataset.adminPlan, b.dataset.planValue));
+      } catch(e) { toast(e.message); }
+    }
+
+    function renderDatabase() {
+      const tables = Object.keys(S.database || {});
+      $('dbTableSelect').innerHTML = tables.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+      if (S.dbTable) $('dbTableSelect').value = S.dbTable;
+      const rows = (S.database && S.dbTable ? S.database[S.dbTable] : []) || [];
+      $('dbRowCount').textContent = `${rows.length} rows`;
+      const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
+      $('dbTable').innerHTML = rows.length ? `<table class="data-table"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(c => `<td title="${esc(cell(r[c]))}">${esc(cell(r[c]))}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<div class="empty-state" style="min-height:120px"><div><strong>Empty</strong><p>No rows in this table.</p></div></div>';
+      $('dbJson').textContent = JSON.stringify({ table: S.dbTable, rows }, null, 2);
+    }
+
+    async function adminSetPlan(userId, plan) { try { await fetchJson(`/api/admin/users/${userId}/plan`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan }) }); await loadAdmin(); toast('Plan updated.'); } catch(e) { toast(e.message); } }
+
+    /* ═══════════════════════════════════════════
+       EVENT BINDINGS & BOOT
+       ═══════════════════════════════════════════ */
+    const bind = (id, fn, ev = 'click') => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+
+    bind('landingLoginBtn', () => showAuth('login'));
+    bind('landingSignupBtn', () => showAuth('signup'));
+    bind('heroGetStarted', () => showAuth('signup'));
+    bind('backToLandingBtn', showLanding);
+    bind('authSubmitBtn', handleAuth);
+    bind('forgotPasswordBtn', () => setAuthMode('reset-request'));
+    bind('authPassword', e => { if (e.key === 'Enter') handleAuth(); }, 'keydown');
+    bind('authEmail', e => { if (e.key === 'Enter') handleAuth(); }, 'keydown');
+    bind('sidebarLogoutBtn', logout);
+    bind('startBtn', () => startJob());
+    bind('projectSelect', loadSites, 'change');
+    bind('siteSelect', () => { const o = $('siteSelect').selectedOptions[0]; if (o?.dataset.url) $('url').value = o.dataset.url; }, 'change');
+    bind('createProjectBtn', () => createProject('newProject'));
+    bind('createProjectPanelBtn', () => createProject('projectNamePanel'));
+    bind('saveSiteBtn', () => saveSite());
+    bind('saveSitePanelBtn', () => saveSite($('siteProjectPanel').value, $('siteUrlPanel').value.trim()));
+    bind('createScheduleBtn', createSchedule);
+    bind('saveProfileBtn', saveProfile);
+    bind('changePasswordBtn', changePassword);
+    bind('resendVerifyBtn', resendVerification);
+    bind('sendInviteBtn', sendInvite);
+    bind('dbTableSelect', () => { S.dbTable = $('dbTableSelect').value; renderDatabase(); }, 'change');
+    bind('dbRefreshBtn', loadAdmin);
+    bind('dbDownloadBtn', () => { const blob = new Blob([JSON.stringify({ created_at: Date.now() / 1000, tables: S.database || {} }, null, 2)], { type: 'application/json' }); window.open(URL.createObjectURL(blob)); });
+
+    document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
+    document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.activeTab = b.dataset.tab; document.querySelectorAll('[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === S.activeTab)); updateTabs(); });
+    document.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => upgrade(b.dataset.plan));
+
     init();
   </script>
 </body>

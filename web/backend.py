@@ -54,12 +54,13 @@ AUTO_WORKER = os.environ.get("CLAUDE_SEO_WEB_AUTO_WORKER", AUTO_WORKER_DEFAULT) 
 WORKER_POLL_SECONDS = float(os.environ.get("CLAUDE_SEO_WORKER_POLL_SECONDS", "0.25"))
 WORKER_LOG = os.environ.get("CLAUDE_SEO_WORKER_LOG")
 DEV_EMAIL_TOKENS = os.environ.get("CLAUDE_SEO_WEB_DEV_EMAIL_TOKENS", "0") == "1"
+PUBLIC_SIGNUP_ENABLED = os.environ.get("CLAUDE_SEO_PUBLIC_SIGNUP", "1") == "1"
 PUBLIC_BASE_URL = os.environ.get("CLAUDE_SEO_PUBLIC_URL", "http://127.0.0.1:8001")
 SMTP_HOST = os.environ.get("CLAUDE_SEO_SMTP_HOST")
 SMTP_PORT = int(os.environ.get("CLAUDE_SEO_SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("CLAUDE_SEO_SMTP_USER")
 SMTP_PASSWORD = os.environ.get("CLAUDE_SEO_SMTP_PASSWORD")
-MAIL_FROM = os.environ.get("CLAUDE_SEO_MAIL_FROM", "Claude SEO <noreply@example.com>")
+MAIL_FROM = os.environ.get("CLAUDE_SEO_MAIL_FROM", "RankForge Command <noreply@example.com>")
 STRIPE_SECRET_KEY = os.environ.get("CLAUDE_SEO_STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.environ.get("CLAUDE_SEO_STRIPE_WEBHOOK_SECRET")
 STRIPE_PRICE_IDS = {
@@ -70,7 +71,7 @@ STRIPE_SUCCESS_URL = os.environ.get("CLAUDE_SEO_BILLING_SUCCESS_URL")
 STRIPE_CANCEL_URL = os.environ.get("CLAUDE_SEO_BILLING_CANCEL_URL")
 STRIPE_API_BASE = os.environ.get("CLAUDE_SEO_STRIPE_API_BASE", "https://api.stripe.com")
 
-app = FastAPI(title="Claude SEO SaaS Console API")
+app = FastAPI(title="RankForge Command API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get(
@@ -1639,16 +1640,18 @@ async def modules() -> list[dict[str, str]]:
 
 @app.get("/terms")
 async def terms_page() -> HTMLResponse:
-    return HTMLResponse("""<!doctype html><html><head><title>Terms - Claude SEO</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Terms of Service</h1><p>This development build is provided for evaluation. Production terms should be reviewed by counsel before public launch.</p><h2>Acceptable Use</h2><p>Users may only audit websites they own, manage, or are authorized to evaluate.</p><h2>Service Availability</h2><p>Audit results are informational and depend on third-party services and website availability.</p></body></html>""")
+    return HTMLResponse("""<!doctype html><html><head><title>Terms - RankForge Command</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Terms of Service</h1><p>This development build is provided for evaluation. Production terms should be reviewed by counsel before public launch.</p><h2>Acceptable Use</h2><p>Users may only audit websites they own, manage, or are authorized to evaluate.</p><h2>Service Availability</h2><p>Audit results are informational and depend on third-party services and website availability.</p></body></html>""")
 
 
 @app.get("/privacy")
 async def privacy_page() -> HTMLResponse:
-    return HTMLResponse("""<!doctype html><html><head><title>Privacy - Claude SEO</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Privacy Policy</h1><p>This development build stores account, project, site, audit, and email-outbox data in the configured application database.</p><h2>Customer Data</h2><p>Website URLs and audit outputs are stored to provide history, exports, and shareable reports.</p><h2>Production Review</h2><p>Before public launch, replace this placeholder with a jurisdiction-specific policy reviewed by counsel.</p></body></html>""")
+    return HTMLResponse("""<!doctype html><html><head><title>Privacy - RankForge Command</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Privacy Policy</h1><p>This development build stores account, project, site, audit, and email-outbox data in the configured application database.</p><h2>Customer Data</h2><p>Website URLs and audit outputs are stored to provide history, exports, and shareable reports.</p><h2>Production Review</h2><p>Before public launch, replace this placeholder with a jurisdiction-specific policy reviewed by counsel.</p></body></html>""")
 
 
 @app.post("/api/auth/signup")
 async def signup(request: AuthRequest) -> dict[str, Any]:
+    if not PUBLIC_SIGNUP_ENABLED:
+        raise HTTPException(status_code=403, detail="Public signup is disabled. Contact your workspace administrator for paid member access.")
     email = normalize_email(request.email)
     user_id = uuid.uuid4().hex
     created = now()
