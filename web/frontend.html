@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="RankForge Command — Premium SEO intelligence platform. Run Client SEO audits, track performance, and generate actionable reports.">
-  <title>RankForge Command — SEO Intelligence Platform</title>
+  <meta name="description" content="Ranklytics — Premium SEO intelligence platform. Run Client SEO audits, track performance, and generate actionable reports.">
+  <title>Ranklytics — SEO Intelligence Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -653,7 +653,7 @@
        ═══════════════════════════════════════════ -->
   <div class="landing" id="landingView">
     <nav class="landing-nav">
-      <div class="nav-brand"><div class="nav-mark">RF</div><strong>RankForge</strong></div>
+      <div class="nav-brand"><div class="nav-mark">Rl</div><strong>Ranklytics</strong></div>
       <div class="nav-links">
         <a href="#features" class="desktop-only">Features</a>
         <a href="#pricing" class="desktop-only">Pricing</a>
@@ -666,7 +666,7 @@
       <div class="hero-left">
         <div class="hero-eyebrow"><span class="dot"></span> AI-Powered SEO Intelligence</div>
         <h1>Client SEO audits in <span class="gradient-text">minutes, not hours.</span></h1>
-        <p>RankForge Command deploys 15 parallel AI agents to analyze technical SEO, content quality, schema markup, and AI search readiness — with every finding backed by a falsifiability check.</p>
+        <p>Ranklytics deploys 15 parallel AI agents to analyze technical SEO, content quality, schema markup, and AI search readiness — with every finding backed by a falsifiability check.</p>
         <div class="stats-mini" style="display: flex; gap: 24px; margin-top: 32px;">
           <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">25</strong><span style="font-size: 0.75rem; color: var(--text-muted)">AI Skills</span></div>
           <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">18</strong><span style="font-size: 0.75rem; color: var(--text-muted)">Specialist Agents</span></div>
@@ -803,7 +803,7 @@
     </section>
 
     <footer class="landing-footer">
-      <p class="muted">© 2026 RankForge Command. Built on <a href="https://github.com/AgriciDaniel/claude-seo" target="_blank" rel="noopener">Claude SEO</a>.</p>
+      <p class="muted">© 2026 Ranklytics. Built on <a href="https://github.com/AgriciDaniel/claude-seo" target="_blank" rel="noopener">Claude SEO</a>.</p>
       <p class="muted"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></p>
     </footer>
   </div>
@@ -813,14 +813,13 @@
        ═══════════════════════════════════════════ -->
   <div class="app-shell hidden" id="appView">
     <aside class="sidebar">
-      <div class="sidebar-brand"><div class="nav-mark">RF</div><div><strong>RankForge</strong><span id="userLine">Command</span></div></div>
+      <div class="sidebar-brand"><div class="nav-mark">Rl</div><div><strong>Ranklytics</strong><span id="userLine">Dashboard</span></div></div>
       <nav class="sidebar-nav">
         <button class="nav-item active" data-view="audit"><span class="nav-dot"></span>Audit Desk</button>
         <button class="nav-item" data-view="projects"><span class="nav-dot"></span>Projects</button>
         <button class="nav-item" data-view="sites"><span class="nav-dot"></span>Sites</button>
         <button class="nav-item" data-view="reports"><span class="nav-dot"></span>Reports</button>
         <button class="nav-item" data-view="settings"><span class="nav-dot"></span>Settings</button>
-        <button class="nav-item hidden" data-view="admin" id="adminNavBtn"><span class="nav-dot"></span>Admin</button>
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-plan"><span class="muted">Plan</span><span class="badge badge-emerald" id="sidebarPlan">Free</span></div>
@@ -887,11 +886,7 @@
                 <div id="rawView" hidden><pre class="code-block" id="rawOutput"></pre></div>
               </div>
             </div>
-            <div class="card" style="padding:18px;margin-top:14px">
-              <div class="section-title"><h2>Plan and Billing</h2><span class="badge badge-cyan" id="planBadge">free</span></div>
-              <p class="muted" id="planDetail">Free plan.</p>
-              <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
-            </div>
+
           </div>
         </div>
       </section>
@@ -971,8 +966,11 @@
           </div>
           <div class="card settings-panel">
             <div class="section-title"><h2>Subscription</h2><span class="badge badge-cyan" id="settingsPlan">free</span></div>
+            <span class="badge badge-emerald" id="planBadge" style="display:none">free</span>
+            <p class="muted" id="planDetail">Free plan.</p>
             <p class="muted" id="settingsSubscription">Local development subscription state.</p>
-            <div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
+            <div id="planLimitsDisplay" class="muted" style="font-size:0.8125rem;margin-top:4px"></div>
+            <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
           </div>
           <div class="card settings-panel">
             <div class="section-title"><h2>Team Access</h2><span class="badge badge-cyan" id="teamCount">0 members</span></div>
@@ -989,37 +987,7 @@
         </div>
       </section>
 
-      <!-- ADMIN VIEW -->
-      <section class="view" id="view-admin">
-        <div class="kpi-grid" style="margin-bottom:0">
-          <div class="card kpi-card"><div class="kpi-label">Users</div><div class="kpi-value" id="adminUsersKpi">0</div></div>
-          <div class="card kpi-card"><div class="kpi-label">Jobs</div><div class="kpi-value" id="adminJobsKpi">0</div></div>
-          <div class="card kpi-card"><div class="kpi-label">Queued</div><div class="kpi-value" id="adminQueuedKpi">0</div></div>
-          <div class="card kpi-card"><div class="kpi-label">Complete</div><div class="kpi-value" id="adminCompleteKpi">0</div></div>
-        </div>
-        <div class="admin-section">
-          <div class="card" style="padding:20px;margin-bottom:18px">
-            <div class="section-title"><h2>Database Tables</h2><span class="badge badge-cyan" id="dbRowCount">0 rows</span></div>
-            <div class="db-controls">
-              <div class="input-wrap"><label for="dbTableSelect">Table</label><select id="dbTableSelect"></select></div>
-              <button class="btn btn-secondary btn-sm" id="dbRefreshBtn">Refresh</button>
-              <button class="btn btn-secondary btn-sm" id="dbDownloadBtn">Export JSON</button>
-            </div>
-            <div class="data-table-wrap" id="dbTable"></div>
-            <pre class="code-block" id="dbJson" style="margin-top:12px;max-height:240px"></pre>
-          </div>
-          <div class="grid-2">
-            <div>
-              <div class="section-title"><h2>Users</h2><span class="badge badge-dim" id="adminUserCount">0</span></div>
-              <div class="stack" id="adminUsers"></div>
-            </div>
-            <div>
-              <div class="section-title"><h2>Audit Log</h2><span class="badge badge-dim" id="adminLogCount">0</span></div>
-              <div class="stack" id="adminLogs"></div>
-            </div>
-          </div>
-        </div>
-      </section>
+
     </main>
   </div>
 
@@ -1073,6 +1041,15 @@
       const el = document.createElement('div');
       el.className = 'toast-item'; el.textContent = msg; c.appendChild(el);
       setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 3200);
+    }
+
+    function copyText(val) {
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(() => {
+        toast('Link copied to clipboard!');
+      }).catch(() => {
+        toast('Failed to copy link.');
+      });
     }
 
     async function fetchJson(url, opts = {}) {
@@ -1155,13 +1132,12 @@
       $('authView').classList.add('hidden');
       $('appView').classList.remove('hidden');
       $('mobileNav').classList.remove('hidden');
-      $('adminNavBtn').classList.toggle('hidden', S.user?.role !== 'admin');
 
       const initial = S.user?.name?.[0] || S.user?.email?.[0] || '?';
       $('userAvatar').textContent = initial.toUpperCase();
       $('userName').textContent = S.user?.name || 'User';
       $('userEmail').textContent = S.user?.role || 'Member';
-      $('userLine').textContent = S.user?.email || 'Command';
+      $('userLine').textContent = S.user?.email || 'Dashboard';
       renderSettings();
       setView(S.view);
     }
@@ -1273,7 +1249,7 @@
        APP VIEWS
        ═══════════════════════════════════════════ */
     function setView(view) {
-      if (view === 'admin' && S.user?.role !== 'admin') { toast('Admin access required.'); return; }
+      if (view === 'admin') return;
       S.view = view;
       document.querySelectorAll('[data-view]').forEach(b => {
         b.classList.toggle('active', b.dataset.view === view);
@@ -1285,7 +1261,6 @@
       if (view === 'projects') renderProjects();
       if (view === 'sites') renderSites();
       if (view === 'settings') { renderSettings(); loadTeam(); }
-      if (view === 'admin') loadAdmin();
     }
 
     /* ═══════════════════════════════════════════
@@ -1487,6 +1462,16 @@
       }, 1200);
     }
 
+    async function cancelJob(id) {
+      if (!confirm('Cancel this queued audit?')) return;
+      try {
+        const job = await fetchJson(`/api/jobs/${id}/cancel`, { method:'POST' });
+        renderJob(job);
+        await refreshWorkspace();
+        toast('Audit cancelled.');
+      } catch(e) { toast(e.message); }
+    }
+
     function renderJob(job) {
       if (!job) return; S.latest = job;
       $('emptyState').hidden = true;
@@ -1494,8 +1479,26 @@
       $('rawOutput').textContent = JSON.stringify(job, null, 2);
       const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
       const exports = job.status === 'complete' ? `\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json` : '';
+      
+      let actionButtons = '';
+      if (job.status === 'queued') {
+        actionButtons = `<div style="margin-top:12px"><button class="btn btn-danger btn-xs" onclick="cancelJob('${job.id}')">Cancel Audit</button></div>`;
+      } else if (job.status === 'complete') {
+        actionButtons = `
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <a href="/api/jobs/${job.id}/report.html" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
+            <a href="/api/jobs/${job.id}/export.json" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">Export JSON</a>
+            <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
+          </div>
+        `;
+      }
+
       $('summaryView').innerHTML = `
-        <div class="finding-item"><div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div><pre class="code-block">${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command || 'Pending'}\nShare: ${share}${exports}`)}</pre></div>
+        <div class="finding-item">
+          <div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
+          <pre class="code-block">${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command || 'Pending'}\nShare: ${share}${exports}`)}</pre>
+          ${actionButtons}
+        </div>
         ${(job.findings || []).map(f => `<div class="finding-item"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${f.severity === 'critical' || f.severity === 'high' ? 'badge-red' : f.severity === 'info' ? 'badge-cyan' : 'badge-dim'}">${esc(f.severity)}</span></div><pre class="code-block">${esc(f.detail || '')}</pre></div>`).join('')}
       `;
       renderReportPreview(job); updateTabs();
@@ -1536,36 +1539,6 @@
 
     async function logout() { try { await fetchJson('/api/auth/logout', { method:'POST' }); } catch {} localStorage.removeItem('seo_token'); location.reload(); }
 
-    /* Admin */
-    async function loadAdmin() {
-      try {
-        const [summary, users, logs, backup] = await Promise.all([fetchJson('/api/admin/summary'), fetchJson('/api/admin/users'), fetchJson('/api/admin/audit-logs'), fetchJson('/api/admin/backup.json')]);
-        $('adminUsersKpi').textContent = summary.counts.users; $('adminJobsKpi').textContent = summary.counts.jobs;
-        $('adminQueuedKpi').textContent = summary.counts.queued_jobs; $('adminCompleteKpi').textContent = summary.counts.completed_jobs;
-        $('adminUserCount').textContent = users.length;
-        $('adminUsers').innerHTML = users.map(u => `<article class="card entity-card" style="padding:14px"><h3>${esc(u.email)}</h3><p class="muted">${esc(u.name || '')} · ${esc(u.subscription_status)}</p><div class="entity-meta"><span class="badge badge-cyan">${esc(u.role)}</span><span class="badge badge-dim">${esc(u.plan)}</span></div><div class="entity-actions"><button class="btn btn-secondary btn-xs" data-admin-plan="${esc(u.id)}" data-plan-value="pro">Set Pro</button><button class="btn btn-secondary btn-xs" data-admin-plan="${esc(u.id)}" data-plan-value="agency">Set Agency</button></div></article>`).join('');
-        $('adminLogCount').textContent = logs.length;
-        $('adminLogs').innerHTML = logs.slice(0, 40).map(l => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(l.action)}</strong><span class="badge badge-dim">${date(l.created_at)}</span></div><p class="muted">${esc(l.target_type || 'system')} · ${esc(l.target_id || '')}</p></div>`).join('');
-        S.database = backup.tables || {};
-        if (!S.dbTable || !S.database[S.dbTable]) S.dbTable = Object.keys(S.database)[0] || null;
-        renderDatabase();
-        document.querySelectorAll('[data-admin-plan]').forEach(b => b.onclick = () => adminSetPlan(b.dataset.adminPlan, b.dataset.planValue));
-      } catch(e) { toast(e.message); }
-    }
-
-    function renderDatabase() {
-      const tables = Object.keys(S.database || {});
-      $('dbTableSelect').innerHTML = tables.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
-      if (S.dbTable) $('dbTableSelect').value = S.dbTable;
-      const rows = (S.database && S.dbTable ? S.database[S.dbTable] : []) || [];
-      $('dbRowCount').textContent = `${rows.length} rows`;
-      const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
-      $('dbTable').innerHTML = rows.length ? `<table class="data-table"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(c => `<td title="${esc(cell(r[c]))}">${esc(cell(r[c]))}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<div class="empty-state" style="min-height:120px"><div><strong>Empty</strong><p>No rows in this table.</p></div></div>';
-      $('dbJson').textContent = JSON.stringify({ table: S.dbTable, rows }, null, 2);
-    }
-
-    async function adminSetPlan(userId, plan) { try { await fetchJson(`/api/admin/users/${userId}/plan`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ plan }) }); await loadAdmin(); toast('Plan updated.'); } catch(e) { toast(e.message); } }
-
     /* ═══════════════════════════════════════════
        EVENT BINDINGS & BOOT
        ═══════════════════════════════════════════ */
@@ -1592,9 +1565,6 @@
     bind('changePasswordBtn', changePassword);
     bind('resendVerifyBtn', resendVerification);
     bind('sendInviteBtn', sendInvite);
-    bind('dbTableSelect', () => { S.dbTable = $('dbTableSelect').value; renderDatabase(); }, 'change');
-    bind('dbRefreshBtn', loadAdmin);
-    bind('dbDownloadBtn', () => { const blob = new Blob([JSON.stringify({ created_at: Date.now() / 1000, tables: S.database || {} }, null, 2)], { type: 'application/json' }); window.open(URL.createObjectURL(blob)); });
 
     document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
     document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.activeTab = b.dataset.tab; document.querySelectorAll('[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === S.activeTab)); updateTabs(); });
