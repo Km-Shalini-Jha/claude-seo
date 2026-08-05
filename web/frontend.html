@@ -983,6 +983,16 @@
             </div>
           </div>
           <div class="card settings-panel">
+            <div class="section-title"><h2>API Credentials & Data Services</h2><span class="badge badge-cyan" id="credStatusBadge">Credentials Configured</span></div>
+            <p class="muted">Manage live credentials for Google Search Console, PageSpeed Insights, IndexNow, and DataForSEO APIs.</p>
+            <div class="grid-2" style="margin-top:12px">
+              <div class="input-wrap"><label for="googleApiKey">Google API Key / GSC Token</label><input class="input" id="googleApiKey" type="password" placeholder="AIzaSy... / OAuth token"></div>
+              <div class="input-wrap"><label for="indexnowKey">IndexNow Key (Bing/Yandex)</label><input class="input" id="indexnowKey" type="password" placeholder="IndexNow Verification Key"></div>
+            </div>
+            <div class="input-wrap" style="margin-top:8px"><label for="dataforseoAuth">DataForSEO Auth (Username:Password)</label><input class="input" id="dataforseoAuth" type="password" placeholder="user:pass"></div>
+            <button class="btn btn-secondary btn-sm" id="saveCredsBtn" style="margin-top:12px">Save API Credentials</button>
+          </div>
+          <div class="card settings-panel">
             <div class="section-title"><h2>Team Access</h2><span class="badge badge-cyan" id="teamCount">0 members</span></div>
             <div class="schedule-bar">
               <div class="input-wrap" style="flex:1"><label for="inviteEmail">Invite Email</label><input class="input" id="inviteEmail" type="email" placeholder="teammate@agency.com"></div>
@@ -1599,6 +1609,7 @@
             <a href="/api/jobs/${job.id}/report.html" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
             <a href="/api/jobs/${job.id}/export.json" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">Export JSON</a>
             <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
+            <a href="/api/jobs/${job.id}/report.html" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
           </div>
         `;
       }

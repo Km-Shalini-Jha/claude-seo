@@ -135,6 +135,18 @@ def main() -> int:
         assert status == 200, body
         assert json.loads(body)["deployed"] is True
 
+        status, body = request(
+            base,
+            "/api/settings/credentials",
+            {"google_api_key": "AIzaSy_test", "indexnow_key": "in_key_123", "dataforseo_auth": "user:pass"},
+            token=token
+        )
+        assert status == 200, body
+
+        status, body = request(base, "/api/settings/credentials", token=token)
+        assert status == 200, body
+        assert json.loads(body)["configured"] is True
+
         status, body = request(base, "/api/ready")
         assert status == 200, body
         assert json.loads(body)["database"] is True

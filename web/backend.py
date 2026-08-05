@@ -188,6 +188,12 @@ class CMSDeployRequest(BaseModel):
     url: str
 
 
+class APICredentialsRequest(BaseModel):
+    google_api_key: str | None = None
+    indexnow_key: str | None = None
+    dataforseo_auth: str | None = None
+
+
 class JobRecord(BaseModel):
     id: str
     user_id: str | None = None
@@ -604,6 +610,18 @@ def ensure_schema(conn: AppDatabase) -> None:
             site_url TEXT NOT NULL,
             api_key TEXT NOT NULL,
             api_secret TEXT,
+            updated_at REAL NOT NULL,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS api_credentials (
+            user_id TEXT PRIMARY KEY,
+            google_api_key TEXT,
+            indexnow_key TEXT,
+            dataforseo_auth TEXT,
             updated_at REAL NOT NULL,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
@@ -2249,6 +2267,43 @@ async def deploy_cms_fix(req: CMSDeployRequest, user: dict[str, Any] = Depends(c
             "platform": str(r["platform"]).capitalize(),
             "message": f"Successfully pushed '{req.fix_title}' to {r['site_url']} via REST API."
         }
+
+
+@app.get("/api/settings/credentials")
+async def get_api_credentials(user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    with db() as conn:
+        row = conn.execute("SELECT google_api_key, indexnow_key, dataforseo_auth, updated_at FROM api_credentials WHERE user_id = ?", (user["id"],)).fetchone()
+        if not row:
+            return {"configured": False, "credentials": {}}
+        r = dict(row)
+        return {
+            "configured": True,
+            "credentials": {
+                "google_api_key_masked": (r["google_api_key"][:4] + "****") if r.get("google_api_key") else "",
+                "indexnow_key_masked": (r["indexnow_key"][:4] + "****") if r.get("indexnow_key") else "",
+                "dataforseo_auth_masked": (r["dataforseo_auth"][:4] + "****") if r.get("dataforseo_auth") else "",
+                "updated_at": r["updated_at"]
+            }
+        }
+
+
+@app.post("/api/settings/credentials")
+async def save_api_credentials(req: APICredentialsRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    ts = now()
+    with db() as conn:
+        conn.execute(
+            """
+            INSERT INTO api_credentials (user_id, google_api_key, indexnow_key, dataforseo_auth, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                google_api_key = excluded.google_api_key,
+                indexnow_key = excluded.indexnow_key,
+                dataforseo_auth = excluded.dataforseo_auth,
+                updated_at = excluded.updated_at
+            """,
+            (user["id"], req.google_api_key or "", req.indexnow_key or "", req.dataforseo_auth or "", ts)
+        )
+    return {"status": "success", "message": "API credentials saved successfully."}
 
 
 @app.post("/api/projects")
