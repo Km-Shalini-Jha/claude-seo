@@ -118,6 +118,23 @@ def main() -> int:
         verification_token = owner["verification_token"]
         assert owner["user"]["role"] == "admin"
 
+        status, body = request(
+            base,
+            "/api/cms/config",
+            {"platform": "wordpress", "site_url": "https://example.com", "api_key": "wp_secret_12345"},
+            token=token
+        )
+        assert status == 200, body
+
+        status, body = request(
+            base,
+            "/api/cms/deploy-fix",
+            {"fix_title": "Meta Tags", "code": "<title>Test</title>", "url": "https://example.com"},
+            token=token
+        )
+        assert status == 200, body
+        assert json.loads(body)["deployed"] is True
+
         status, body = request(base, "/api/ready")
         assert status == 200, body
         assert json.loads(body)["database"] is True

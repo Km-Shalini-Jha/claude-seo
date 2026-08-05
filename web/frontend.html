@@ -973,6 +973,16 @@
             <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
           </div>
           <div class="card settings-panel">
+            <div class="section-title"><h2>CMS Direct Auto-Patcher Integrations</h2><span class="badge badge-emerald" id="cmsStatusBadge">Connected</span></div>
+            <p class="muted">Connect your CMS via REST API or Webhook to deploy auto-fixes and blog content directly from SEOVault in 1 click.</p>
+            <div class="schedule-bar" style="margin-top:12px">
+              <div class="input-wrap"><label for="cmsPlatform">Platform</label><select id="cmsPlatform"><option value="wordpress">WordPress REST API</option><option value="shopify">Shopify Admin API</option><option value="webflow">Webflow API</option><option value="webhook">Custom Webhook</option></select></div>
+              <div class="input-wrap" style="flex:1"><label for="cmsSiteUrl">Target Site URL</label><input class="input" id="cmsSiteUrl" placeholder="https://example.com"></div>
+              <div class="input-wrap" style="flex:1"><label for="cmsApiKey">API Token / App Key</label><input class="input" id="cmsApiKey" type="password" placeholder="Key or App Password"></div>
+              <button class="btn btn-primary btn-sm" id="saveCmsBtn">Connect CMS</button>
+            </div>
+          </div>
+          <div class="card settings-panel">
             <div class="section-title"><h2>Team Access</h2><span class="badge badge-cyan" id="teamCount">0 members</span></div>
             <div class="schedule-bar">
               <div class="input-wrap" style="flex:1"><label for="inviteEmail">Invite Email</label><input class="input" id="inviteEmail" type="email" placeholder="teammate@agency.com"></div>
@@ -1558,6 +1568,20 @@
       } catch(e) { toast(e.message); }
     }
 
+    async function deployCmsFix(title, code) {
+      const url = targetUrl() || 'https://example.com';
+      try {
+        const res = await fetchJson('/api/cms/deploy-fix', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ fix_title: title, code, url })
+        });
+        toast(`⚡ ${res.message || 'Deployed to CMS!'}`);
+      } catch(e) {
+        toast(e.message);
+      }
+    }
+
     function renderJob(job) {
       if (!job) return; S.latest = job;
       $('emptyState').hidden = true;
@@ -1587,7 +1611,10 @@
             <div class="finding-item" style="border:1px solid var(--border-focus);background:var(--surface-solid);margin-top:10px">
               <div class="finding-top">
                 <div class="finding-title" style="color:var(--emerald)">🛠️ ${esc(fix.title)}</div>
-                <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(fix.code)}">Copy Snippet</button>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(fix.code)}">Copy Snippet</button>
+                  <button class="btn btn-primary btn-xs" onclick="deployCmsFix('${esc(fix.title)}', decodeURIComponent(this.dataset.code))" data-code="${encodeURIComponent(fix.code)}">⚡ Deploy Direct to CMS</button>
+                </div>
               </div>
               <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(fix.code)}</pre>
             </div>
