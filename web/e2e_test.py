@@ -316,7 +316,7 @@ def main() -> int:
         assert completed["status"] == "complete", completed
         assert completed["share_url"], completed
         assert completed["findings"], completed
-        assert "overview" in completed["output"]["stdout"]
+        assert "overview" in str(completed["output"]["stdout"])
 
         scheduled_job_id = None
         deadline = time.time() + 8
