@@ -1592,6 +1592,22 @@
       }
     }
 
+    function downloadJobJson(jobId) {
+      const url = `/api/jobs/${jobId}/export.json?token=${S.token}`;
+      fetch(url)
+        .then(r => r.blob())
+        .then(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `seovault_${jobId.slice(0, 8)}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          toast('JSON Export downloaded successfully.');
+        })
+        .catch(e => toast('Download failed: ' + e.message));
+    }
+
     function renderJob(job) {
       if (!job) return; S.latest = job;
       const emptyEl = $('emptyState');
@@ -1610,9 +1626,9 @@
         actionButtons = `
           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
             <a href="${htmlReportUrl}" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
-            <a href="${jsonExportUrl}" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">Export JSON</a>
+            <button class="btn btn-secondary btn-xs" onclick="downloadJobJson('${job.id}')" style="color:var(--text);border-color:var(--border-hover)">Export JSON</button>
             <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
-            <a href="${htmlReportUrl}" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
+            <a href="${htmlReportUrl}&print=1" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
           </div>
         `;
       }

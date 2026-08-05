@@ -1755,9 +1755,10 @@ def escape_html(value: object) -> str:
     )
 
 
-def render_report_html(job: JobRecord) -> str:
+def render_report_html(job: JobRecord, print_auto: bool = False) -> str:
     public = public_job(job)
     findings = public.get("findings") or []
+    print_script = "<script>window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 500); });</script>" if print_auto else ""
     
     fix_html = ""
     article_html = ""
@@ -1854,6 +1855,7 @@ def render_report_html(job: JobRecord) -> str:
     <pre>{raw}</pre>
   </section>
 </main>
+{print_script}
 </body>
 </html>"""
 
@@ -2564,13 +2566,17 @@ def resolve_job_access(job_id: str, request: Request, token: str | None = Query(
 async def export_job_json(job_id: str, request: Request, token: str | None = Query(None)) -> Response:
     record = resolve_job_access(job_id, request, token)
     content = json.dumps(public_job(record), indent=2, sort_keys=True)
-    return Response(content, media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{job_id}.json"'})
+    return Response(
+        content,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="seovault_{job_id[:8]}.json"'}
+    )
 
 
 @app.get("/api/jobs/{job_id}/report.html")
-async def export_job_html(job_id: str, request: Request, token: str | None = Query(None)) -> HTMLResponse:
+async def export_job_html(job_id: str, request: Request, token: str | None = Query(None), print: int | None = Query(None)) -> HTMLResponse:
     record = resolve_job_access(job_id, request, token)
-    return HTMLResponse(render_report_html(record))
+    return HTMLResponse(render_report_html(record, print_auto=bool(print)))
 
 
 @app.get("/api/history")
