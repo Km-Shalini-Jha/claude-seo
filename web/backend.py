@@ -1674,6 +1674,24 @@ def worker_log(message: str) -> None:
         pass
 
 
+def drift_background_loop() -> None:
+    while True:
+        try:
+            with db() as conn:
+                sites = conn.execute("SELECT id, user_id, project_id, url FROM sites LIMIT 50").fetchall()
+            for site in sites:
+                s = dict(site)
+                try:
+                    command, output = run_module("drift-check", s["url"])
+                    parsed = parse_stdout(output)
+                    log_event(s["user_id"], "drift.background_check", "site", s["id"], {"url": s["url"], "output": parsed})
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        time.sleep(300)
+
+
 @app.on_event("startup")
 def start_worker() -> None:
     global WORKER_STARTED
@@ -1683,6 +1701,7 @@ def start_worker() -> None:
         return
     WORKER_STARTED = True
     threading.Thread(target=worker_loop, daemon=True).start()
+    threading.Thread(target=drift_background_loop, daemon=True).start()
 
 
 def run_runtime_doctor() -> dict[str, Any]:
@@ -1721,10 +1740,45 @@ def escape_html(value: object) -> str:
 def render_report_html(job: JobRecord) -> str:
     public = public_job(job)
     findings = public.get("findings") or []
+    
+    fix_html = ""
+    article_html = ""
+    email_html = ""
+    
+    try:
+        raw_out = public.get("output") or {}
+        parsed = parse_stdout(raw_out) if isinstance(raw_out, dict) else None
+        if isinstance(parsed, dict):
+            if parsed.get("auto_fixes"):
+                fix_html = "<section style='margin-top:24px'><h2>🛠️ Auto-Fix Code Snippets</h2>" + "".join(
+                    f"""<div class="finding" style="border-left:4px solid #237255;margin-bottom:10px">
+                        <strong>{escape_html(fix['title'])}</strong>
+                        <pre style="margin-top:8px">{escape_html(fix['code'])}</pre>
+                    </div>"""
+                    for fix in parsed["auto_fixes"]
+                ) + "</section>"
+            if parsed.get("article_markdown"):
+                article_html = f"""<section style='margin-top:24px'><h2>✍️ Generated AI Article Draft</h2>
+                    <div class="finding">
+                        <h3>{escape_html(parsed.get('article_title'))}</h3>
+                        <p><strong>Word Count:</strong> {escape_html(parsed.get('word_count'))} | <strong>E-E-A-T Score:</strong> {escape_html(parsed.get('eeat_score'))}</p>
+                        <pre>{escape_html(parsed.get('article_markdown'))}</pre>
+                    </div>
+                </section>"""
+            if parsed.get("email_body"):
+                email_html = f"""<section style='margin-top:24px'><h2>📧 Backlink Outreach Pitch</h2>
+                    <div class="finding">
+                        <p><strong>Subject:</strong> {escape_html(parsed.get('email_subject'))}</p>
+                        <pre>{escape_html(parsed.get('email_body'))}</pre>
+                    </div>
+                </section>"""
+    except Exception:
+        pass
+
     finding_html = "\n".join(
         f"""
         <article class="finding">
-          <div><strong>{escape_html(item.get('title'))}</strong><span>{escape_html(item.get('severity'))}</span></div>
+          <div><strong>{escape_html(item.get('title'))}</strong><span class="badge">{escape_html(item.get('severity'))}</span></div>
           <p>{escape_html(item.get('detail'))}</p>
         </article>
         """
@@ -1736,18 +1790,18 @@ def render_report_html(job: JobRecord) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{escape_html(job.label)} Report</title>
+  <title>SEOVault Executive Report · {escape_html(job.label)}</title>
   <style>
-    body{{margin:0;background:#f5f7f2;color:#18211c;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+    body{{margin:0;background:#0d1117;color:#c9d1d9;font-family:Inter,system-ui,-apple-system,sans-serif}}
     main{{max-width:1040px;margin:0 auto;padding:36px 20px}}
-    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid #dce4d8;padding-bottom:22px;margin-bottom:22px}}
-    h1{{margin:0;font-size:32px;letter-spacing:0}} p{{color:#69766d;line-height:1.55}}
-    .badge{{display:inline-flex;border-radius:99px;padding:6px 10px;background:#dff1e8;color:#237255;font-weight:800;font-size:12px;text-transform:uppercase}}
+    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid #30363d;padding-bottom:22px;margin-bottom:22px}}
+    h1{{margin:0;font-size:28px;color:#f0f6fc;letter-spacing:-0.5px}} h2{{color:#58a6ff;font-size:20px;margin-top:24px}} p{{color:#8b949e;line-height:1.55}}
+    .badge{{display:inline-flex;border-radius:99px;padding:4px 10px;background:rgba(46,160,67,0.15);color:#3fb950;font-weight:800;font-size:11px;text-transform:uppercase}}
     .grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}}
-    .card,.finding{{background:white;border:1px solid #dce4d8;border-radius:8px;box-shadow:0 12px 34px rgba(31,44,34,.07)}}
-    .card{{padding:16px}} .card span{{display:block;color:#69766d;font-size:12px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;word-break:break-word}}
-    .findings{{display:grid;gap:10px;margin-top:12px}} .finding{{padding:14px}} .finding div{{display:flex;justify-content:space-between;gap:12px}} .finding span{{color:#a2651b;font-size:12px;font-weight:800;text-transform:uppercase}}
-    pre{{white-space:pre-wrap;word-break:break-word;background:#eef2ed;border:1px solid #dce4d8;border-radius:8px;padding:14px;max-height:520px;overflow:auto;font-size:12px}}
+    .card,.finding{{background:#161b22;border:1px solid #30363d;border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.4)}}
+    .card{{padding:16px}} .card span{{display:block;color:#8b949e;font-size:11px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;color:#f0f6fc;word-break:break-word}}
+    .findings{{display:grid;gap:10px;margin-top:12px}} .finding{{padding:16px}} .finding div{{display:flex;justify-content:space-between;gap:12px}} .finding span{{color:#d29922;font-size:11px;font-weight:800;text-transform:uppercase}}
+    pre{{white-space:pre-wrap;word-break:break-word;background:#010409;border:1px solid #30363d;border-radius:8px;padding:14px;max-height:520px;overflow:auto;font-size:12px;color:#e6edf3}}
     @media(max-width:760px){{header,.grid{{display:grid;grid-template-columns:1fr}}}}
   </style>
 </head>
@@ -1755,20 +1809,32 @@ def render_report_html(job: JobRecord) -> str:
 <main>
   <header>
     <div>
+      <span class="badge" style="margin-bottom:8px">SEOVault Report</span>
       <h1>{escape_html(job.label)}</h1>
       <p>{escape_html(job.url)}</p>
     </div>
-    <span class="badge">{escape_html(job.status)}</span>
+    <div>
+      <span class="badge">{escape_html(job.status)}</span>
+    </div>
   </header>
-  <section class="grid">
-    <div class="card"><span>Module</span><strong>{escape_html(job.module)}</strong></div>
-    <div class="card"><span>Command</span><strong>{escape_html(job.command or "Completed")}</strong></div>
-    <div class="card"><span>Findings</span><strong>{len(findings)}</strong></div>
+  <div class="grid">
+    <div class="card"><span>Status</span><strong>{escape_html(job.status)}</strong></div>
+    <div class="card"><span>Module</span><strong>{escape_html(job.label)}</strong></div>
+    <div class="card"><span>Findings Count</span><strong>{len(findings)}</strong></div>
+  </div>
+  {fix_html}
+  {article_html}
+  {email_html}
+  <section style="margin-top:24px">
+    <h2>Audit Findings & Signals</h2>
+    <div class="findings">
+      {finding_html}
+    </div>
   </section>
-  <h2>Findings</h2>
-  <section class="findings">{finding_html}</section>
-  <h2>Raw Audit JSON</h2>
-  <pre>{raw}</pre>
+  <section style="margin-top:24px">
+    <h2>Raw Execution Payload</h2>
+    <pre>{raw}</pre>
+  </section>
 </main>
 </body>
 </html>"""

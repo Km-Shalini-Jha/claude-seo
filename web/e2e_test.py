@@ -332,7 +332,7 @@ def main() -> int:
 
         status, body = request(base, completed["share_url"])
         assert status == 200, body
-        assert "Raw Audit JSON" in body
+        assert "Raw Execution Payload" in body or "Raw Audit JSON" in body
 
         status, body = request(base, f"/api/jobs/{job_id}/report.html", token=token)
         assert status == 200, body

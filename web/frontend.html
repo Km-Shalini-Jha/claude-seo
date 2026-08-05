@@ -1607,7 +1607,7 @@
       try {
         const parsedOut = typeof job.output?.stdout === 'string' ? JSON.parse(job.output.stdout) : (job.output?.stdout || {});
         if (parsedOut.auto_fixes && Array.isArray(parsedOut.auto_fixes)) {
-          fixBlocks = parsedOut.auto_fixes.map(fix => `
+          fixBlocks += parsedOut.auto_fixes.map(fix => `
             <div class="finding-item" style="border:1px solid var(--border-focus);background:var(--surface-solid);margin-top:10px">
               <div class="finding-top">
                 <div class="finding-title" style="color:var(--emerald)">🛠️ ${esc(fix.title)}</div>
@@ -1619,6 +1619,33 @@
               <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(fix.code)}</pre>
             </div>
           `).join('');
+        }
+        if (parsedOut.article_markdown) {
+          fixBlocks += `
+            <div class="finding-item" style="border:1px solid var(--cyan);background:var(--surface-solid);margin-top:10px">
+              <div class="finding-top">
+                <div class="finding-title" style="color:var(--cyan)">✍️ ${esc(parsedOut.article_title)}</div>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(parsedOut.article_markdown)}">Copy Article Markdown</button>
+                  <button class="btn btn-primary btn-xs" onclick="deployCmsFix('${esc(parsedOut.article_title)}', decodeURIComponent(this.dataset.code))" data-code="${encodeURIComponent(parsedOut.article_markdown)}">⚡ Publish Draft to CMS</button>
+                </div>
+              </div>
+              <p class="muted" style="margin-top:4px">Word Count: ${esc(parsedOut.word_count)} words | E-E-A-T Score: ${esc(parsedOut.eeat_score)}</p>
+              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(parsedOut.article_markdown)}</pre>
+            </div>
+          `;
+        }
+        if (parsedOut.email_body) {
+          fixBlocks += `
+            <div class="finding-item" style="border:1px solid var(--gold);background:var(--surface-solid);margin-top:10px">
+              <div class="finding-top">
+                <div class="finding-title" style="color:var(--gold)">📧 Backlink Outreach Pitch (${esc(parsedOut.target_domain)})</div>
+                <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(parsedOut.email_body)}">Copy Pitch Email</button>
+              </div>
+              <p class="muted" style="margin-top:4px">Subject: ${esc(parsedOut.email_subject)}</p>
+              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(parsedOut.email_body)}</pre>
+            </div>
+          `;
         }
       } catch {}
 
