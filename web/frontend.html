@@ -1628,7 +1628,7 @@
             <a href="${htmlReportUrl}" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
             <button class="btn btn-secondary btn-xs" onclick="downloadJobJson('${job.id}')" style="color:var(--text);border-color:var(--border-hover)">Export JSON</button>
             <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
-            <a href="${htmlReportUrl}&print=1" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
+            <a href="${htmlReportUrl.includes('?') ? htmlReportUrl + '&print=1' : htmlReportUrl + '?print=1'}" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
           </div>
         `;
       }
