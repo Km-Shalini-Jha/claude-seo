@@ -1045,11 +1045,38 @@
 
     function copyText(val) {
       if (!val) return;
-      navigator.clipboard.writeText(val).then(() => {
-        toast('Link copied to clipboard!');
-      }).catch(() => {
-        toast('Failed to copy link.');
-      });
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(val).then(() => {
+          toast('Copied to clipboard!');
+        }).catch(() => fallbackCopy(val));
+      } else {
+        fallbackCopy(val);
+      }
+    }
+
+    function fallbackCopy(val) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = val;
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (success) toast('Copied to clipboard!');
+        else toast('Copy not supported.');
+      } catch(e) {
+        toast('Copy failed.');
+      }
+    }
+
+    function copySnippetFromAttr(btn) {
+      const code = decodeURIComponent(btn.dataset.code || '');
+      copyText(code);
     }
 
     async function fetchJson(url, opts = {}) {
@@ -1398,9 +1425,42 @@
       if (!$('reportPreview')) return;
       if (!job) { $('reportPreview').innerHTML = '<div class="finding-item"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select from history.</p></div>'; return; }
       const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
+      const exports = job.status === 'complete' ? `\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json` : '';
+      
+      let actionButtons = '';
+      if (job.status === 'complete') {
+        actionButtons = `
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <a href="/api/jobs/${job.id}/report.html" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
+            <a href="/api/jobs/${job.id}/export.json" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">Export JSON</a>
+            <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
+          </div>
+        `;
+      }
+
+      let fixBlocks = '';
+      try {
+        const parsedOut = typeof job.output?.stdout === 'string' ? JSON.parse(job.output.stdout) : (job.output?.stdout || {});
+        if (parsedOut.auto_fixes && Array.isArray(parsedOut.auto_fixes)) {
+          fixBlocks = parsedOut.auto_fixes.map(fix => `
+            <div class="finding-item" style="border:1px solid var(--border-focus);background:var(--surface-solid);margin-top:10px">
+              <div class="finding-top">
+                <div class="finding-title" style="color:var(--emerald)">🛠️ ${esc(fix.title)}</div>
+                <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(fix.code)}">Copy Snippet</button>
+              </div>
+              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(fix.code)}</pre>
+            </div>
+          `).join('');
+        }
+      } catch {}
+
       $('reportPreview').innerHTML = `
-        <div class="finding-item"><div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
-        <pre class="code-block">${esc(`${job.url}\nShare: ${share}\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json`)}</pre></div>
+        <div class="finding-item">
+          <div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
+          <pre class="code-block">${esc(`${job.url}\nShare: ${share}${exports}`)}</pre>
+          ${actionButtons}
+        </div>
+        ${fixBlocks}
         ${(job.findings || []).slice(0, 8).map(f => `<div class="finding-item"><div class="finding-title">${esc(f.title)}</div><p class="muted">${esc(f.detail || '')}</p></div>`).join('')}
       `;
     }
@@ -1527,7 +1587,7 @@
             <div class="finding-item" style="border:1px solid var(--border-focus);background:var(--surface-solid);margin-top:10px">
               <div class="finding-top">
                 <div class="finding-title" style="color:var(--emerald)">🛠️ ${esc(fix.title)}</div>
-                <button class="btn btn-secondary btn-xs" onclick="copyText(${JSON.stringify(fix.code)})">Copy Code Snippet</button>
+                <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(fix.code)}">Copy Snippet</button>
               </div>
               <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(fix.code)}</pre>
             </div>
