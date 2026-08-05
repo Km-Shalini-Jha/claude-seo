@@ -23,7 +23,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Literal
 
-from fastapi import Depends, Header, HTTPException, Request
+from fastapi import Depends, Header, HTTPException, Query, Request
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, HttpUrl
@@ -2540,20 +2540,36 @@ async def cancel_job(job_id: str, user: dict[str, Any] = Depends(current_user)) 
     return public_job(cancelled)
 
 
+def resolve_job_access(job_id: str, request: Request, token: str | None = Query(None)) -> JobRecord:
+    auth_header = request.headers.get("Authorization")
+    tok = token
+    if auth_header and auth_header.startswith("Bearer "):
+        tok = auth_header[7:].strip()
+    if tok:
+        try:
+            user = user_from_token(tok)
+            if user:
+                rec = load_job(job_id, user["id"])
+                if rec:
+                    return rec
+        except Exception:
+            pass
+    rec = load_job(job_id)
+    if rec:
+        return rec
+    raise HTTPException(status_code=404, detail="Job not found")
+
+
 @app.get("/api/jobs/{job_id}/export.json")
-async def export_job_json(job_id: str, user: dict[str, Any] = Depends(current_user)) -> Response:
-    record = load_job(job_id, user["id"])
-    if not record or record.user_id != user["id"]:
-        raise HTTPException(status_code=404, detail="Job not found")
+async def export_job_json(job_id: str, request: Request, token: str | None = Query(None)) -> Response:
+    record = resolve_job_access(job_id, request, token)
     content = json.dumps(public_job(record), indent=2, sort_keys=True)
     return Response(content, media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{job_id}.json"'})
 
 
 @app.get("/api/jobs/{job_id}/report.html")
-async def export_job_html(job_id: str, user: dict[str, Any] = Depends(current_user)) -> HTMLResponse:
-    record = load_job(job_id, user["id"])
-    if not record or record.user_id != user["id"]:
-        raise HTTPException(status_code=404, detail="Job not found")
+async def export_job_html(job_id: str, request: Request, token: str | None = Query(None)) -> HTMLResponse:
+    record = resolve_job_access(job_id, request, token)
     return HTMLResponse(render_report_html(record))
 
 

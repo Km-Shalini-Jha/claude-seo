@@ -1594,11 +1594,14 @@
 
     function renderJob(job) {
       if (!job) return; S.latest = job;
-      $('emptyState').hidden = true;
+      const emptyEl = $('emptyState');
+      if (emptyEl) emptyEl.style.display = 'none';
       $('resultTitle').textContent = `${job.label} · ${job.status}`;
       $('rawOutput').textContent = JSON.stringify(job, null, 2);
       const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
-      const exports = job.status === 'complete' ? `\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json` : '';
+      const htmlReportUrl = job.share_url ? `${location.origin}${job.share_url}` : `${location.origin}/api/jobs/${job.id}/report.html?token=${S.token}`;
+      const jsonExportUrl = `${location.origin}/api/jobs/${job.id}/export.json?token=${S.token}`;
+      const exports = job.status === 'complete' ? `\nHTML: ${htmlReportUrl}\nJSON: ${jsonExportUrl}` : '';
       
       let actionButtons = '';
       if (job.status === 'queued') {
@@ -1606,10 +1609,10 @@
       } else if (job.status === 'complete') {
         actionButtons = `
           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <a href="/api/jobs/${job.id}/report.html" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
-            <a href="/api/jobs/${job.id}/export.json" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">Export JSON</a>
+            <a href="${htmlReportUrl}" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
+            <a href="${jsonExportUrl}" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">Export JSON</a>
             <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
-            <a href="/api/jobs/${job.id}/report.html" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
+            <a href="${htmlReportUrl}" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
           </div>
         `;
       }
