@@ -290,6 +290,93 @@ MODULES: dict[str, dict[str, Any]] = {
         "args": lambda url: [url, "--json"],
         "timeout": 75,
     },
+    "indexing": {
+        "label": "Instant Indexing Submission",
+        "category": "Indexing & Ops",
+        "description": "Submits target URL for instant indexing to IndexNow (Bing/Yandex) and Google Indexing API.",
+        "script": "indexnow_submit.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 60,
+    },
+    "drift-check": {
+        "label": "SEO Drift & Baseline Comparison",
+        "category": "Indexing & Ops",
+        "description": "Compares current page state to captured baseline and flags regression and code drift over time.",
+        "script": "drift_compare.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 90,
+    },
+    "backlinks-verify": {
+        "label": "Backlink Audit & Verification",
+        "category": "Indexing & Ops",
+        "description": "Inspects known backlinks, checking live HTTP status, anchor text, and rel attributes.",
+        "script": "verify_backlinks.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 90,
+    },
+    "nlp-content": {
+        "label": "NLP Entity & Keyword Analysis",
+        "category": "Content",
+        "description": "Analyzes TF-IDF keyword density, key entities, and intent alignment gaps.",
+        "script": "nlp_analyze.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 90,
+    },
+    "content-humanize": {
+        "label": "Readability & Natural Style Linter",
+        "category": "Content",
+        "description": "Detects AI-written cliches, repetitive phrases, readability obstacles, and style issues.",
+        "script": "content_humanize.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 75,
+    },
+    "schema-generator": {
+        "label": "Schema.org Code Generator",
+        "category": "Schema",
+        "description": "Generates valid JSON-LD structured data code blocks (Organization, Article, FAQ, LocalBusiness).",
+        "script": "schema_generate.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 60,
+    },
+    "crux-history": {
+        "label": "CrUX Core Web Vitals Field History",
+        "category": "Performance",
+        "description": "Fetches 28-day historical real-user Core Web Vitals metrics from Google CrUX API.",
+        "script": "crux_history.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 75,
+    },
+    "gsc-inspect": {
+        "label": "Google Search Console URL Inspector",
+        "category": "Indexing & Ops",
+        "description": "Queries Search Console URL Inspection API for index status, canonical mismatch, and mobile usability.",
+        "script": "gsc_inspect.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 90,
+    },
+    "unlighthouse": {
+        "label": "Unlighthouse Multi-Route Audit",
+        "category": "Audit",
+        "description": "Crawls and performs multi-page Lighthouse route audits across the domain.",
+        "script": "unlighthouse_run.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 180,
+    },
+    "parasite-risk": {
+        "label": "Parasite & Expired Domain Risk Audit",
+        "category": "Audit",
+        "description": "Audits subdomains, redirect chains, and parasite SEO vulnerability risks.",
+        "script": "parasite_risk.py",
+        "args": lambda url: [url, "--json"],
+        "timeout": 75,
+    },
+    "auto-fix-generator": {
+        "label": "CMS Auto-Fix Code Generator",
+        "category": "Schema",
+        "description": "Generates drop-in HTML, JSON-LD, 301 redirect rules, and meta tags for 1-click CMS deployment.",
+        "compound": "auto_fix_generator",
+        "timeout": 90,
+    },
 }
 
 JOBS: dict[str, JobRecord] = {}
@@ -1274,6 +1361,35 @@ def run_module(module: str, url: str) -> tuple[str, dict[str, Any]]:
             return "content_quality.py", run_cli_script("content_quality.py", [str(temp_file), "--json"], timeout=timeout)
         finally:
             temp_file.unlink(missing_ok=True)
+    if config.get("compound") == "auto_fix_generator":
+        try:
+            _, overview_out = run_module("overview", url)
+            overview_data = parse_stdout(overview_out) or {}
+        except Exception:
+            overview_data = {}
+        
+        parsed_url = urllib.parse.urlparse(url)
+        host = parsed_url.netloc or url
+        
+        title = (overview_data.get("title") if isinstance(overview_data, dict) else None) or f"SEO Optimized - {host}"
+        desc = (overview_data.get("meta_description") if isinstance(overview_data, dict) else None) or f"Official website and intelligence portal for {host}."
+        
+        head_code = f'<!-- SEOVault Auto-Fix: Meta Tags -->\n<title>{title}</title>\n<meta name="description" content="{desc}">\n<link rel="canonical" href="{url}">'
+        schema_code = f'<!-- SEOVault Auto-Fix: JSON-LD Structured Data -->\n<script type="application/ld+json">\n{{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "{title}",\n  "url": "{url}",\n  "description": "{desc}"\n}}\n</script>'
+        redirect_code = f'# SEOVault Auto-Fix: 301 Permanent Redirect Rule\nRedirect 301 /old-page {url}'
+        
+        fixes = [
+          {"title": "HTML Head Meta Tags & Canonical", "type": "html", "code": head_code},
+          {"title": "Schema.org JSON-LD Structured Data", "type": "json-ld", "code": schema_code},
+          {"title": "301 Permanent Redirect Rule", "type": "htaccess", "code": redirect_code}
+        ]
+        
+        payload = {
+            "url": url,
+            "auto_fixes": fixes,
+            "recommendation": "Copy and paste these pre-formatted code snippets into your CMS or HTML <head> section."
+        }
+        return "auto_fix_generator", {"stdout": json.dumps(payload, indent=2), "stderr": ""}
     script = str(config["script"])
     args = config["args"](url)
     return script, run_cli_script(script, args, timeout=timeout)

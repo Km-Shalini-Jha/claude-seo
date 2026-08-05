@@ -1297,8 +1297,15 @@
 
     async function loadModules() {
       S.modules = await fetchJson('/api/modules');
-      $('moduleSelect').innerHTML = S.modules.map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('');
       $('moduleCount').textContent = S.modules.length;
+      
+      const categories = [...new Set(S.modules.map(m => m.category))];
+      $('moduleSelect').innerHTML = categories.map(cat => `
+        <optgroup label="${esc(cat)}">
+          ${S.modules.filter(m => m.category === cat).map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('')}
+        </optgroup>
+      `).join('');
+
       $('modulesGrid').innerHTML = S.modules.map(m => `
         <article class="card card-glow module-card" data-module="${esc(m.id)}">
           <div class="module-top"><div><h3>${esc(m.label)}</h3><p>${esc(m.description)}</p></div><span class="badge badge-dim">${esc(m.category)}</span></div>
@@ -1512,12 +1519,29 @@
         `;
       }
 
+      let fixBlocks = '';
+      try {
+        const parsedOut = typeof job.output?.stdout === 'string' ? JSON.parse(job.output.stdout) : (job.output?.stdout || {});
+        if (parsedOut.auto_fixes && Array.isArray(parsedOut.auto_fixes)) {
+          fixBlocks = parsedOut.auto_fixes.map(fix => `
+            <div class="finding-item" style="border:1px solid var(--border-focus);background:var(--surface-solid);margin-top:10px">
+              <div class="finding-top">
+                <div class="finding-title" style="color:var(--emerald)">🛠️ ${esc(fix.title)}</div>
+                <button class="btn btn-secondary btn-xs" onclick="copyText(${JSON.stringify(fix.code)})">Copy Code Snippet</button>
+              </div>
+              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(fix.code)}</pre>
+            </div>
+          `).join('');
+        }
+      } catch {}
+
       $('summaryView').innerHTML = `
         <div class="finding-item">
           <div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
           <pre class="code-block">${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command || 'Pending'}\nShare: ${share}${exports}`)}</pre>
           ${actionButtons}
         </div>
+        ${fixBlocks}
         ${(job.findings || []).map(f => `<div class="finding-item"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${f.severity === 'critical' || f.severity === 'high' ? 'badge-red' : f.severity === 'info' ? 'badge-cyan' : 'badge-dim'}">${esc(f.severity)}</span></div><pre class="code-block">${esc(f.detail || '')}</pre></div>`).join('')}
       `;
       renderReportPreview(job); updateTabs();

@@ -105,7 +105,11 @@ def main() -> int:
 
         status, body = request(base, "/api/modules")
         assert status == 200, body
-        assert "full-audit" in {item["id"] for item in json.loads(body)}
+        modules = {item["id"] for item in json.loads(body)}
+        assert "full-audit" in modules
+        assert "auto-fix-generator" in modules
+        assert "indexing" in modules
+        assert "schema-generator" in modules
 
         status, body = request(base, "/api/auth/signup", {"email": "owner@example.com", "password": "long-password", "name": "Owner"})
         assert status == 200, body
