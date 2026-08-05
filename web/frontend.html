@@ -865,6 +865,10 @@
         <div class="grid-2">
           <div>
             <div class="section-title"><h2>Audit Modules</h2><span class="badge badge-cyan" id="moduleCount">0</span></div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; align-items:center;">
+              <input class="input" id="moduleSearch" placeholder="🔍 Search 25+ skills (e.g. images, geo, schema, sitemap)..." style="flex:1; min-width:180px; height:36px; font-size:0.8125rem;">
+              <div id="categoryPills" style="display:flex; gap:4px; flex-wrap:wrap;"></div>
+            </div>
             <div class="modules-grid" id="modulesGrid"></div>
             <div class="schedule-section">
               <div class="section-title"><h2>Recurring Audits</h2><span class="badge badge-cyan" id="scheduleCount">0</span></div>
@@ -1353,11 +1357,60 @@
         </optgroup>
       `).join('');
 
-      $('modulesGrid').innerHTML = S.modules.map(m => `
+      S.selectedCategory = S.selectedCategory || 'All';
+      S.searchQuery = S.searchQuery || '';
+
+      const pillsHtml = ['All', ...categories].map(cat => `
+        <button class="btn btn-xs ${S.selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}" data-cat-pill="${esc(cat)}" style="font-size:0.75rem; padding:2px 8px;">
+          ${esc(cat)}
+        </button>
+      `).join('');
+      $('categoryPills').innerHTML = pillsHtml;
+
+      document.querySelectorAll('[data-cat-pill]').forEach(btn => {
+        btn.onclick = () => {
+          S.selectedCategory = btn.dataset.catPill;
+          filterAndRenderModules();
+        };
+      });
+
+      $('moduleSearch').oninput = (e) => {
+        S.searchQuery = e.target.value.toLowerCase();
+        filterAndRenderModules();
+      };
+
+      filterAndRenderModules();
+    }
+
+    function filterAndRenderModules() {
+      let filtered = S.modules;
+      if (S.selectedCategory && S.selectedCategory !== 'All') {
+        filtered = filtered.filter(m => m.category === S.selectedCategory);
+      }
+      if (S.searchQuery) {
+        filtered = filtered.filter(m => m.label.toLowerCase().includes(S.searchQuery) || m.description.toLowerCase().includes(S.searchQuery) || m.id.toLowerCase().includes(S.searchQuery));
+      }
+
+      const categories = [...new Set(S.modules.map(m => m.category))];
+      $('categoryPills').innerHTML = ['All', ...categories].map(cat => `
+        <button class="btn btn-xs ${S.selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}" data-cat-pill="${esc(cat)}" style="font-size:0.75rem; padding:2px 8px;">
+          ${esc(cat)}
+        </button>
+      `).join('');
+
+      document.querySelectorAll('[data-cat-pill]').forEach(btn => {
+        btn.onclick = () => {
+          S.selectedCategory = btn.dataset.catPill;
+          filterAndRenderModules();
+        };
+      });
+
+      $('modulesGrid').innerHTML = filtered.length ? filtered.map(m => `
         <article class="card card-glow module-card" data-module="${esc(m.id)}">
           <div class="module-top"><div><h3>${esc(m.label)}</h3><p>${esc(m.description)}</p></div><span class="badge badge-dim">${esc(m.category)}</span></div>
         </article>
-      `).join('');
+      `).join('') : '<div class="muted" style="grid-column:1/-1; padding:20px; text-align:center;">No matching audit skills found.</div>';
+
       document.querySelectorAll('[data-module]').forEach(b => b.onclick = () => startJob(b.dataset.module));
     }
 
