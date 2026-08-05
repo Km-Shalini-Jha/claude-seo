@@ -1640,12 +1640,12 @@ async def modules() -> list[dict[str, str]]:
 
 @app.get("/terms")
 async def terms_page() -> HTMLResponse:
-    return HTMLResponse("""<!doctype html><html><head><title>Terms - Ranklytics</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Terms of Service</h1><p>This development build is provided for evaluation. Production terms should be reviewed by counsel before public launch.</p><h2>Acceptable Use</h2><p>Users may only audit websites they own, manage, or are authorized to evaluate.</p><h2>Service Availability</h2><p>Audit results are informational and depend on third-party services and website availability.</p></body></html>""")
+    return HTMLResponse("""<!doctype html><html><head><title>Terms - SEOVault</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Terms of Service</h1><p>This development build is provided for evaluation. Production terms should be reviewed by counsel before public launch.</p><h2>Acceptable Use</h2><p>Users may only audit websites they own, manage, or are authorized to evaluate.</p><h2>Service Availability</h2><p>Audit results are informational and depend on third-party services and website availability.</p></body></html>""")
 
 
 @app.get("/privacy")
 async def privacy_page() -> HTMLResponse:
-    return HTMLResponse("""<!doctype html><html><head><title>Privacy - Ranklytics</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Privacy Policy</h1><p>This development build stores account, project, site, audit, and email-outbox data in the configured application database.</p><h2>Customer Data</h2><p>Website URLs and audit outputs are stored to provide history, exports, and shareable reports.</p><h2>Production Review</h2><p>Before public launch, replace this placeholder with a jurisdiction-specific policy reviewed by counsel.</p></body></html>""")
+    return HTMLResponse("""<!doctype html><html><head><title>Privacy - SEOVault</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:system-ui;max-width:860px;margin:40px auto;line-height:1.6;padding:0 20px"><h1>Privacy Policy</h1><p>This development build stores account, project, site, audit, and email-outbox data in the configured application database.</p><h2>Customer Data</h2><p>Website URLs and audit outputs are stored to provide history, exports, and shareable reports.</p><h2>Production Review</h2><p>Before public launch, replace this placeholder with a jurisdiction-specific policy reviewed by counsel.</p></body></html>""")
 
 
 @app.post("/api/auth/signup")
