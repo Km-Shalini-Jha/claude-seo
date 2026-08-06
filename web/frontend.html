@@ -2535,14 +2535,20 @@
 <style>
   /* Motion overlay control */
   :root {
-    --motion-overlay-z: 10;
+    --motion-overlay-z: 14;
+    --motion-global-z: 12;
     --motion-glow-intensity: 22px;
     --motion-blend-mode: screen;
     --motion-canvas-opacity: 0.98;
+    --motion-global-opacity: 0.52;
   }
   /* Particle canvas overlay (defaults behind content). Add .hero--overlay on .hero to bring it visually forward. */
   #heroCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; mix-blend-mode: var(--motion-blend-mode); opacity: var(--motion-canvas-opacity); transition: opacity 0.25s ease; }
   .hero.hero--overlay #heroCanvas { z-index: var(--motion-overlay-z); mix-blend-mode: var(--motion-blend-mode); filter: blur(0.6px); }
+  #globalMotionCanvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: var(--motion-global-z); mix-blend-mode: var(--motion-blend-mode); opacity: 0; transition: opacity 0.25s ease; }
+  body.motion-active #globalMotionCanvas { opacity: var(--motion-global-opacity); }
+  body.motion-active .card { box-shadow: 0 22px 88px rgba(184,134,11,0.06); }
+  body.motion-active .sidebar, body.motion-active .landing-nav, body.motion-active .app-shell { transform: translateZ(0); }
   /* CTA pulse */
   @keyframes ctaPulse { 0% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } 50% { box-shadow: 0 18px 60px rgba(184,134,11,0.16); transform: translateY(-4px); } 100% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } }
   .btn-primary.cta-animated { animation: ctaPulse 4s ease-in-out infinite; }
@@ -2564,6 +2570,21 @@
     return;
   }
 
+  function createMotionCanvas(id, parent, isFixed = false, zIndex = '8') {
+    const canvas = document.createElement('canvas');
+    canvas.id = id;
+    canvas.style.position = isFixed ? 'fixed' : 'absolute';
+    canvas.style.left = '0';
+    canvas.style.top = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = zIndex;
+    canvas.style.mixBlendMode = 'var(--motion-blend-mode)';
+    parent.insertBefore(canvas, parent.firstChild);
+    return canvas;
+  }
+ 
   function waitForHero(cb, timeout = 15000) {
     const start = Date.now();
     function tryNow() {
@@ -2574,7 +2595,7 @@
     }
     tryNow();
   }
-
+ 
   waitForHero(function(hero){
     try {
       // ensure hero has positioning context
@@ -2590,12 +2611,18 @@
       canvas.style.pointerEvents = 'none';
       canvas.style.zIndex = '0';
       hero.insertBefore(canvas, hero.firstChild);
-
+      const globalCanvas = createMotionCanvas('globalMotionCanvas', document.body, true, '12');
+      document.body.classList.add('motion-active');
+      hero.classList.add('hero--overlay');
+ 
       const ctx = canvas.getContext('2d');
+      const globalCtx = globalCanvas.getContext('2d');
       let W = 0, H = 0, particles = [];
+      let globalW = 0, globalH = 0, globalParticles = [];
       const area = Math.max(1, window.innerWidth * window.innerHeight);
       // Increase particle density and visibility for a cinematic effect
-      const PARTICLE_COUNT = Math.max(28, Math.floor(area / 90000));
+      const PARTICLE_COUNT = Math.max(36, Math.floor(area / 75000));
+      const GLOBAL_PARTICLE_COUNT = Math.max(26, Math.floor(area / 120000));
       console.debug('[SEO-MOTION] particle count', PARTICLE_COUNT);
 
       function resize() {
@@ -2607,20 +2634,34 @@
         // make canvas slightly more prominent
         canvas.style.mixBlendMode = 'screen';
         canvas.style.opacity = '0.98';
-
+ 
         particles = [];
         for (let i = 0; i < PARTICLE_COUNT; i++) {
           particles.push({
             x: Math.random() * W,
             y: Math.random() * H,
-            r: 10 + Math.random() * 40,
-            vx: (Math.random() - 0.5) * 1.2,
-            vy: (Math.random() - 0.5) * 1.2,
-            alpha: 0.06 + Math.random() * 0.16
+            r: 12 + Math.random() * 48,
+            vx: (Math.random() - 0.5) * 1.4,
+            vy: (Math.random() - 0.5) * 1.4,
+            alpha: 0.08 + Math.random() * 0.18
+          });
+        }
+ 
+        globalW = globalCanvas.width = Math.max(600, Math.round(window.innerWidth));
+        globalH = globalCanvas.height = Math.max(400, Math.round(window.innerHeight));
+        globalParticles = [];
+        for (let i = 0; i < GLOBAL_PARTICLE_COUNT; i++) {
+          globalParticles.push({
+            x: Math.random() * globalW,
+            y: Math.random() * globalH,
+            r: 6 + Math.random() * 24,
+            vx: (Math.random() - 0.5) * 1.0,
+            vy: (Math.random() - 0.5) * 1.0,
+            alpha: 0.04 + Math.random() * 0.12
           });
         }
       }
-
+ 
       function draw() {
         ctx.clearRect(0,0,W,H);
         // vignette
@@ -2633,7 +2674,7 @@
           p.x += p.vx; p.y += p.vy;
           if (p.x < -60) p.x = W + 60; if (p.x > W + 60) p.x = -60;
           if (p.y < -60) p.y = H + 60; if (p.y > H + 60) p.y = -60;
-
+ 
           ctx.save();
           ctx.globalCompositeOperation = 'lighter';
           ctx.shadowBlur = Math.min(48, 8 + (p.r * 0.5));
@@ -2645,7 +2686,9 @@
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
           ctx.restore();
         }
-
+ 
+        drawGlobal();
+ 
         // connections
         for (let i=0;i<particles.length;i++){
           for (let j=i+1;j<particles.length;j++){
@@ -2660,7 +2703,53 @@
           }
         }
       }
-
+ 
+      function drawGlobal() {
+        globalCtx.clearRect(0,0,globalW,globalH);
+        const depth = globalCtx.createRadialGradient(globalW * 0.65, globalH * 0.25, 0, globalW * 0.65, globalH * 0.25, globalW * 0.55);
+        depth.addColorStop(0, 'rgba(184,134,11,0.08)');
+        depth.addColorStop(0.6, 'rgba(184,134,11,0)');
+        globalCtx.fillStyle = depth;
+        globalCtx.fillRect(0,0,globalW,globalH);
+ 
+        for (let p of globalParticles) {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -80) p.x = globalW + 80; if (p.x > globalW + 80) p.x = -80;
+          if (p.y < -80) p.y = globalH + 80; if (p.y > globalH + 80) p.y = -80;
+ 
+          globalCtx.save();
+          globalCtx.globalCompositeOperation = 'lighter';
+          globalCtx.shadowBlur = Math.min(32, 6 + (p.r * 0.35));
+          globalCtx.shadowColor = `rgba(184,134,11,${Math.min(0.28, p.alpha * 1.8)})`;
+          const glow = globalCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+          glow.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.2})`);
+          glow.addColorStop(0.5, `rgba(184,134,11,${p.alpha * 0.45})`);
+          glow.addColorStop(1, 'rgba(184,134,11,0)');
+          globalCtx.fillStyle = glow;
+          globalCtx.beginPath();
+          globalCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          globalCtx.fill();
+          globalCtx.restore();
+        }
+ 
+        for (let i=0;i<globalParticles.length;i++) {
+          for (let j=i+1;j<globalParticles.length;j++) {
+            const a = globalParticles[i], b = globalParticles[j];
+            const dx = a.x - b.x, dy = a.y - b.y; const d = Math.sqrt(dx*dx+dy*dy);
+            const maxd = Math.min(globalW, globalH) * 0.22;
+            if (d < maxd) {
+              const alpha = 0.08 * (1 - d / maxd);
+              globalCtx.strokeStyle = `rgba(184,134,11,${alpha})`;
+              globalCtx.lineWidth = 1;
+              globalCtx.beginPath();
+              globalCtx.moveTo(a.x, a.y);
+              globalCtx.lineTo(b.x, b.y);
+              globalCtx.stroke();
+            }
+          }
+        }
+      }
+ 
       let rafId;
       function loop() { draw(); rafId = requestAnimationFrame(loop); }
 
@@ -2692,13 +2781,26 @@
       window._seoMotion = {
         started: true,
         particleCount: PARTICLE_COUNT,
-        overlay: hero.classList.contains('hero--overlay') || false,
+        globalParticleCount: GLOBAL_PARTICLE_COUNT,
+        heroOverlay: true,
+        globalOverlay: true,
         setOverlay: function(on) {
           try {
-            if (on) hero.classList.add('hero--overlay'); else hero.classList.remove('hero--overlay');
-            this.overlay = !!on;
-            console.debug('[SEO-MOTION] overlay', this.overlay);
+            const enabled = !!on;
+            hero.classList.toggle('hero--overlay', enabled);
+            document.body.classList.toggle('motion-active', enabled);
+            this.heroOverlay = enabled;
+            this.globalOverlay = enabled;
+            console.debug('[SEO-MOTION] overlay', enabled);
           } catch(e) { console.warn('[SEO-MOTION] setOverlay failed', e); }
+        },
+        setGlobalOverlay: function(on) {
+          try {
+            const enabled = !!on;
+            document.body.classList.toggle('motion-active', enabled);
+            this.globalOverlay = enabled;
+            console.debug('[SEO-MOTION] globalOverlay', enabled);
+          } catch(e) { console.warn('[SEO-MOTION] setGlobalOverlay failed', e); }
         }
       };
       console.debug('[SEO-MOTION] started', window._seoMotion);
