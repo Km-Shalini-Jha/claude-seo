@@ -1703,11 +1703,20 @@
     }
 
     async function fetchJson(url, opts = {}) {
-      const headers = { ...(opts.headers || {}), ...authHeaders() };
-      const resp = await fetch(url, { ...opts, headers });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.detail || JSON.stringify(data));
-      return data;
+      // Build headers here to ensure token is read from current state (in-memory or localStorage).
+      try {
+        const token = S.token || localStorage.getItem('seo_token');
+        const auth = token ? { Authorization: `Bearer ${token}` } : {};
+        const headers = { ...(opts.headers || {}), ...auth };
+        const resp = await fetch(url, { ...opts, headers });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || JSON.stringify(data));
+        return data;
+      } catch(e) {
+        // Re-throw for callers to handle; keep same behavior but log for visibility
+        console.warn('[fetchJson] error', e);
+        throw e;
+      }
     }
 
     /* ═══════════════════════════════════════════
@@ -1829,6 +1838,15 @@
     }
 
     function showAuth(mode = 'login') {
+      // Reduce motion while auth UI is visible to avoid competing CPU/GPU work
+      try {
+        if (window._seoMotion) {
+          // temporarily lower intensity and pause drawing
+          window._seoMotion.setGlobalOverlay && window._seoMotion.setGlobalOverlay(false);
+          window._seoMotion.pause && window._seoMotion.pause();
+        }
+      } catch(e) { console.warn('[SEO-MOTION] showAuth pause failed', e); }
+
       $('landingView').classList.remove('hidden');
       $('authView').classList.remove('hidden');
       $('appView').classList.add('hidden');
@@ -1853,6 +1871,14 @@
       $('userLine').textContent = S.user?.email || 'Dashboard';
       renderSettings();
       setView(S.view);
+
+      // Re-enable motion overlay after entering the app
+      try {
+        if (window._seoMotion) {
+          window._seoMotion.setGlobalOverlay && window._seoMotion.setGlobalOverlay(true);
+          window._seoMotion.resume && window._seoMotion.resume();
+        }
+      } catch(e) { console.warn('[SEO-MOTION] enterApp resume failed', e); }
     }
 
     /* ═══════════════════════════════════════════
@@ -1911,6 +1937,17 @@
       const password = $('authPassword')?.value;
       const name = $('authName')?.value.trim();
 
+      // Temporarily reduce motion intensity while performing auth to reduce main-thread/GPU contention
+      try {
+        if (window._seoMotion) {
+          // Prefer a short tempPause if available, otherwise pause entirely
+          if (window._seoMotion.tempPause) window._seoMotion.tempPause(2500);
+          else window._seoMotion.pause && window._seoMotion.pause();
+          // Also lower the global overlay
+          window._seoMotion.setGlobalOverlay && window._seoMotion.setGlobalOverlay(false);
+        }
+      } catch(e) { console.warn('[SEO-MOTION] handleAuth temp pause failed', e); }
+
       if (mode === 'reset-request') {
         if (!email || !email.includes('@')) { showAuthError('Enter a valid email.'); return; }
         setAuthBusy(true);
@@ -1944,6 +1981,7 @@
           showAuthError('Account created. Please log in.', 'ok');
           return;
         }
+
         const data = await fetchJson('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) });
         S.token = data.token; S.user = data.user;
         localStorage.setItem('seo_token', S.token);
@@ -1951,6 +1989,14 @@
         await refreshWorkspace();
         if (S.inviteToken) await acceptInvitation();
         toast('Logged in successfully.');
+
+        // Ensure motion is re-enabled (in case it was paused/disabled during auth)
+        try {
+          if (window._seoMotion) {
+            window._seoMotion.setGlobalOverlay && window._seoMotion.setGlobalOverlay(true);
+            window._seoMotion.resume && window._seoMotion.resume();
+          }
+        } catch(e) { console.warn('[SEO-MOTION] resume after login failed', e); }
       } catch(e) {
         let msg = e.message;
         if (mode === 'login' && msg.includes('Invalid email or password')) {
@@ -2054,7 +2100,15 @@
     }
 
     async function loadProjects() {
-      S.projects = await fetchJson('/api/projects');
+      // Fetch projects and deduplicate by id to avoid duplicates (sometimes a backend or duplicate calls can cause repeats)
+      const projects = await fetchJson('/api/projects');
+      const seen = new Set();
+      S.projects = (projects || []).filter(p => {
+        if (!p || !p.id) return false;
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
       const opts = S.projects.length ? S.projects.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('') : '<option value="">No projects</option>';
       $('projectSelect').innerHTML = opts;
       $('siteProjectPanel').innerHTML = opts;
@@ -2063,7 +2117,15 @@
 
     async function loadSites() {
       const project = $('projectSelect').value;
-      S.sites = await fetchJson('/api/sites');
+      const sites = await fetchJson('/api/sites');
+      // dedupe sites by id
+      const seenSites = new Set();
+      S.sites = (sites || []).filter(s => {
+        if (!s || !s.id) return false;
+        if (seenSites.has(s.id)) return false;
+        seenSites.add(s.id);
+        return true;
+      });
       const filtered = project ? S.sites.filter(s => s.project_id === project) : S.sites;
       $('siteSelect').innerHTML = filtered.length ? filtered.map(s => `<option value="${esc(s.id)}" data-url="${esc(s.url)}">${esc(s.name || s.url)}</option>`).join('') : '<option value="">No sites</option>';
       if (filtered[0]) $('url').value = filtered[0].url;
@@ -2382,9 +2444,42 @@
     }
 
     async function editProject(id) { const p = S.projects.find(x => x.id === id); if (!p) return; const name = prompt('Project name', p.name); if (name === null) return; await fetchJson(`/api/projects/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) }); await refreshWorkspace(); toast('Updated.'); }
-    async function deleteProject(id) { if (!confirm('Delete this project?')) return; try { await fetchJson(`/api/projects/${id}`, { method:'DELETE' }); await refreshWorkspace(); toast('Deleted.'); } catch(e) { toast(e.message); } }
+    async function deleteProject(id) {
+      if (!confirm('Delete this project?')) return;
+      // Optimistic UI update: remove from list immediately to avoid perceived lag
+      const orig = S.projects.slice();
+      S.projects = S.projects.filter(p => p.id !== id);
+      renderProjects();
+      try {
+        await fetchJson(`/api/projects/${id}`, { method:'DELETE' });
+        // refresh to ensure counts and related sites reflect server state
+        await refreshWorkspace();
+        toast('Deleted.');
+      } catch(e) {
+        // restore on failure
+        S.projects = orig;
+        renderProjects();
+        toast(e.message);
+      }
+    }
+
     async function editSite(id) { const s = S.sites.find(x => x.id === id); if (!s) return; const url = prompt('URL', s.url); if (url === null) return; const name = prompt('Name', s.name || new URL(s.url).hostname); if (name === null) return; await fetchJson(`/api/sites/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url, name, project_id: s.project_id }) }); await refreshWorkspace(); toast('Updated.'); }
-    async function deleteSite(id) { if (!confirm('Delete this site?')) return; try { await fetchJson(`/api/sites/${id}`, { method:'DELETE' }); await refreshWorkspace(); toast('Deleted.'); } catch(e) { toast(e.message); } }
+
+    async function deleteSite(id) {
+      if (!confirm('Delete this site?')) return;
+      const orig = S.sites.slice();
+      S.sites = S.sites.filter(s => s.id !== id);
+      renderSites();
+      try {
+        await fetchJson(`/api/sites/${id}`, { method:'DELETE' });
+        await refreshWorkspace();
+        toast('Deleted.');
+      } catch(e) {
+        S.sites = orig;
+        renderSites();
+        toast(e.message);
+      }
+    }
 
     async function startJob(module = $('moduleSelect').value) {
       const url = targetUrl(); if (!url) return;
