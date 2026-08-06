@@ -2091,7 +2091,10 @@
         </button>
       `).join('') : '<div class="muted" style="padding:16px;text-align:center;width:100%">No matching modules found.</div>';
 
-      document.querySelectorAll('[data-module]').forEach(b => b.onclick = () => startJob(b.dataset.module));
+      document.querySelectorAll('[data-module]').forEach(b => {
+        if (!b.id) b.id = 'module-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { startJob(this.dataset.module); });
+      });
     }
 
     async function refreshWorkspace() {
@@ -2180,9 +2183,18 @@
         const sites = S.sites.filter(s => s.project_id === p.id).length;
         return `<article class="card card-glow entity-card"><h3>${esc(p.name)}</h3><p>${sites} sites · Created ${date(p.created_at)}</p><div class="entity-meta"><span class="badge badge-cyan">Project</span><span class="badge badge-dim">${sites} sites</span></div><div class="entity-actions"><button class="btn btn-secondary btn-xs" data-open-project="${esc(p.id)}">Open</button><button class="btn btn-secondary btn-xs" data-edit-project="${esc(p.id)}">Edit</button><button class="btn btn-secondary btn-xs btn-danger" data-delete-project="${esc(p.id)}">Delete</button></div></article>`;
       }).join('') : '<div class="card entity-card"><h3>No projects yet</h3><p class="muted">Create your first workspace.</p></div>';
-      document.querySelectorAll('[data-open-project]').forEach(b => b.onclick = () => { setView('audit'); $('projectSelect').value = b.dataset.openProject; loadSites(); });
-      document.querySelectorAll('[data-edit-project]').forEach(b => b.onclick = () => editProject(b.dataset.editProject));
-      document.querySelectorAll('[data-delete-project]').forEach(b => b.onclick = () => deleteProject(b.dataset.deleteProject));
+      document.querySelectorAll('[data-open-project]').forEach(b => {
+        if (!b.id) b.id = 'open-project-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { setView('audit'); $('projectSelect').value = this.dataset.openProject; loadSites(); });
+      });
+      document.querySelectorAll('[data-edit-project]').forEach(b => {
+        if (!b.id) b.id = 'edit-project-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { editProject(this.dataset.editProject); });
+      });
+      document.querySelectorAll('[data-delete-project]').forEach(b => {
+        if (!b.id) b.id = 'delete-project-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { deleteProject(this.dataset.deleteProject); });
+      });
     }
 
     function renderSites() {
@@ -2192,9 +2204,24 @@
         const project = S.projects.find(p => p.id === s.project_id);
         return `<article class="card card-glow entity-card"><h3>${esc(s.name || new URL(s.url).hostname)}</h3><p>${esc(s.url)}</p><div class="entity-meta"><span class="badge badge-cyan">${esc(project?.name || 'Project')}</span></div><div class="entity-actions"><button class="btn btn-secondary btn-xs" data-audit-site="${esc(s.id)}">Audit</button><button class="btn btn-secondary btn-xs" data-edit-site="${esc(s.id)}">Edit</button><button class="btn btn-secondary btn-xs btn-danger" data-delete-site="${esc(s.id)}">Delete</button></div></article>`;
       }).join('') : '<div class="card entity-card"><h3>No sites saved</h3><p class="muted">Add sites here or from the Audit Desk.</p></div>';
-      document.querySelectorAll('[data-audit-site]').forEach(b => b.onclick = () => { const s = S.sites.find(x => x.id === b.dataset.auditSite); if (!s) return; setView('audit'); $('projectSelect').value = s.project_id; loadSites().then(() => { $('siteSelect').value = s.id; $('url').value = s.url; }); });
-      document.querySelectorAll('[data-edit-site]').forEach(b => b.onclick = () => editSite(b.dataset.editSite));
-      document.querySelectorAll('[data-delete-site]').forEach(b => b.onclick = () => deleteSite(b.dataset.deleteSite));
+      document.querySelectorAll('[data-audit-site]').forEach(b => {
+        if (!b.id) b.id = 'audit-site-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() {
+          const s = S.sites.find(x => x.id === this.dataset.auditSite);
+          if (!s) return;
+          setView('audit');
+          $('projectSelect').value = s.project_id;
+          loadSites().then(() => { $('siteSelect').value = s.id; $('url').value = s.url; });
+        });
+      });
+      document.querySelectorAll('[data-edit-site]').forEach(b => {
+        if (!b.id) b.id = 'edit-site-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { editSite(this.dataset.editSite); });
+      });
+      document.querySelectorAll('[data-delete-site]').forEach(b => {
+        if (!b.id) b.id = 'delete-site-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { deleteSite(this.dataset.deleteSite); });
+      });
     }
 
     function renderHistory() {
@@ -2208,9 +2235,12 @@
           <p>${esc(r.url)} · ${dateTime(r.created_at)}</p>
         </div>
       `).join('') : '<div class="card" style="padding:14px"><p class="muted">No reports yet. Completed audits appear here.</p></div>';
-      document.querySelectorAll('[data-history]').forEach(b => b.onclick = () => {
-        const job = S.history.find(r => r.id === b.dataset.history);
-        renderJob(job); setView('reports'); renderReportPreview(job);
+      document.querySelectorAll('[data-history]').forEach(b => {
+        if (!b.id) b.id = 'history-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() {
+          const job = S.history.find(r => r.id === this.dataset.history);
+          renderJob(job); setView('reports'); renderReportPreview(job);
+        });
       });
     }
 
@@ -2347,8 +2377,14 @@
           </div>
         `;
       }).join('') : '<div class="card" style="padding:16px"><p class="muted">No campaigns scheduled yet.</p></div>';
-      document.querySelectorAll('[data-toggle-schedule]').forEach(b => b.onclick = () => toggleSchedule(b.dataset.toggleSchedule));
-      document.querySelectorAll('[data-delete-schedule]').forEach(b => b.onclick = () => deleteSchedule(b.dataset.deleteSchedule));
+      document.querySelectorAll('[data-toggle-schedule]').forEach(b => {
+        if (!b.id) b.id = 'toggleSched-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { toggleSchedule(this.dataset.toggleSchedule); });
+      });
+      document.querySelectorAll('[data-delete-schedule]').forEach(b => {
+        if (!b.id) b.id = 'delSched-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { deleteSchedule(this.dataset.deleteSchedule); });
+      });
     }
 
     function renderTeam() {
@@ -2362,7 +2398,10 @@
            ...joined.map(m => `<div class="card" style="padding:10px"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:.75rem">${esc(m.email)}</strong><span class="badge badge-emerald">Joined</span></div></div>`)].join('')
         : '<div class="card" style="padding:10px"><p class="muted">No teammates yet.</p></div>';
       $('inviteList').innerHTML = invites.length ? invites.map(i => `<div class="card" style="padding:10px"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:.75rem">${esc(i.email)}</strong><span class="badge ${i.status === 'pending' ? 'badge-gold' : i.status === 'accepted' ? 'badge-emerald' : 'badge-red'}">${esc(i.status)}</span></div>${i.status === 'pending' ? `<button class="btn btn-secondary btn-xs btn-danger" data-revoke-invite="${esc(i.id)}" style="margin-top:4px">Revoke</button>` : ''}</div>`).join('') : '<div class="card" style="padding:10px"><p class="muted">No invitations.</p></div>';
-      document.querySelectorAll('[data-revoke-invite]').forEach(b => b.onclick = () => revokeInvite(b.dataset.revokeInvite));
+      document.querySelectorAll('[data-revoke-invite]').forEach(b => {
+        if (!b.id) b.id = 'revokeInv-' + Math.random().toString(36).slice(2,9);
+        bind(b.id, function() { revokeInvite(this.dataset.revokeInvite); });
+      });
     }
 
     function renderSettings() {
@@ -2703,9 +2742,18 @@
     bind('resendVerifyBtn', resendVerification);
     bind('sendInviteBtn', sendInvite);
 
-    document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
-    document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { S.activeTab = b.dataset.tab; document.querySelectorAll('[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === S.activeTab)); updateTabs(); });
-    document.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => upgrade(b.dataset.plan));
+    document.querySelectorAll('[data-view]').forEach(b => {
+      if (!b.id) b.id = 'view-' + Math.random().toString(36).slice(2,9);
+      bind(b.id, function() { setView(this.dataset.view); });
+    });
+    document.querySelectorAll('[data-tab]').forEach(b => {
+      if (!b.id) b.id = 'tab-' + Math.random().toString(36).slice(2,9);
+      bind(b.id, function() { S.activeTab = this.dataset.tab; document.querySelectorAll('[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === S.activeTab)); updateTabs(); });
+    });
+    document.querySelectorAll('[data-plan]').forEach(b => {
+      if (!b.id) b.id = 'plan-' + Math.random().toString(36).slice(2,9);
+      bind(b.id, function() { upgrade(this.dataset.plan); });
+    });
 
     init();
   </script>
@@ -2716,12 +2764,12 @@
 <style>
   /* Motion overlay control */
   :root {
-    --motion-overlay-z: 14;
-    --motion-global-z: 12;
-    --motion-glow-intensity: 22px;
+    --motion-overlay-z: 100;
+    --motion-global-z: 60;
+    --motion-glow-intensity: 28px;
     --motion-blend-mode: screen;
     --motion-canvas-opacity: 0.98;
-    --motion-global-opacity: 0.52;
+    --motion-global-opacity: 0.62;
     --motion-x: 0;
     --motion-y: 0;
   }
@@ -2815,10 +2863,13 @@
       let W = 0, H = 0, particles = [];
       let globalW = 0, globalH = 0, globalParticles = [];
       const area = Math.max(1, window.innerWidth * window.innerHeight);
-      // Increase particle density and visibility for a cinematic effect
-      const PARTICLE_COUNT = Math.max(36, Math.floor(area / 75000));
-      const GLOBAL_PARTICLE_COUNT = Math.max(26, Math.floor(area / 120000));
-      console.debug('[SEO-MOTION] particle count', PARTICLE_COUNT);
+      // Adaptive particle density: higher for desktop, lower on small/DPR devices
+      let _countScale = 1;
+      if (window.innerWidth < 900 || window.devicePixelRatio < 1.25) _countScale = 0.55;
+      if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) _countScale = Math.min(_countScale, 0.5);
+      const PARTICLE_COUNT = Math.max(48, Math.floor((area / 50000) * _countScale));
+      const GLOBAL_PARTICLE_COUNT = Math.max(36, Math.floor((area / 90000) * _countScale));
+      console.debug('[SEO-MOTION] particle count', PARTICLE_COUNT, 'global', GLOBAL_PARTICLE_COUNT, 'scale', _countScale);
 
       function resize() {
         const rect = hero.getBoundingClientRect();
@@ -2835,10 +2886,11 @@
           particles.push({
             x: Math.random() * W,
             y: Math.random() * H,
-            r: 12 + Math.random() * 48,
-            vx: (Math.random() - 0.5) * 1.4,
-            vy: (Math.random() - 0.5) * 1.4,
-            alpha: 0.08 + Math.random() * 0.18
+            // larger base radius for cinematic look
+            r: 16 + Math.random() * 64,
+            vx: (Math.random() - 0.5) * 1.6,
+            vy: (Math.random() - 0.5) * 1.6,
+            alpha: 0.10 + Math.random() * 0.22
           });
         }
  
@@ -2849,10 +2901,10 @@
           globalParticles.push({
             x: Math.random() * globalW,
             y: Math.random() * globalH,
-            r: 6 + Math.random() * 24,
-            vx: (Math.random() - 0.5) * 1.0,
-            vy: (Math.random() - 0.5) * 1.0,
-            alpha: 0.04 + Math.random() * 0.12
+            r: 10 + Math.random() * 36,
+            vx: (Math.random() - 0.5) * 0.9,
+            vy: (Math.random() - 0.5) * 0.9,
+            alpha: 0.06 + Math.random() * 0.14
           });
         }
       }
@@ -2872,11 +2924,12 @@
  
           ctx.save();
           ctx.globalCompositeOperation = 'lighter';
-          ctx.shadowBlur = Math.min(48, 8 + (p.r * 0.5));
-          ctx.shadowColor = `rgba(184,134,11,${Math.min(0.45, p.alpha * 2)})`;
+          // stronger glow for premium cinematic effect
+          ctx.shadowBlur = Math.min(120, 12 + (p.r * 0.9));
+          ctx.shadowColor = `rgba(184,134,11,${Math.min(0.7, p.alpha * 2.2)})`;
           const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.4})`);
-          g.addColorStop(0.4, `rgba(184,134,11,${p.alpha * 0.6})`);
+          g.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.6})`);
+          g.addColorStop(0.35, `rgba(184,134,11,${p.alpha * 0.8})`);
           g.addColorStop(1, 'rgba(184,134,11,0)');
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
           ctx.restore();
@@ -2889,11 +2942,11 @@
           for (let j=i+1;j<particles.length;j++){
             const a = particles[i], b = particles[j];
             const dx = a.x - b.x, dy = a.y - b.y; const d = Math.sqrt(dx*dx+dy*dy);
-            const maxd = Math.min(W,H) * 0.28;
+            const maxd = Math.min(W,H) * 0.32;
             if (d < maxd) {
-              const alpha = 0.14 * (1 - d / maxd);
+              const alpha = 0.22 * (1 - d / maxd);
               ctx.strokeStyle = `rgba(184,134,11,${alpha})`;
-              ctx.lineWidth = 1.25; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+              ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
             }
           }
         }
@@ -2914,11 +2967,11 @@
  
           globalCtx.save();
           globalCtx.globalCompositeOperation = 'lighter';
-          globalCtx.shadowBlur = Math.min(32, 6 + (p.r * 0.35));
-          globalCtx.shadowColor = `rgba(184,134,11,${Math.min(0.28, p.alpha * 1.8)})`;
+          globalCtx.shadowBlur = Math.min(96, 10 + (p.r * 0.8));
+          globalCtx.shadowColor = `rgba(184,134,11,${Math.min(0.6, p.alpha * 2.0)})`;
           const glow = globalCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          glow.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.2})`);
-          glow.addColorStop(0.5, `rgba(184,134,11,${p.alpha * 0.45})`);
+          glow.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.6})`);
+          glow.addColorStop(0.5, `rgba(184,134,11,${p.alpha * 0.6})`);
           glow.addColorStop(1, 'rgba(184,134,11,0)');
           globalCtx.fillStyle = glow;
           globalCtx.beginPath();
@@ -2931,11 +2984,11 @@
           for (let j=i+1;j<globalParticles.length;j++) {
             const a = globalParticles[i], b = globalParticles[j];
             const dx = a.x - b.x, dy = a.y - b.y; const d = Math.sqrt(dx*dx+dy*dy);
-            const maxd = Math.min(globalW, globalH) * 0.22;
+            const maxd = Math.min(globalW, globalH) * 0.28;
             if (d < maxd) {
-              const alpha = 0.08 * (1 - d / maxd);
+              const alpha = 0.12 * (1 - d / maxd);
               globalCtx.strokeStyle = `rgba(184,134,11,${alpha})`;
-              globalCtx.lineWidth = 1;
+              globalCtx.lineWidth = 1.25;
               globalCtx.beginPath();
               globalCtx.moveTo(a.x, a.y);
               globalCtx.lineTo(b.x, b.y);
