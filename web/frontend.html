@@ -2529,4 +2529,135 @@
     init();
   </script>
 </body>
+
+
+<!-- Cinematic particle canvas, hero tilt, and CTA micro-animations -->
+<style>
+  /* Particle canvas overlay */
+  #heroCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; mix-blend-mode: screen; opacity: 0.9; }
+  /* CTA pulse */
+  @keyframes ctaPulse { 0% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } 50% { box-shadow: 0 18px 60px rgba(184,134,11,0.16); transform: translateY(-4px); } 100% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } }
+  .btn-primary.cta-animated { animation: ctaPulse 4s ease-in-out infinite; }
+  /* Subtle floating for hero elements */
+  .hero-floating { animation: floatHero 12s ease-in-out infinite; }
+  @keyframes floatHero { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    #heroCanvas, .btn-primary.cta-animated, .hero-floating { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<script>
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // skip heavy animation for reduced-motion
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+
+  // Create canvas overlay
+  const canvas = document.createElement('canvas');
+  canvas.id = 'heroCanvas';
+  hero.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  let W = 0, H = 0, particles = [];
+  const PARTICLE_COUNT = Math.max(18, Math.floor((window.innerWidth * window.innerHeight) / 120000));
+
+  function resize() {
+    W = canvas.width = hero.offsetWidth;
+    H = canvas.height = hero.offsetHeight;
+    // position canvas to cover hero
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    // recreate particles
+    particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: 6 + Math.random() * 28,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        hue: 40 + Math.random() * 30, // goldish hues
+        alpha: 0.04 + Math.random() * 0.08
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    // subtle vignette
+    const grd = ctx.createLinearGradient(0,0,0,H);
+    grd.addColorStop(0, 'rgba(0,0,0,0.0)');
+    grd.addColorStop(1, 'rgba(0,0,0,0.18)');
+    ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
+
+    // draw particles
+    for (let p of particles) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -50) p.x = W + 50; if (p.x > W + 50) p.x = -50;
+      if (p.y < -50) p.y = H + 50; if (p.y > H + 50) p.y = -50;
+
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      g.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.2})`);
+      g.addColorStop(0.4, `rgba(184,134,11,${p.alpha * 0.6})`);
+      g.addColorStop(1, 'rgba(184,134,11,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+
+    // draw connecting lines for close particles
+    for (let i=0;i<particles.length;i++){
+      for (let j=i+1;j<particles.length;j++){
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y; const d = Math.sqrt(dx*dx+dy*dy);
+        if (d < Math.min(W,H) * 0.18) {
+          const alpha = 0.06 * (1 - d / (Math.min(W,H)*0.18));
+          ctx.strokeStyle = `rgba(184,134,11,${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+  }
+
+  let rafId;
+  function loop() {
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function start() { resize(); loop(); }
+  function stop() { cancelAnimationFrame(rafId); }
+
+  window.addEventListener('resize', () => { resize(); });
+
+  // 3D tilt for hero-right when present
+  const tiltTarget = hero.querySelector('.hero-right') || hero;
+  function onMove(e) {
+    const rect = hero.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    const rx = (-y) * 6; const ry = x * 10;
+    tiltTarget.style.transform = `translateZ(0) rotateX(${rx}deg) rotateY(${ry}deg)`;
+  }
+  function onLeave() { tiltTarget.style.transform = '';
+  }
+  hero.addEventListener('mousemove', onMove);
+  hero.addEventListener('mouseleave', onLeave);
+
+  // Add CTA pulsing class to first primary button in hero
+  const heroPrimary = hero.querySelector('.btn-primary');
+  if (heroPrimary) heroPrimary.classList.add('cta-animated');
+
+  // gentle floating on headline and hero elements
+  const heroFloatEls = hero.querySelectorAll('h1, .hero-eyebrow, .hero p, .hero-stats');
+  heroFloatEls.forEach(el => el.classList.add('hero-floating'));
+
+  start();
+
+  // cleanup on unload
+  window.addEventListener('unload', stop);
+})();
+</script>
+
 </html>
