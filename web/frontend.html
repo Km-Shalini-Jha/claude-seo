@@ -2154,9 +2154,11 @@
 
     function renderReportPreview(job) {
       if (!$('reportPreview')) return;
-      if (!job) { $('reportPreview').innerHTML = '<div class="finding-item sev-info"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select from history.</p></div>'; return; }
+      const container = $('reportPreview');
+      if (!job) { container.innerHTML = '<div class="finding-item sev-info"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select from history.</p></div>'; return; }
       const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
 
+      // Helper to build the action buttons
       let actionButtons = '';
       if (job.status === 'complete') {
         const htmlReportUrl = job.share_url ? `${location.origin}${job.share_url}` : `${location.origin}/api/jobs/${job.id}/report.html?token=${S.token}`;
@@ -2169,14 +2171,76 @@
         `;
       }
 
-      $('reportPreview').innerHTML = `
-        <div class="finding-item sev-${job.status === 'complete' ? 'info' : job.status === 'error' ? 'critical' : 'low'}">
-          <div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
-          <p class="muted">${esc(job.url)} · ${dateTime(job.created_at)}</p>
-          ${actionButtons}
-        </div>
-        ${(job.findings || []).slice(0, 8).map(f => `<div class="finding-item sev-${f.severity || 'info'}"><div class="finding-title">${esc(f.title)}</div><p class="muted" style="white-space:pre-wrap">${esc(f.detail || '')}</p></div>`).join('')}
-      `;
+      // Render header and an initial slice of findings (lazy render rest)
+      const findings = job.findings || [];
+      const initialCount = 12;
+
+      const frag = document.createDocumentFragment();
+      const header = document.createElement('div');
+      header.className = `finding-item sev-${job.status === 'complete' ? 'info' : job.status === 'error' ? 'critical' : 'low'}`;
+      header.innerHTML = `<div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div><p class="muted">${esc(job.url)} · ${dateTime(job.created_at)}</p>${actionButtons}`;
+      frag.appendChild(header);
+
+      const listWrap = document.createElement('div');
+      listWrap.className = 'findings-list';
+      listWrap.style.display = 'grid'; listWrap.style.gap = '8px';
+
+      // Render initial items
+      const toRender = findings.slice(0, initialCount);
+      toRender.forEach(f => {
+        const it = document.createElement('div');
+        it.className = `finding-item sev-${f.severity || 'info'}`;
+        it.innerHTML = `<div class="finding-title">${esc(f.title)}</div><p class="muted" style="white-space:pre-wrap">${esc(f.detail || '')}</p>`;
+        listWrap.appendChild(it);
+      });
+
+      frag.appendChild(listWrap);
+
+      // If more items exist, add a 'show more' button to lazy-render the rest
+      if (findings.length > initialCount) {
+        const moreWrap = document.createElement('div');
+        moreWrap.style.paddingTop = '8px';
+        const moreBtn = document.createElement('button');
+        moreBtn.className = 'btn btn-secondary btn-sm';
+        moreBtn.textContent = `Show ${findings.length - initialCount} more`;
+        moreBtn.onclick = () => {
+          moreBtn.disabled = true; moreBtn.textContent = 'Loading…';
+          // append remaining items in a requestAnimationFrame to avoid blocking
+          requestAnimationFrame(() => {
+            findings.slice(initialCount).forEach(f => {
+              const it = document.createElement('div');
+              it.className = `finding-item sev-${f.severity || 'info'}`;
+              it.innerHTML = `<div class="finding-title">${esc(f.title)}</div><p class="muted" style="white-space:pre-wrap">${esc(f.detail || '')}</p>`;
+              listWrap.appendChild(it);
+            });
+            moreBtn.remove();
+          });
+        };
+        moreWrap.appendChild(moreBtn);
+        frag.appendChild(moreWrap);
+      }
+
+      // Replace container contents efficiently
+      container.innerHTML = '';
+      container.appendChild(frag);
+
+      // If global motion is active, temporarily lower intensity during report interactions to reduce lag
+      try { if (window._seoMotion && window._seoMotion.globalOverlay) { window._seoMotion.setGlobalOverlay(false); window._seoMotion.tempPause && window._seoMotion.tempPause(600); } } catch(e) { }
+
+      // Attach scroll throttling to the results body so intensive scrolls pause motion
+      const resultsBody = document.querySelector('.results-body');
+      if (resultsBody) {
+        let scrollTimer = null;
+        const onScroll = () => {
+          try { window._seoMotion && window._seoMotion.pause && window._seoMotion.pause(); } catch(e) {}
+          if (scrollTimer) clearTimeout(scrollTimer);
+          scrollTimer = setTimeout(() => { try { window._seoMotion && window._seoMotion.resume && window._seoMotion.resume(); } catch(e) {} }, 250);
+        };
+        // Remove any prior listener by cloning node approach to avoid duplicates
+        resultsBody.removeEventListener('scroll', resultsBody._seo_onScroll || (() => {}));
+        resultsBody._seo_onScroll = onScroll;
+        resultsBody.addEventListener('scroll', onScroll, { passive: true });
+      }
     }
 
     function renderSchedules() {
@@ -2541,6 +2605,8 @@
     --motion-blend-mode: screen;
     --motion-canvas-opacity: 0.98;
     --motion-global-opacity: 0.52;
+    --motion-x: 0;
+    --motion-y: 0;
   }
   /* Particle canvas overlay (defaults behind content). Add .hero--overlay on .hero to bring it visually forward. */
   #heroCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; mix-blend-mode: var(--motion-blend-mode); opacity: var(--motion-canvas-opacity); transition: opacity 0.25s ease; }
@@ -2549,6 +2615,18 @@
   body.motion-active #globalMotionCanvas { opacity: var(--motion-global-opacity); }
   body.motion-active .card { box-shadow: 0 22px 88px rgba(184,134,11,0.06); }
   body.motion-active .sidebar, body.motion-active .landing-nav, body.motion-active .app-shell { transform: translateZ(0); }
+  body.motion-active .motion-3d {
+    transform-style: preserve-3d;
+    transform: perspective(1200px) rotateX(calc(var(--motion-y, 0) * 1deg)) rotateY(calc(var(--motion-x, 0) * 1deg));
+    transition: transform 0.35s ease;
+    will-change: transform;
+  }
+  body.motion-active .motion-3d:hover {
+    transform: perspective(1200px) rotateX(calc(var(--motion-y, 0) * 1.25deg)) rotateY(calc(var(--motion-x, 0) * 1.25deg)) translateZ(8px);
+  }
+  body.motion-active .motion-3d.card { box-shadow: 0 28px 100px rgba(184,134,11,0.08); }
+  body.motion-active .motion-3d .btn { transition: transform 0.35s ease, box-shadow 0.35s ease; }
+  body.motion-active .motion-3d .btn:hover { transform: translateZ(4px); }
   /* CTA pulse */
   @keyframes ctaPulse { 0% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } 50% { box-shadow: 0 18px 60px rgba(184,134,11,0.16); transform: translateY(-4px); } 100% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } }
   .btn-primary.cta-animated { animation: ctaPulse 4s ease-in-out infinite; }
@@ -2778,32 +2856,46 @@
       heroFloatEls.forEach(el => el.classList.add('hero-floating'));
 
       // expose debug handle
+      let _paused = false;
+      let _tempPauseTimer = null;
       window._seoMotion = {
-        started: true,
-        particleCount: PARTICLE_COUNT,
-        globalParticleCount: GLOBAL_PARTICLE_COUNT,
-        heroOverlay: true,
-        globalOverlay: true,
-        setOverlay: function(on) {
-          try {
-            const enabled = !!on;
-            hero.classList.toggle('hero--overlay', enabled);
-            document.body.classList.toggle('motion-active', enabled);
-            this.heroOverlay = enabled;
-            this.globalOverlay = enabled;
-            console.debug('[SEO-MOTION] overlay', enabled);
-          } catch(e) { console.warn('[SEO-MOTION] setOverlay failed', e); }
-        },
-        setGlobalOverlay: function(on) {
-          try {
-            const enabled = !!on;
-            document.body.classList.toggle('motion-active', enabled);
-            this.globalOverlay = enabled;
-            console.debug('[SEO-MOTION] globalOverlay', enabled);
-          } catch(e) { console.warn('[SEO-MOTION] setGlobalOverlay failed', e); }
-        }
+       started: true,
+       particleCount: PARTICLE_COUNT,
+       globalParticleCount: GLOBAL_PARTICLE_COUNT,
+       heroOverlay: true,
+       globalOverlay: true,
+       pause: function() { _paused = true; console.debug('[SEO-MOTION] paused'); },
+       resume: function() { _paused = false; console.debug('[SEO-MOTION] resumed'); },
+       tempPause: function(ms) {
+         try { if (_tempPauseTimer) clearTimeout(_tempPauseTimer); this.pause(); _tempPauseTimer = setTimeout(() => { this.resume(); _tempPauseTimer = null; }, ms || 500); } catch(e) { console.warn(e); }
+       },
+       setOverlay: function(on) {
+         try {
+           const enabled = !!on;
+           hero.classList.toggle('hero--overlay', enabled);
+           document.body.classList.toggle('motion-active', enabled);
+           this.heroOverlay = enabled;
+           this.globalOverlay = enabled;
+           console.debug('[SEO-MOTION] overlay', enabled);
+         } catch(e) { console.warn('[SEO-MOTION] setOverlay failed', e); }
+       },
+       setGlobalOverlay: function(on) {
+         try {
+           const enabled = !!on;
+           document.body.classList.toggle('motion-active', enabled);
+           this.globalOverlay = enabled;
+           console.debug('[SEO-MOTION] globalOverlay', enabled);
+         } catch(e) { console.warn('[SEO-MOTION] setGlobalOverlay failed', e); }
+       }
       };
       console.debug('[SEO-MOTION] started', window._seoMotion);
+
+      // wire pause into the animation loop by checking _paused
+      const origLoop = loop;
+      function loopWrapper() { if (!_paused) { draw(); } rafId = requestAnimationFrame(loopWrapper); }
+      // replace loop with wrapper
+      rafId && cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loopWrapper);
 
       start();
       window.addEventListener('unload', stop);
