@@ -2939,9 +2939,22 @@ async def delete_schedule(schedule_id: str, user: dict[str, Any] = Depends(curre
         row = conn.execute("SELECT * FROM scheduled_audits WHERE id = ? AND user_id = ?", (schedule_id, user["id"])).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Schedule not found")
-        conn.execute("UPDATE scheduled_audits SET status = 'paused', updated_at = ? WHERE id = ?", (now(), schedule_id))
-    log_event(user["id"], "schedule.pause", "scheduled_audit", schedule_id)
+        conn.execute("DELETE FROM scheduled_audits WHERE id = ?", (schedule_id,))
+    log_event(user["id"], "schedule.delete", "scheduled_audit", schedule_id)
     return {"ok": True}
+
+
+@app.post("/api/schedules/{schedule_id}/toggle")
+async def toggle_schedule(schedule_id: str, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+    with db() as conn:
+        row = conn.execute("SELECT * FROM scheduled_audits WHERE id = ? AND user_id = ?", (schedule_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Schedule not found")
+        new_status = "paused" if row["status"] == "active" else "active"
+        conn.execute("UPDATE scheduled_audits SET status = ?, updated_at = ? WHERE id = ?", (new_status, now(), schedule_id))
+        updated = conn.execute("SELECT * FROM scheduled_audits WHERE id = ?", (schedule_id,)).fetchone()
+    log_event(user["id"], f"schedule.{new_status}", "scheduled_audit", schedule_id)
+    return dict(updated)
 
 
 @app.get("/api/jobs/{job_id}")

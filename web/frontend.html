@@ -14,12 +14,12 @@
        ═══════════════════════════════════════════ */
     :root {
       --font: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-      --bg: #06090f; --bg-2: #0b1120; --bg-3: #111827;
-      --surface: rgba(15, 23, 42, 0.55); --surface-solid: #0f172a;
-      --surface-hover: rgba(15, 23, 42, 0.85);
-      --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.12);
-      --border-focus: rgba(16,185,129,0.5);
-      --text: #f1f5f9; --text-muted: #94a3b8; --text-dim: #64748b;
+      --bg: #02040a; --bg-2: #070b13; --bg-3: #0c1122;
+      --surface: rgba(10, 17, 32, 0.65); --surface-solid: #090d16;
+      --surface-hover: rgba(15, 27, 50, 0.85);
+      --border: rgba(6, 182, 212, 0.15); --border-hover: rgba(6, 182, 212, 0.35);
+      --border-focus: rgba(0, 242, 254, 0.8);
+      --text: #f8fafc; --text-muted: #94a3b8; --text-dim: #475569;
       --emerald: #10b981; --emerald-soft: rgba(16,185,129,0.12);
       --cyan: #06b6d4; --cyan-soft: rgba(6,182,212,0.12);
       --gold: #f59e0b; --gold-soft: rgba(245,158,11,0.12);
@@ -27,16 +27,16 @@
       --blue: #3b82f6; --blue-soft: rgba(59,130,246,0.12);
       --purple: #a855f7; --purple-soft: rgba(168,85,247,0.12);
       --violet: #8b5cf6; --rose: #f43f5e;
-      --grad-brand: linear-gradient(135deg, #06b6d4, #10b981 50%, #f59e0b);
-      --grad-hero: linear-gradient(135deg, #06090f 0%, #0c1425 30%, #091a1f 60%, #06090f 100%);
-      --grad-card: linear-gradient(180deg, rgba(15,23,42,0.6), rgba(10,15,26,0.6));
-      --glass: blur(24px) saturate(1.8);
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-      --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
-      --shadow-glow: 0 0 40px rgba(16,185,129,0.12);
+      --grad-brand: linear-gradient(135deg, #00f2fe, #4facfe 50%, #a855f7);
+      --grad-hero: linear-gradient(135deg, #02040a 0%, #081125 35%, #051d24 70%, #02040a 100%);
+      --grad-card: linear-gradient(180deg, rgba(9,15,26,0.7), rgba(4,8,16,0.7));
+      --glass: blur(20px) saturate(1.8);
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
+      --shadow-lg: 0 24px 80px rgba(0,0,0,0.7);
+      --shadow-glow: 0 0 25px rgba(6, 182, 212, 0.2);
       --radius: 12px; --radius-sm: 8px; --radius-pill: 999px;
-      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+      --transition: 0.25s cubic-bezier(0.16,1,0.3,1);
     }
 
     /* ═══════════════════════════════════════════
@@ -48,6 +48,44 @@
       font-family: var(--font); color: var(--text); background: var(--bg);
       min-height: 100vh; line-height: 1.6; -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      position: relative;
+    }
+    
+    /* Cyber Digital Grid Overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: 
+        linear-gradient(rgba(6, 182, 212, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6, 182, 212, 0.015) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none; z-index: 0; opacity: 0.8;
+    }
+
+    /* Animated background glow blobs */
+    .cyber-bg-glow {
+      position: fixed; top: -10%; left: -10%;
+      width: clamp(300px, 40vw, 600px); height: clamp(300px, 40vw, 600px);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.08) 0%, rgba(168, 85, 247, 0.02) 60%, transparent 100%);
+      filter: blur(80px); pointer-events: none; z-index: 0;
+      animation: floatGlow 25s infinite alternate ease-in-out;
+    }
+    .cyber-bg-glow-2 {
+      position: fixed; bottom: 10%; right: -5%;
+      width: clamp(250px, 30vw, 500px); height: clamp(250px, 30vw, 500px);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(0, 242, 254, 0.02) 60%, transparent 100%);
+      filter: blur(70px); pointer-events: none; z-index: 0;
+      animation: floatGlow2 30s infinite alternate ease-in-out;
+    }
+    @keyframes floatGlow {
+      0% { transform: translate(-5%, -5%) scale(1); }
+      100% { transform: translate(15%, 20%) scale(1.15); }
+    }
+    @keyframes floatGlow2 {
+      0% { transform: translate(5%, 10%) scale(1.1); }
+      100% { transform: translate(-15%, -5%) scale(0.9); }
     }
     button, input, select, textarea { font: inherit; color: inherit; }
     button { cursor: pointer; border: none; background: none; }
@@ -71,24 +109,51 @@
       height: 40px; padding: 0 18px; border-radius: var(--radius-sm);
       font-weight: 700; font-size: 0.8125rem; white-space: nowrap;
       transition: all var(--transition); position: relative; overflow: hidden;
+      border: 1px solid transparent;
     }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); }
     .btn:active:not(:disabled) { transform: translateY(0); }
+    
+    /* Glowing Neon Primary Button */
     .btn-primary {
-      background: var(--grad-brand); color: #fff; font-weight: 800;
-      box-shadow: 0 4px 20px rgba(16,185,129,0.2);
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+      color: #06090f; font-weight: 800;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);
+      border-color: rgba(0, 242, 254, 0.4);
     }
-    .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(16,185,129,0.3); }
+    .btn-primary:hover:not(:disabled) { 
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.7); 
+      border-color: rgba(0, 242, 254, 0.8);
+    }
+    
+    /* High Tech Border Secondaries */
     .btn-secondary {
-      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      background: rgba(6, 182, 212, 0.05); 
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #00f2fe;
       box-shadow: var(--shadow-sm);
     }
-    .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--border-hover); }
+    .btn-secondary:hover:not(:disabled) { 
+      background: rgba(6, 182, 212, 0.15); 
+      border-color: #00f2fe; 
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+    }
+    
     .btn-ghost { background: transparent; color: var(--text-muted); }
-    .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.06); }
-    .btn-danger { color: var(--red); border-color: rgba(239,68,68,0.3); }
-    .btn-danger:hover:not(:disabled) { background: var(--red-soft); border-color: rgba(239,68,68,0.5); }
+    .btn-ghost:hover { color: var(--text); background: rgba(6, 182, 212, 0.08); border-color: rgba(6, 182, 212, 0.2); }
+    
+    .btn-danger { 
+      color: #f43f5e; 
+      border-color: rgba(244, 63, 94, 0.4); 
+      background: rgba(244, 63, 94, 0.04);
+    }
+    .btn-danger:hover:not(:disabled) { 
+      background: rgba(244, 63, 94, 0.15); 
+      border-color: #f43f5e;
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.3);
+    }
+    
     .btn-sm { height: 34px; padding: 0 14px; font-size: 0.75rem; }
     .btn-xs { height: 28px; padding: 0 10px; font-size: 0.6875rem; border-radius: 6px; }
     .btn-lg { height: 48px; padding: 0 28px; font-size: 0.9375rem; border-radius: var(--radius); }
@@ -97,37 +162,45 @@
     .input-wrap label { font-size: 0.625rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
     .input, select {
       width: 100%; height: 40px; padding: 0 14px;
-      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      background: rgba(6, 182, 212, 0.03); border: 1px solid rgba(6, 182, 212, 0.15);
       border-radius: var(--radius-sm); color: var(--text);
       transition: all var(--transition); outline: none; font-size: 0.875rem;
     }
     .input::placeholder { color: var(--text-dim); }
-    .input:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(16,185,129,0.08); }
+    .input:focus, select:focus { 
+      border-color: var(--border-focus); 
+      box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15), 0 0 15px rgba(0, 242, 254, 0.15); 
+    }
     .input:disabled { opacity: 0.6; }
     select { cursor: pointer; }
     select option { background: var(--bg-3); color: var(--text); }
 
+    /* High Tech Glowing Cards with Ambient Shadows */
     .card {
       background: var(--grad-card); border: 1px solid var(--border);
       border-radius: var(--radius); backdrop-filter: var(--glass);
       -webkit-backdrop-filter: var(--glass);
       transition: all var(--transition); position: relative;
     }
-    .card:hover { border-color: var(--border-hover); }
-    .card-glow:hover { box-shadow: var(--shadow-glow); }
+    .card:hover { 
+      border-color: rgba(6, 182, 212, 0.4); 
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(6, 182, 212, 0.1);
+    }
+    .card-glow:hover { box-shadow: 0 0 25px rgba(6, 182, 212, 0.25); }
 
     .badge {
       display: inline-flex; align-items: center; height: 22px; padding: 0 9px;
       border-radius: var(--radius-pill); font-size: 0.625rem; font-weight: 800;
       text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
     }
-    .badge-emerald { background: var(--emerald-soft); color: var(--emerald); }
-    .badge-cyan { background: var(--cyan-soft); color: var(--cyan); }
-    .badge-gold { background: var(--gold-soft); color: var(--gold); }
-    .badge-red { background: var(--red-soft); color: var(--red); }
-    .badge-blue { background: var(--blue-soft); color: var(--blue); }
-    .badge-purple { background: var(--purple-soft); color: var(--purple); }
-    .badge-dim { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+    .badge-emerald { background: var(--emerald-soft); color: var(--emerald); border: 1px solid rgba(16,185,129,0.2); }
+    .badge-cyan { background: var(--cyan-soft); color: #00f2fe; border: 1px solid rgba(6,182,212,0.2); }
+    .badge-gold { background: var(--gold-soft); color: var(--gold); border: 1px solid rgba(245,158,11,0.2); }
+    .badge-red { background: var(--red-soft); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+    .badge-blue { background: var(--blue-soft); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
+    .badge-purple { background: var(--purple-soft); color: var(--purple); border: 1px solid rgba(168,85,247,0.2); }
+    .badge-dim { background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.05); }
 
     .toast-container {
       position: fixed; bottom: 24px; right: 24px; z-index: 9999;
@@ -185,10 +258,59 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-brand { display: flex; align-items: center; gap: 10px; }
-    .nav-mark {
-      width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
-      background: var(--grad-brand); color: #fff; font-weight: 900; font-size: 0.75rem;
-      box-shadow: 0 4px 16px rgba(16,185,129,0.25);
+    
+    /* Cyber Animated Logo */
+    .nav-cyber-logo {
+      display: inline-flex; align-items: center; justify-content: center;
+      position: relative; width: 38px; height: 38px;
+      filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.5));
+      flex-shrink: 0;
+    }
+    .cyber-orbit-outer {
+      transform-origin: center;
+      animation: rotateCW 12s linear infinite;
+    }
+    .cyber-orbit-inner {
+      transform-origin: center;
+      animation: rotateCCW 8s linear infinite;
+    }
+    .cyber-core {
+      animation: corePulse 2s ease-in-out infinite alternate;
+    }
+    @keyframes rotateCW {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes rotateCCW {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+    @keyframes corePulse {
+      0% { r: 12px; opacity: 0.85; }
+      100% { r: 16px; opacity: 1; }
+    }
+
+    /* Sweep Scanner Laser Animation */
+    .scanner-active {
+      position: relative;
+      overflow: hidden;
+    }
+    .scanner-active::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(0, 242, 254, 0) 0%, rgba(0, 242, 254, 0.8) 50%, rgba(0, 242, 254, 0) 100%);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.8), 0 0 30px rgba(0, 242, 254, 0.4);
+      animation: laserScan 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      pointer-events: none;
+      z-index: 10;
+    }
+    @keyframes laserScan {
+      0% { top: 0%; opacity: 0; }
+      5% { opacity: 1; }
+      95% { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
     }
     .nav-brand strong { font-size: 0.9375rem; font-weight: 800; }
     .nav-links { display: flex; align-items: center; gap: 6px; }
@@ -670,13 +792,15 @@
   </style>
 </head>
 <body>
+  <div class="cyber-bg-glow"></div>
+  <div class="cyber-bg-glow-2"></div>
 
   <!-- ═══════════════════════════════════════════
        LANDING PAGE
        ═══════════════════════════════════════════ -->
   <div class="landing" id="landingView">
     <nav class="landing-nav">
-      <div class="nav-brand"><div class="nav-mark">SV</div><strong>SEOVault</strong></div>
+      <div class="nav-brand"><div class="nav-cyber-logo"><svg width="30" height="30" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="url(#cyber-grad)" stroke-width="6" stroke-dasharray="16 10" class="cyber-orbit-outer"></circle><circle cx="50" cy="50" r="28" fill="none" stroke="#a855f7" stroke-width="5" stroke-dasharray="8 6" class="cyber-orbit-inner"></circle><circle cx="50" cy="50" r="14" fill="url(#core-grad)" class="cyber-core"></circle><circle cx="50" cy="50" r="6" fill="#ffffff"></circle><defs><linearGradient id="cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="#10b981"></stop></linearGradient><radialGradient id="core-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="rgba(0, 242, 254, 0.2)"></stop></radialGradient></defs></svg></div><strong>SEOVault</strong></div>
       <div class="nav-links">
         <a href="#features" class="desktop-only">Features</a>
         <a href="#pricing" class="desktop-only">Pricing</a>
@@ -835,7 +959,7 @@
        ═══════════════════════════════════════════ -->
   <div class="app-shell hidden" id="appView">
     <aside class="sidebar">
-      <div class="sidebar-brand"><div class="nav-mark">SV</div><div><strong>SEOVault</strong><span id="userLine">Dashboard</span></div></div>
+      <div class="sidebar-brand"><div class="nav-cyber-logo"><svg width="30" height="30" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="url(#cyber-grad)" stroke-width="6" stroke-dasharray="16 10" class="cyber-orbit-outer"></circle><circle cx="50" cy="50" r="28" fill="none" stroke="#a855f7" stroke-width="5" stroke-dasharray="8 6" class="cyber-orbit-inner"></circle><circle cx="50" cy="50" r="14" fill="url(#core-grad)" class="cyber-core"></circle><circle cx="50" cy="50" r="6" fill="#ffffff"></circle><defs><linearGradient id="cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="#10b981"></stop></linearGradient><radialGradient id="core-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="rgba(0, 242, 254, 0.2)"></stop></radialGradient></defs></svg></div><div><strong>SEOVault</strong><span id="userLine">Dashboard</span></div></div>
       <nav class="sidebar-nav">
         <div class="nav-section-label">Main</div>
         <button class="nav-item active" data-view="audit"><span class="nav-icon">🎯</span>Audit Desk</button>
@@ -1576,9 +1700,20 @@
       const active = S.schedules.filter(s => s.status === 'active');
       $('scheduleCount').textContent = active.length;
       $('scheduleList').innerHTML = S.schedules.length ? S.schedules.map(s => `
-        <div class="card" style="padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong style="font-size:0.8125rem">${esc(s.label)}</strong><span class="badge ${s.status === 'active' ? 'badge-emerald' : 'badge-dim'}">${esc(s.frequency)} · ${esc(s.status)}</span></div><p class="muted">${esc(s.url)} · next ${dateTime(s.next_run_at)}</p><div class="entity-actions" style="margin-top:6px"><button class="btn btn-secondary btn-xs btn-danger" data-pause-schedule="${esc(s.id)}">Pause</button></div></div>
+        <div class="card" style="padding:12px; margin-bottom: 8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <strong style="font-size:0.8125rem">${esc(s.label)}</strong>
+            <span class="badge ${s.status === 'active' ? 'badge-emerald' : 'badge-dim'}">${esc(s.frequency)} · ${esc(s.status)}</span>
+          </div>
+          <p class="muted" style="margin-top:4px;">${esc(s.url)} · next ${dateTime(s.next_run_at)}</p>
+          <div class="entity-actions" style="margin-top:8px; display:flex; gap:6px;">
+            <button class="btn btn-secondary btn-xs" data-toggle-schedule="${esc(s.id)}">${s.status === 'active' ? 'Pause' : 'Resume'}</button>
+            <button class="btn btn-secondary btn-xs btn-danger" data-delete-schedule="${esc(s.id)}">Delete</button>
+          </div>
+        </div>
       `).join('') : '<div class="card" style="padding:12px"><p class="muted">No recurring audits scheduled.</p></div>';
-      document.querySelectorAll('[data-pause-schedule]').forEach(b => b.onclick = () => pauseSchedule(b.dataset.pauseSchedule));
+      document.querySelectorAll('[data-toggle-schedule]').forEach(b => b.onclick = () => toggleSchedule(b.dataset.toggleSchedule));
+      document.querySelectorAll('[data-delete-schedule]').forEach(b => b.onclick = () => deleteSchedule(b.dataset.deleteSchedule));
     }
 
     function renderTeam() {
@@ -1814,6 +1949,7 @@
     function setBusy(v) {
       $('startBtn').disabled = v; $('startBtn').classList.toggle('busy', v);
       document.querySelectorAll('.module-tile').forEach(b => b.style.pointerEvents = v ? 'none' : '');
+      $('view-audit').classList.toggle('scanner-active', v);
     }
 
     function updateTabs() {
@@ -1834,7 +1970,13 @@
       const url = targetUrl(); if (!url) return;
       try { await fetchJson('/api/schedules', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url, module: $('moduleSelect').value, frequency: $('scheduleFrequency').value, project_id: $('projectSelect').value || null, site_id: $('siteSelect').value || null }) }); await loadSchedules(); toast('Recurring audit scheduled.'); } catch(e) { toast(e.message); }
     }
-    async function pauseSchedule(id) { try { await fetchJson(`/api/schedules/${id}`, { method:'DELETE' }); await loadSchedules(); toast('Schedule paused.'); } catch(e) { toast(e.message); } }
+    async function deleteSchedule(id) {
+      if (!confirm('Are you sure you want to delete this schedule?')) return;
+      try { await fetchJson(`/api/schedules/${id}`, { method:'DELETE' }); await loadSchedules(); toast('Schedule deleted.'); } catch(e) { toast(e.message); }
+    }
+    async function toggleSchedule(id) {
+      try { await fetchJson(`/api/schedules/${id}/toggle`, { method:'POST' }); await loadSchedules(); toast('Schedule status updated.'); } catch(e) { toast(e.message); }
+    }
 
     async function saveProfile() { try { const data = await fetchJson('/api/me/profile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: $('settingsName').value }) }); S.user = data.user; enterApp(); toast('Profile saved.'); } catch(e) { toast(e.message); } }
     async function changePassword() { try { await fetchJson('/api/me/password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ current_password: $('currentPassword').value, new_password: $('newPassword').value }) }); $('currentPassword').value = ''; $('newPassword').value = ''; toast('Password changed.'); } catch(e) { toast(e.message); } }
