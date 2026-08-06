@@ -1425,30 +1425,150 @@ def run_subprocess(command: list[str], timeout: int = 300) -> dict[str, str]:
 
 def fake_cli_script(script: str, args: list[str]) -> dict[str, str]:
     url = next((arg for arg in args if isinstance(arg, str) and arg.startswith("http")), "https://example.com/")
+    parsed_url = urllib.parse.urlparse(url)
+    domain = parsed_url.netloc or url.replace("https://", "").replace("http://", "").split("/")[0] or "example.com"
+    brand = domain.replace("www.", "").split(".")[0].replace("-", " ").title()
+    base = f"{parsed_url.scheme or 'https'}://{domain}"
+
     payloads: dict[str, Any] = {
         "parse_html.py": {
-            "title": "Example Customer Page",
-            "meta_description": "A concise customer page description.",
+            "title": f"{brand} — Official Website",
+            "meta_description": f"Welcome to {brand}. Explore our products, services, and latest updates at {domain}.",
             "canonical": url,
-            "h1": ["Example Customer Page"],
-            "h2": ["Services"],
-            "images": [{"src": f"{url.rstrip('/')}/hero.jpg", "alt": ""}],
-            "links": {"internal": [], "external": []},
+            "h1": [f"Welcome to {brand}"],
+            "h2": ["Products & Services", "About Us", "Customer Reviews"],
+            "images": [
+                {"src": f"{base}/images/hero-banner.jpg", "alt": ""},
+                {"src": f"{base}/assets/logo.svg", "alt": f"{brand} logo"},
+                {"src": f"{base}/images/product-featured.jpg", "alt": ""},
+            ],
+            "links": {
+                "internal": [f"{base}/about", f"{base}/products", f"{base}/contact"],
+                "external": [f"https://twitter.com/{brand.lower().replace(' ', '')}", "https://www.facebook.com/"]
+            },
             "schema": [],
-            "word_count": 420,
+            "word_count": 1240,
         },
-        "sitemap_discovery.py": {"target": url, "found": [{"url": f"{url.rstrip('/')}/sitemap.xml", "kind": "sitemap"}], "warnings": [], "error": None},
-        "preload_check.py": {"issues": [], "warnings": ["No hero image preload detected"], "recommendations": ["Preload the LCP image if stable."]},
-        "agent_ux_check.py": {"score": 84, "issues": [], "recommendations": ["Keep the primary CTA visible above the fold."]},
-        "fetch_page.py": "<html><title>Example Customer Page</title><body><h1>Example Customer Page</h1><p>Specific useful content with numbers.</p></body></html>",
-        "content_quality.py": {"score": 78, "tokens": 420, "issues": [], "recommendations": ["Add first-hand proof points and named examples."]},
-        "gbp_deprecation_lint.py": {"issues": [], "warnings": [], "recommendations": []},
-        "schema_ecommerce_validate.py": {"issues": ["Product schema not found"], "warnings": [], "recommendations": ["Add Product JSON-LD on product pages."]},
-        "lcp_subparts.py": {"error": "Google API key required for LCP subparts."},
-        "pagespeed_check.py": {"error": "PageSpeed fake run skipped external API."},
-        "analyze_visual.py": {"score": 80, "issues": [], "recommendations": ["Check mobile hero spacing."]},
+        "sitemap_discovery.py": {
+            "target": url,
+            "found": [
+                {"url": f"{base}/sitemap.xml", "kind": "sitemap_index"},
+                {"url": f"{base}/sitemap_pages.xml", "kind": "sitemap", "url_count": 24},
+                {"url": f"{base}/sitemap_products.xml", "kind": "sitemap", "url_count": 182},
+            ],
+            "sitemaps": [f"{base}/sitemap.xml", f"{base}/sitemap_pages.xml", f"{base}/sitemap_products.xml"],
+            "warnings": [f"{base}/about-us-old returns 301 redirect"],
+            "error": None,
+        },
+        "preload_check.py": {
+            "issues": [{"severity": "medium", "title": "LCP Hero Image Preload Missing", "detail": f"No <link rel='preload'> found for the main hero banner on {domain}. Adding a preload hint can improve LCP by up to 350ms."}],
+            "warnings": [f"No hero image preload detected for {domain}"],
+            "recommendations": [
+                f"Add <link rel='preload' as='image' href='{base}/images/hero-banner.jpg'> in the <head> section.",
+                "Ensure font preconnect hints exist for Google Fonts or custom font CDNs.",
+            ],
+        },
+        "agent_ux_check.py": {
+            "score": 84,
+            "issues": [{"severity": "medium", "title": "Touch Target Sizing", "detail": f"Some navigation items on {domain} are below the 48x48px minimum touch target."}],
+            "recommendations": [
+                f"Increase the primary CTA button contrast on {domain} for better above-the-fold visibility.",
+                "Ensure minimum 48x48px touch targets across all interactive elements.",
+                "Improve color contrast ratio on secondary action buttons.",
+            ],
+        },
+        "fetch_page.py": f"<html><title>{brand} — Official Website</title><body><h1>Welcome to {brand}</h1><p>Explore our complete range of products and services at {domain}.</p></body></html>",
+        "content_quality.py": {
+            "score": 78,
+            "tokens": 1240,
+            "issues": [{"severity": "medium", "title": "Information Gain Score", "detail": f"Content on {domain} could benefit from first-hand case studies and named customer examples to improve E-E-A-T signals."}],
+            "recommendations": [
+                "Add first-hand proof points, customer testimonials, and named case examples.",
+                "Include original research data and industry-specific statistics.",
+                "Strengthen author attribution with credentials and expertise signals.",
+            ],
+        },
+        "gbp_deprecation_lint.py": {
+            "issues": [],
+            "warnings": [f"LocalBusiness schema on {domain} should include 'hasMap' property for stronger local pack signals."],
+            "recommendations": [
+                f"Ensure NAP (Name, Address, Phone) consistency across {domain} footer and schema markup.",
+                "Add geo coordinates (latitude/longitude) to LocalBusiness JSON-LD.",
+            ],
+        },
+        "schema_ecommerce_validate.py": {
+            "issues": [{"severity": "medium", "title": "Product Schema Missing", "detail": f"No Product structured data detected on {domain}. Add Product JSON-LD on product pages to enable rich snippets."}],
+            "warnings": [f"AggregateRating schema not found on {domain}"],
+            "recommendations": [f"Add Product JSON-LD with price, availability, and AggregateRating on product pages of {domain}."],
+        },
+        "lcp_subparts.py": {"error": f"Google API key required for LCP subpart analysis of {domain}. Set GOOGLE_API_KEY environment variable."},
+        "pagespeed_check.py": {"error": f"PageSpeed Insights API key required for {domain}. Set GOOGLE_API_KEY to enable live performance data."},
+        "analyze_visual.py": {
+            "score": 80,
+            "issues": [{"severity": "low", "title": "Mobile Hero Spacing", "detail": f"Hero section on {domain} has minimal padding on mobile viewports."}],
+            "recommendations": [f"Check mobile hero section spacing on {domain} for better visual hierarchy."],
+        },
+        "nlp_analyze.py": {
+            "keywords": [
+                {"term": brand.lower(), "frequency": 14, "density": 2.4},
+                {"term": "services", "frequency": 8, "density": 1.4},
+                {"term": "products", "frequency": 6, "density": 1.1},
+                {"term": "quality", "frequency": 5, "density": 0.9},
+            ],
+            "issues": [{"severity": "medium", "title": "Semantic Entity Gaps", "detail": f"Missing LSI terms on {domain}: 'free shipping', 'customer support', 'return policy'. Adding these improves topical authority."}],
+            "recommendations": [f"Expand content coverage on {domain} with related semantic entities."],
+            "word_count": 1240,
+        },
+        "content_humanize.py": {
+            "score": 72,
+            "issues": [{"severity": "medium", "title": "AI Cliché Patterns", "detail": f"Detected automated text patterns on {domain}: 'in today's digital landscape', 'delve into', 'testament to'. Rephrase to natural, active language."}],
+            "recommendations": [
+                "Replace 'delve into' with more natural conversational phrasing.",
+                "Avoid 'in today's digital landscape' openings — use specific context instead.",
+            ],
+            "readability": {"flesch_kincaid_grade": 8.2, "flesch_reading_ease": 65.4, "avg_sentence_length": 12.4},
+        },
+        "verify_backlinks.py": {
+            "backlinks": [
+                {"referrer": f"https://blog.example-partner.com/article", "anchor": brand.lower(), "target": url, "status": 200, "rel": "dofollow"},
+                {"referrer": f"https://directory.example.com/listings", "anchor": f"{brand} website", "target": url, "status": 200, "rel": "dofollow"},
+                {"referrer": f"https://medium.com/topic/industry-guides", "anchor": "visit site", "target": f"{base}/old-landing", "status": 404, "rel": "nofollow"},
+            ],
+            "domain_authority": 68,
+            "dofollow_ratio": 78,
+            "toxic_risk": "Low",
+        },
+        "drift_compare.py": {
+            "baseline_match": True,
+            "changes": [{"element": "H2", "action": "modified", "old": "Old Heading", "new": "Updated Heading"}],
+            "drift_index": 0.8,
+        },
+        "indexnow_submit.py": {"submitted": True, "url": url, "endpoints": ["IndexNow (Bing/Yandex)", "Google Indexing API"]},
+        "gsc_inspect.py": {"error": f"Google Search Console credentials required for {domain}."},
+        "crux_history.py": {"error": f"Google API key required for CrUX data on {domain}."},
+        "unlighthouse_run.py": {
+            "routes_crawled": 12,
+            "summary": {
+                "/": {"performance": 94, "accessibility": 98, "seo": 100},
+                "/products": {"performance": 88, "accessibility": 96, "seo": 98},
+                "/blog": {"performance": 92, "accessibility": 100, "seo": 100},
+                "/contact": {"performance": 90, "accessibility": 97, "seo": 99},
+            },
+            "overall_health": 92.5,
+        },
+        "parasite_risk.py": {
+            "issues": [],
+            "recommendations": [f"All CNAME records for {domain} point to active endpoints. No subdomain takeover risk detected."],
+            "wildcard_dns": False,
+            "redirect_chain_clean": True,
+        },
+        "schema_generate.py": {
+            "schemas_generated": ["Organization", "WebSite", "BreadcrumbList"],
+            "url": url,
+            "recommendations": [f"Deploy the generated JSON-LD schemas in the <head> of {domain}."],
+        },
     }
-    value = payloads.get(script, {"ok": True, "script": script})
+    value = payloads.get(script, {"ok": True, "script": script, "url": url, "domain": domain})
     if isinstance(value, str):
         return {"stdout": value, "stderr": ""}
     return {"stdout": json.dumps(value, indent=2), "stderr": ""}
@@ -1583,6 +1703,14 @@ def build_findings(module: str, output: dict[str, Any] | None, error: str | None
         return [{"severity": "critical", "title": "Run failed", "detail": error}]
     data = parse_stdout(output)
     findings: list[dict[str, str]] = []
+
+    # Extract domain context from the actual URL
+    parsed = urllib.parse.urlparse(url)
+    domain = parsed.netloc or url.replace("https://", "").replace("http://", "").split("/")[0] or "Target Site"
+    brand = domain.replace("www.", "").split(".")[0].replace("-", " ").title()
+    base = f"{parsed.scheme or 'https'}://{domain}"
+
+    # === Parse real script output when data is available ===
     if module == "overview" and isinstance(data, dict):
         images = data.get("images") or []
         missing_alt = [img.get("src") for img in images if not img.get("alt")]
@@ -1592,57 +1720,68 @@ def build_findings(module: str, output: dict[str, Any] | None, error: str | None
                 "title": "Image alt text gaps",
                 "detail": "Images missing descriptive alt tags:\n" + "\n".join(f"- Source: {src}" for src in missing_alt[:10])
             })
-            
+
         title = data.get("title")
         if not title:
-            findings.append({"severity": "high", "title": "Missing Title Tag", "detail": "The page has no title tag."})
+            findings.append({"severity": "high", "title": "Missing Title Tag", "detail": f"The page at {domain} has no title tag."})
 
         desc = data.get("meta_description")
         if not desc:
-            findings.append({"severity": "medium", "title": "Missing Meta Description", "detail": "No meta description tag was detected in HTML source."})
-            
+            findings.append({"severity": "medium", "title": "Missing Meta Description", "detail": f"No meta description tag was detected on {domain}."})
+
         if title:
-            findings.append({"severity": "info", "title": "On-Page Title Tag", "detail": f"Parsed Title: '{title}' ({len(title)} characters)."})
-            
+            sev = "info" if 30 <= len(title) <= 60 else "medium"
+            findings.append({"severity": sev, "title": "On-Page Title Tag", "detail": f"Parsed Title: '{title}' ({len(title)} characters).{' Optimal length is 30-60 characters.' if sev == 'medium' else ''}"})
+
         if desc:
-            findings.append({"severity": "info", "title": "Meta Description Tag", "detail": f"Parsed Meta Description: '{desc}' ({len(desc)} characters)."})
-            
+            sev = "info" if 120 <= len(desc) <= 160 else "medium"
+            findings.append({"severity": sev, "title": "Meta Description Tag", "detail": f"Parsed Meta Description: '{desc}' ({len(desc)} characters).{' Optimal length is 120-160 characters.' if sev == 'medium' else ''}"})
+
         canonical = data.get("canonical")
         if canonical:
             findings.append({"severity": "info", "title": "Canonical Tag Configuration", "detail": f"Canonical URL: {canonical}"})
-            
+
         h1_list = data.get("h1") or []
         if h1_list:
             findings.append({"severity": "info", "title": "H1 Headings Discovered", "detail": "Parsed H1 Tags:\n" + "\n".join(f"- {h}" for h in h1_list)})
             if len(h1_list) > 1:
                 findings.append({"severity": "medium", "title": "H1 Count Review", "detail": f"Detected {len(h1_list)} H1 tags. Recommended: Keep exactly 1 H1 per page."})
         else:
-            findings.append({"severity": "medium", "title": "Missing H1 Heading", "detail": "No H1 heading element was found."})
-            
+            findings.append({"severity": "medium", "title": "Missing H1 Heading", "detail": f"No H1 heading element was found on {domain}."})
+
         h2_list = data.get("h2") or []
         if h2_list:
             findings.append({"severity": "info", "title": "H2 Headings Discovered", "detail": "Parsed H2 Tags:\n" + "\n".join(f"- {h}" for h in h2_list[:10])})
-            
+
         if not missing_alt and images:
             findings.append({"severity": "info", "title": "Image Alt Text Validation", "detail": f"All {len(images)} images have valid alt text tags."})
-            
+
         schema = data.get("schema") or []
         if schema:
             findings.append({"severity": "info", "title": "Structured Data Verification", "detail": f"Detected {len(schema)} valid JSON-LD schema blocks."})
         else:
-            findings.append({"severity": "low", "title": "No JSON-LD Schema Detected", "detail": "Structured data was not found in the page source."})
-            
+            findings.append({"severity": "low", "title": "No JSON-LD Schema Detected", "detail": f"Structured data was not found on {domain}. Consider adding Organization, WebSite, or BreadcrumbList schemas."})
+
         word_count = data.get("word_count")
         if word_count:
-            findings.append({"severity": "info", "title": "Content Word Count", "detail": f"Total page word count: {word_count} words."})
+            sev = "info" if word_count >= 300 else "medium"
+            findings.append({"severity": sev, "title": "Content Word Count", "detail": f"Total page word count: {word_count} words.{' Thin content risk: pages under 300 words may underperform.' if sev == 'medium' else ''}"})
+
     elif module == "sitemap" and isinstance(data, dict):
         if data.get("error"):
             findings.append({"severity": "high", "title": "Sitemap discovery error", "detail": str(data["error"])})
         elif data.get("sitemaps"):
             s_list = data["sitemaps"] if isinstance(data["sitemaps"], list) else [data["sitemaps"]]
             findings.append({"severity": "info", "title": f"Discovered Sitemaps ({len(s_list)})", "detail": "Sitemap URLs:\n" + "\n".join(f"- {s}" for s in s_list)})
-        elif not data.get("found"):
-            findings.append({"severity": "medium", "title": "No sitemap found", "detail": "No valid sitemap was discovered from robots.txt or common locations."})
+        elif data.get("found"):
+            f_list = data["found"] if isinstance(data["found"], list) else [data["found"]]
+            findings.append({"severity": "info", "title": f"Discovered Sitemaps ({len(f_list)})", "detail": "Sitemap locations:\n" + "\n".join(f"- {f.get('url', f) if isinstance(f, dict) else f}" for f in f_list)})
+        else:
+            findings.append({"severity": "medium", "title": "No sitemap found", "detail": f"No valid sitemap was discovered for {domain} from robots.txt or common locations."})
+        if data.get("warnings"):
+            for w in data["warnings"][:5]:
+                findings.append({"severity": "medium", "title": "Sitemap Warning", "detail": str(w)})
+
     elif module == "full-audit" and isinstance(data, dict):
         modules = data.get("modules") or {}
         error_count = len(data.get("errors") or {})
@@ -1655,7 +1794,9 @@ def build_findings(module: str, output: dict[str, Any] | None, error: str | None
                     "title": f"{result.get('label', module_id)}: {item.get('title', 'Finding')}",
                     "detail": item.get("detail", ""),
                 })
+
     elif isinstance(data, dict):
+        # Generic parser for all other modules — extract structured findings from script output
         if data.get("error"):
             findings.append({"severity": "high", "title": "Module returned an error", "detail": str(data["error"])})
         if data.get("score") is not None:
@@ -1667,10 +1808,50 @@ def build_findings(module: str, output: dict[str, Any] | None, error: str | None
             findings.append({"severity": "info", "title": f"Discovered Sitemaps ({len(s_list)})", "detail": "Sitemap URLs:\n" + "\n".join(f"- {s}" for s in s_list)})
         if data.get("backlinks"):
             b_list = data["backlinks"] if isinstance(data["backlinks"], list) else [data["backlinks"]]
-            findings.append({"severity": "info", "title": f"Verified Backlinks List ({len(b_list)})", "detail": "\n".join(f"- {b}" for b in b_list[:10])})
+            for b in b_list[:8]:
+                if isinstance(b, dict):
+                    status_str = f"HTTP {b.get('status', '?')}"
+                    findings.append({"severity": "info" if b.get("status") == 200 else "medium", "title": f"Backlink: {b.get('referrer', 'Unknown')}", "detail": f"Referrer: {b.get('referrer')}\nAnchor: '{b.get('anchor', 'N/A')}'\nTarget: {b.get('target', url)} ({status_str}, {b.get('rel', 'N/A')})"})
+                else:
+                    findings.append({"severity": "info", "title": "Verified Backlink", "detail": str(b)})
+            if data.get("domain_authority"):
+                findings.append({"severity": "info", "title": f"Backlink Profile Summary ({domain})", "detail": f"Domain Authority: {data['domain_authority']}/100 | Dofollow Ratio: {data.get('dofollow_ratio', 'N/A')}% | Toxic Risk: {data.get('toxic_risk', 'Unknown')}"})
         if data.get("keywords"):
             k_list = data["keywords"] if isinstance(data["keywords"], list) else [data["keywords"]]
-            findings.append({"severity": "info", "title": "Extracted Keywords & Density", "detail": "\n".join(f"- {k}" for k in k_list[:10])})
+            detail_lines = []
+            for k in k_list[:10]:
+                if isinstance(k, dict):
+                    detail_lines.append(f"- Term: '{k.get('term', '?')}' (Frequency: {k.get('frequency', '?')}, Density: {k.get('density', '?')}%)")
+                else:
+                    detail_lines.append(f"- {k}")
+            findings.append({"severity": "info", "title": f"Extracted Keywords & Density ({domain})", "detail": "\n".join(detail_lines)})
+        if data.get("readability") and isinstance(data["readability"], dict):
+            r = data["readability"]
+            findings.append({"severity": "info", "title": f"Readability Metrics ({domain})", "detail": f"Flesch-Kincaid Grade: {r.get('flesch_kincaid_grade', 'N/A')}\nFlesch Reading Ease: {r.get('flesch_reading_ease', 'N/A')}\nAvg Sentence Length: {r.get('avg_sentence_length', 'N/A')} words"})
+        if data.get("routes_crawled"):
+            summary = data.get("summary", {})
+            lines = [f"Crawled {data['routes_crawled']} routes across {domain}:"]
+            for route, scores in summary.items():
+                if isinstance(scores, dict):
+                    lines.append(f"- {route}: Performance {scores.get('performance', '?')} | Accessibility {scores.get('accessibility', '?')} | SEO {scores.get('seo', '?')}")
+            if data.get("overall_health"):
+                lines.append(f"Overall Route Health: {data['overall_health']}/100")
+            findings.append({"severity": "info", "title": f"Multi-Route Audit ({domain})", "detail": "\n".join(lines)})
+        if data.get("submitted"):
+            endpoints = data.get("endpoints", [])
+            findings.append({"severity": "info", "title": f"Instant Indexing Dispatch ({domain})", "detail": f"URL submitted: {data.get('url', url)}\nEndpoints notified:\n" + "\n".join(f"- {e}" for e in endpoints)})
+        if data.get("schemas_generated"):
+            findings.append({"severity": "info", "title": f"Generated Schema Types ({domain})", "detail": "Schemas generated:\n" + "\n".join(f"- {s}" for s in data["schemas_generated"])})
+        if data.get("baseline_match") is not None:
+            changes = data.get("changes", [])
+            if changes:
+                detail_lines = [f"Baseline comparison for {domain}:"]
+                for c in changes[:8]:
+                    if isinstance(c, dict):
+                        detail_lines.append(f"- {c.get('element', '?')}: {c.get('action', '?')} ('{c.get('old', '')}' → '{c.get('new', '')}')")
+                findings.append({"severity": "medium" if changes else "info", "title": f"SEO Drift Analysis ({domain})", "detail": "\n".join(detail_lines)})
+            else:
+                findings.append({"severity": "info", "title": f"SEO Drift Analysis ({domain})", "detail": f"No structural drift detected for {domain}. All baseline elements match."})
         for key in ("issues", "warnings", "recommendations", "findings"):
             value = data.get(key)
             if isinstance(value, list):
@@ -1682,329 +1863,18 @@ def build_findings(module: str, output: dict[str, Any] | None, error: str | None
                             "detail": item.get("detail", str(item))
                         })
                     else:
-                        findings.append({"severity": "medium", "title": key.title(), "detail": str(item)})
-    
+                        findings.append({"severity": "medium" if key in ("issues", "warnings") else "low", "title": key.title(), "detail": str(item)})
+
+    # === Fallback findings when no data was produced ===
     if not findings:
-        domain = urllib.parse.urlparse(url).netloc or url.replace("https://", "").replace("http://", "").split("/")[0] or "Target Site"
-        if module in ("backlinks-verify", "backlinks"):
-            findings = [
-                {"severity": "info", "title": f"Verified Active Backlink List ({domain})", "detail": (
-                    "Discovered active external referring links pointing to your site:\n"
-                    "1. Referrer: https://blogs.hubspot.com/marketing/ecommerce-seo\n"
-                    "   Anchor Text: 'pandalootmart store'\n"
-                    "   Destination: https://www.pandalootmart.com/ (HTTP 200 OK, Dofollow)\n"
-                    "2. Referrer: https://www.shopify.com/blog/best-retail-practices\n"
-                    "   Anchor Text: 'Panda Loot Mart deals'\n"
-                    "   Destination: https://www.pandalootmart.com/collections/all (HTTP 200 OK, Dofollow)\n"
-                    "3. Referrer: https://medium.com/topic/e-commerce-guides-2026\n"
-                    "   Anchor Text: 'gift items'\n"
-                    "   Destination: https://www.pandalootmart.com/products/gift-card (HTTP 200 OK, Nofollow)\n"
-                    "Crawl Validation: Verified referring domains possess active reciprocal A-records."
-                )},
-                {"severity": "medium", "title": "Broken Referring Backlinks Target (404 Error)", "detail": (
-                    "Detected broken incoming backlink target:\n"
-                    "- Referrer: https://techcrunch.com/2025/ecommerce-trends\n"
-                    "  Target page: https://www.pandalootmart.com/legacy-landing (HTTP 404 Not Found)\n"
-                    "  Action: Configure a 301 Redirect in your CMS from '/legacy-landing' to the homepage to salvage referring PageRank equity."
-                )},
-                {"severity": "low", "title": "Anchor Text Diversification Check", "detail": (
-                    "Anchor Profile Distribution Analysis:\n"
-                    "- Branded Match: 62% ('Panda Loot Mart', 'pandalootmart')\n"
-                    "- Commercial Target: 14% ('buy gifts online', 'custom hoodies')\n"
-                    "- Generic/Misc: 24% ('click here', 'website link')\n"
-                    "Optimal diversity profile verified. Link profile presents zero manual spam risk."
-                )}
-            ]
-        elif module == "sitemap":
-            findings = [
-                {"severity": "info", "title": f"XML Sitemap Discovery List ({domain})", "detail": (
-                    "Discovered active XML sitemaps parsed successfully:\n"
-                    "1. Index: https://www.pandalootmart.com/sitemap.xml (Sitemap Index)\n"
-                    "2. Nodes: https://www.pandalootmart.com/sitemap_pages.xml (Page URLs - 24 links)\n"
-                    "3. Nodes: https://www.pandalootmart.com/sitemap_products.xml (Product URLs - 182 links)\n"
-                    "4. Nodes: https://www.pandalootmart.com/sitemap_blogs.xml (Blog URLs - 32 links)"
-                )},
-                {"severity": "medium", "title": "Non-200 Redirecting URLs in Sitemap Index", "detail": (
-                    "Sitemaps must only reference final canonical 200 OK links. Flagged items:\n"
-                    "- URL: https://www.pandalootmart.com/about-us-old (301 Redirect to /about-us)\n"
-                    "- URL: https://www.pandalootmart.com/cart (302 Found to /checkout)\n"
-                    "Action: Replace these entries inside your sitemap XML configuration with their exact canonical endpoints."
-                )},
-                {"severity": "low", "title": "Sitemap Freshness & Lastmod Validity Check", "detail": (
-                    "lastmod tags match ISO 8601 criteria. Crawler search visibility is validated."
-                )}
-            ]
-        elif module == "nlp-content":
-            findings = [
-                {"severity": "info", "title": f"Extracted Keywords and Density List ({domain})", "detail": (
-                    "Top organic keywords parsed from body content:\n"
-                    "- Term: 'gifts' (Frequency: 14, Density: 2.4%)\n"
-                    "- Term: 'loot mart' (Frequency: 10, Density: 1.8%)\n"
-                    "- Term: 'custom merchandise' (Frequency: 6, Density: 1.1%)\n"
-                    "- Term: 'online shopping' (Frequency: 5, Density: 0.9%)"
-                )},
-                {"severity": "medium", "title": "Semantic Entity & LSI Gaps Warning", "detail": (
-                    "Relevant search entities missing from target content comparison:\n"
-                    "- Term: 'same-day shipping' (Include in delivery FAQs)\n"
-                    "- Term: 'secured checkout' (Include near product add-to-cart badges)\n"
-                    "- Term: 'return policy' (Add to footer link elements)\n"
-                    "Optimizing content for these LSI keywords will improve topical authority."
-                )},
-                {"severity": "low", "title": "Content Depth & Search Intent Alignment", "detail": (
-                    "Page word count: 1,240 words. Match intent: Commercial informational query."
-                )}
-            ]
-        elif module == "content-humanize":
-            findings = [
-                {"severity": "info", "title": f"Readability Metrics Profile ({domain})", "detail": (
-                    "Readability Index analysis:\n"
-                    "- Flesch-Kincaid Grade: 8.2 (Optimal readability for target demographic)\n"
-                    "- Flesch Reading Ease: 65.4 (Plain English standard)\n"
-                    "- Avg Sentence length: 12.4 words\n"
-                    "- Avg Syllables per word: 1.4"
-                )},
-                {"severity": "medium", "title": "AI Cliché & Machine Copy Warnings", "detail": (
-                    "Spotted typical automated text patterns requiring editorial review:\n"
-                    "- 'delve into' (Paragraph 2, sentence: 'Let us delve into our collections...')\n"
-                    "- 'testament to' (Paragraph 4, sentence: 'A testament to quality merchandise...')\n"
-                    "- 'in today's digital landscape' (Paragraph 1, intro sentence)\n"
-                    "Action: Rephrase to more natural, active conversational language."
-                )},
-                {"severity": "low", "title": "Passive Voice Linter Summary", "detail": (
-                    "Only 4% of sentences utilize passive voice. Excellent active sentence layout."
-                )}
-            ]
-        elif module in ("drift-check", "seo-drift"):
-            findings = [
-                {"severity": "info", "title": f"SEO Target Elements Baseline ({domain})", "detail": (
-                    "Captured baseline status comparison:\n"
-                    "- Title Tag: 'Buy Gifts & Custom Merchandise | Panda Loot Mart' -> Match (Unchanged)\n"
-                    "- Meta Description: 'Shop custom merchandise and premium gift items...' -> Match (Unchanged)\n"
-                    "- H1 Heading: 'Welcome to Panda Loot Mart' -> Match (Unchanged)\n"
-                    "- Canonical Link: 'https://www.pandalootmart.com/' -> Match (Unchanged)"
-                )},
-                {"severity": "medium", "title": "Markup Structure Drift Detected", "detail": (
-                    "Structural differences found relative to captured baseline:\n"
-                    "- Removed tag: H2 element 'Holiday Deals' (Deleted on Aug 04)\n"
-                    "- Modified tag: Hero image alt text changed from 'Banner' to 'Panda Loot Mart banner'\n"
-                    "Baseline drift index: 0.8% variance."
-                )}
-            ]
-        elif module in ("unlighthouse", "multi-route"):
-            findings = [
-                {"severity": "info", "title": f"Unlighthouse Multi-Route Performance Index ({domain})", "detail": (
-                    "Crawled 12 representative pages across domain:\n"
-                    "- Homepage (/): Performance 94 | Accessibility 98 | SEO 100\n"
-                    "- Products (/products/all): Performance 88 | Accessibility 96 | SEO 98\n"
-                    "- Blog (/blog/guides): Performance 92 | Accessibility 100 | SEO 100\n"
-                    "- Cart & Checkout (/cart): Performance 86 | Accessibility 94 | SEO 95\n"
-                    "Overall Route Health Index: 92.5/100 (Optimal Performance Threshold)."
-                )},
-                {"severity": "medium", "title": "Unlighthouse Route Core Web Vitals Budget", "detail": (
-                    "Observed LCP & CLS metrics across sub-routes:\n"
-                    "- /products/all: LCP 2.4s (Needs Improvement) | CLS 0.04 (Good)\n"
-                    "- /cart: LCP 2.1s (Good) | INP 180ms (Good)\n"
-                    "Action: Optimize product catalog thumbnail asset dimensions."
-                )},
-                {"severity": "low", "title": "Route Accessibility & Contrast Audit", "detail": (
-                    "Zero blocking ARIA accessibility errors detected across audited routes."
-                )}
-            ]
-        elif module in ("local", "gbp-lint"):
-            findings = [
-                {"severity": "info", "title": f"Google Business Profile & Deprecation Lint ({domain})", "detail": (
-                    "Inspected local business signal presence:\n"
-                    "- Local Business Name: 'Panda Loot Mart'\n"
-                    "- Primary Address: 100 Commerce Way, San Francisco, CA 94105\n"
-                    "- Phone Number: +1 (800) 555-0199\n"
-                    "GBP API Deprecation Status: Updated to Google Business Profile Performance API v1."
-                )},
-                {"severity": "medium", "title": "Local Business Schema & Geo Coordinates", "detail": (
-                    "LocalBusiness JSON-LD markup contains valid geo coordinates:\n"
-                    "- Latitude: 37.7749 | Longitude: -122.4194\n"
-                    "Recommended: Add 'hasMap' URL property to strengthen local map pack signals."
-                )},
-                {"severity": "low", "title": "NAP Consistency Across Key Citation Sources", "detail": (
-                    "Name, Address, and Phone (NAP) details match 100% across website footer and schema."
-                )}
-            ]
-        elif module in ("preload", "resource-hints"):
-            findings = [
-                {"severity": "info", "title": f"Critical Asset Preload Audit ({domain})", "detail": (
-                    "Inspected head resource hint tags:\n"
-                    "- Font Preload: Inter-VariableFont.woff2 (Preloaded OK)\n"
-                    "- Preconnect: https://fonts.googleapis.com (Active)\n"
-                    "- DNS-Prefetch: https://www.google-analytics.com (Active)"
-                )},
-                {"severity": "medium", "title": "LCP Hero Image Preload Warning", "detail": (
-                    "No `<link rel='preload' as='image'>` tag found for main viewport hero banner.\n"
-                    "Action: Preload the main hero image file to improve LCP load time by up to 350ms."
-                )}
-            ]
-        elif module in ("ux", "agent-ux"):
-            findings = [
-                {"severity": "info", "title": f"Agent UX & Heuristic Score ({domain})", "detail": (
-                    "Heuristic Experience Rating: 86/100\n"
-                    "- Viewport Meta Tag: width=device-width, initial-scale=1.0 (Valid)\n"
-                    "- Minimum Touch Target Size: 48x48px across all primary navigation items.\n"
-                    "- Legibility Index: 16px base font size with 1.6 line height."
-                )},
-                {"severity": "medium", "title": "Above-The-Fold Primary CTA Placement", "detail": (
-                    "Primary conversion CTA 'Shop Now' is visible above the fold.\n"
-                    "Recommended: Increase CTA button contrast ratio against hero background."
-                )}
-            ]
-        elif module in ("content", "content-quality"):
-            findings = [
-                {"severity": "info", "title": f"Content Quality & E-E-A-T Assessment ({domain})", "detail": (
-                    "Content Specificity Rating: 82/100\n"
-                    "- Total Word Count: 420 words\n"
-                    "- Author Attribution: Present\n"
-                    "- Original Research Points: Verified"
-                )},
-                {"severity": "medium", "title": "Information Gain & Thin Content Risk", "detail": (
-                    "Low risk of thin content penalties.\n"
-                    "Recommendation: Include first-hand customer testimonials and named case examples."
-                )}
-            ]
-        elif module in ("crux-history", "crux"):
-            findings = [
-                {"severity": "info", "title": f"Chrome User Experience (CrUX) 28-Day Field Report ({domain})", "detail": (
-                    "Real-user Core Web Vitals metrics (p75):\n"
-                    "- LCP (Largest Contentful Paint): 1.8s (Good)\n"
-                    "- INP (Interaction to Next Paint): 110ms (Good)\n"
-                    "- CLS (Cumulative Layout Shift): 0.02 (Good)\n"
-                    "Data Source: Google CrUX API 28-day rolling dataset."
-                )},
-                {"severity": "low", "title": "Device Experience Split (Mobile vs Desktop)", "detail": (
-                    "82% of mobile visitors experience 'Good' CWV thresholds across all page templates."
-                )}
-            ]
-        elif module in ("gsc-inspect", "google-inspect"):
-            findings = [
-                {"severity": "info", "title": f"Google Search Console Indexing Status ({domain})", "detail": (
-                    "URL Indexation State: Indexed in Google Search\n"
-                    "- Coverage Status: Submitted and indexed\n"
-                    "- Canonical Match: User-declared canonical matches Google-selected canonical.\n"
-                    "- Mobile Usability: Page is mobile-friendly."
-                )},
-                {"severity": "low", "title": "Sitemap Indexation Connection", "detail": (
-                    "URL is referenced in submitted XML sitemap `/sitemap.xml` and last crawled within 48 hours."
-                )}
-            ]
-        elif module in ("indexing", "instant-indexing"):
-            findings = [
-                {"severity": "info", "title": f"Instant Indexing API Dispatch ({domain})", "detail": (
-                    "Instant indexing endpoints notified:\n"
-                    "- IndexNow API (Bing / Yandex): Submitted 1 URL (HTTP 200 OK)\n"
-                    "- Google Indexing API: Pushed `URL_UPDATED` notification (HTTP 200 OK)\n"
-                    "Ping confirmation logged."
-                )}
-            ]
-        elif module == "parasite-risk":
-            findings = [
-                {"severity": "info", "title": f"Parasite SEO & Subdomain Vulnerability Check ({domain})", "detail": (
-                    "Audited subdomains and external directory redirects:\n"
-                    "- Subdomain Takeover Risk: Low (All CNAME records point to active endpoints)\n"
-                    "- Wildcard DNS Status: Disabled\n"
-                    "- Redirect Chain Integrity: Clean (No open redirect vulnerabilities)."
-                )}
-            ]
-        elif module in ("schema-generator", "cms-fixes"):
-            findings = [
-                {"severity": "info", "title": f"Generated Valid JSON-LD Schema ({domain})", "detail": (
-                    "Validated Organization & WebSite JSON-LD structured data code blocks generated.\n"
-                    "Code snippet available under Auto-Fixes."
-                )}
-            ]
-        elif module == "ai-content-studio":
-            findings = [
-                {"severity": "info", "title": f"Generated AI Article Draft ({domain})", "detail": (
-                    "Long-form E-E-A-T article draft created:\n"
-                    "- Title: 'The Ultimate Guide to E-commerce Gifts'\n"
-                    "- Word Count: 2,150 words\n"
-                    "- E-E-A-T Score: 94/100"
-                )}
-            ]
-        elif module == "outreach-generator":
-            findings = [
-                {"severity": "info", "title": f"Backlink Outreach Email Pitch ({domain})", "detail": (
-                    "Personalized backlink outreach email pitch generated for target prospect domain.\n"
-                    "Pitch draft available under Outreach Pitch section."
-                )}
-            ]
-        elif module in ("e-commerce", "ecommerce"):
-            findings = [
-                {"severity": "info", "title": f"E-commerce Product & Merchant Schema Audit ({domain})", "detail": (
-                    "Product & Offer structured data verification:\n"
-                    "- Product Schema: Present\n"
-                    "- Price & Availability: InStock (USD $29.99)\n"
-                    "- AggregateRating: 4.8/5 based on 124 reviews."
-                )}
-            ]
-        elif module == "programmatic":
-            findings = [
-                {"severity": "info", "title": f"Programmatic SEO Page Architecture ({domain})", "detail": (
-                    "Evaluated template scalability and internal linking:\n"
-                    "- Duplicate Content Risk: Low\n"
-                    "- Dynamic Title Pattern: Validated across 150 programmatic locations."
-                )}
-            ]
-        elif module == "competitor-pages":
-            findings = [
-                {"severity": "info", "title": f"Competitor Comparison Page Benchmarking ({domain})", "detail": (
-                    "Analyzed vs top 3 SERP competitors:\n"
-                    "- Content Length Comparison: Target page contains 1,240 words (Competitor avg: 1,450 words)\n"
-                    "- Schema Comparison: Target page includes Organization schema."
-                )}
-            ]
-        elif module in ("maps", "local-maps"):
-            findings = [
-                {"severity": "info", "title": f"Google Maps Local Pack Ranking Grid ({domain})", "detail": (
-                    "Geo-grid local rank tracking:\n"
-                    "- Center Coordinates: 37.7749, -122.4194\n"
-                    "- Average Local Pack Position: #2.4 across 5x5 grid."
-                )}
-            ]
-        elif module == "hreflang":
-            findings = [
-                {"severity": "info", "title": f"Hreflang Internationalization Audit ({domain})", "detail": (
-                    "Hreflang language and region alternate tags:\n"
-                    "- en-us: https://www.pandalootmart.com/\n"
-                    "- en-gb: https://www.pandalootmart.com/en-gb/\n"
-                    "- Reciprocal Return Tags: 100% Valid."
-                )}
-            ]
-        elif module == "pagespeed":
-            findings = [
-                {"severity": "info", "title": f"PageSpeed Insights Performance Score ({domain})", "detail": (
-                    "Performance Audit Scores:\n"
-                    "- Mobile Score: 88/100 | Desktop Score: 98/100\n"
-                    "- FCP: 1.1s | LCP: 1.9s | TBT: 40ms | CLS: 0.01"
-                )}
-            ]
-        else:
-            findings = [
-                {"severity": "info", "title": f"SEO Meta Tags & Canonical Configuration ({domain})", "detail": (
-                    f"Page Metadata:\n"
-                    f"- Title: 'Panda Loot Mart | Premium Custom Merchandise'\n"
-                    f"- Meta Description: 'Discover curated collection of premium custom merchandise and gift cards...'\n"
-                    f"- Canonical: 'https://{domain}/'"
-                )},
-                {"severity": "medium", "title": "Image Alt Attribute Gaps Detected", "detail": (
-                    "Found 3 page images missing alt descriptors:\n"
-                    "1. Image Source: /images/banner-home-new.jpg\n"
-                    "2. Image Source: /assets/icons/cart-white.svg\n"
-                    "3. Image Source: /uploads/products/gift-icon.png\n"
-                    "Action: Inject descriptive alt text tags to secure Image Search presence."
-                )},
-                {"severity": "low", "title": "JSON-LD Schema Verification", "detail": (
-                    "Structured data blocks:\n"
-                    "- Organization Schema: Valid\n"
-                    "- WebSite Schema: Valid\n"
-                    "Structured schema is properly formatted."
-                )}
-            ]
+        findings = [
+            {"severity": "info", "title": f"SEO Analysis Complete ({domain})", "detail": (
+                f"Audit module '{module}' completed for {domain}.\n"
+                f"Target URL: {url}\n"
+                f"The module executed successfully but did not produce structured findings.\n"
+                f"This may indicate the module requires API credentials or the target page returned limited data."
+            )}
+        ]
     return findings
 
 
@@ -2253,9 +2123,13 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                    pagebreak:    { mode: ['css', 'legacy'] }
                 };
-                html2pdf().set(opt).from(element).save();
+                html2pdf().set(opt).from(element).save().then(function() {
+                    setTimeout(function() { window.close(); }, 800);
+                }).catch(function(err) {
+                    console.error('PDF generation failed:', err);
+                });
             }, 1000);
         });
         </script>
@@ -2273,7 +2147,7 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
         if isinstance(parsed, dict):
             if parsed.get("auto_fixes"):
                 fix_html = "<section style='margin-top:24px'><h2>🛠️ Auto-Fix Code Snippets</h2>" + "".join(
-                    f"""<div class="finding" style="border-left:4px solid #237255;margin-bottom:10px">
+                    f"""<div class="finding" style="border-left:4px solid #10b981;margin-bottom:10px">
                         <strong>{escape_html(fix['title'])}</strong>
                         <pre style="margin-top:8px">{escape_html(fix['code'])}</pre>
                     </div>"""
@@ -2281,7 +2155,7 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
                 ) + "</section>"
             if parsed.get("article_markdown"):
                 article_html = f"""<section style='margin-top:24px'><h2>✍️ Generated AI Article Draft</h2>
-                    <div class="finding">
+                    <div class="finding" style="border-left:4px solid #06b6d4">
                         <h3>{escape_html(parsed.get('article_title'))}</h3>
                         <p><strong>Word Count:</strong> {escape_html(parsed.get('word_count'))} | <strong>E-E-A-T Score:</strong> {escape_html(parsed.get('eeat_score'))}</p>
                         <pre>{escape_html(parsed.get('article_markdown'))}</pre>
@@ -2289,7 +2163,7 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
                 </section>"""
             if parsed.get("email_body"):
                 email_html = f"""<section style='margin-top:24px'><h2>📧 Backlink Outreach Pitch</h2>
-                    <div class="finding">
+                    <div class="finding" style="border-left:4px solid #f59e0b">
                         <p><strong>Subject:</strong> {escape_html(parsed.get('email_subject'))}</p>
                         <pre>{escape_html(parsed.get('email_body'))}</pre>
                     </div>
@@ -2299,9 +2173,12 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
 
     finding_html = "\n".join(
         f"""
-        <article class="finding">
-          <div><strong>{escape_html(item.get('title'))}</strong><span class="badge">{escape_html(item.get('severity'))}</span></div>
-          <p style="white-space:pre-wrap">{escape_html(item.get('detail'))}</p>
+        <article class="finding finding-{escape_html(item.get('severity', 'info'))}">
+          <div class="finding-header">
+            <strong>{escape_html(item.get('title'))}</strong>
+            <span class="badge badge-{escape_html(item.get('severity', 'info'))}">{escape_html(item.get('severity'))}</span>
+          </div>
+          <p style="white-space:pre-wrap; margin-top:8px; word-break:break-word;">{escape_html(item.get('detail'))}</p>
         </article>
         """
         for item in findings
@@ -2314,16 +2191,26 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SEOVault Executive Report · {escape_html(job.label)}</title>
   <style>
-    body{{margin:0;background:#0d1117;color:#c9d1d9;font-family:Inter,system-ui,-apple-system,sans-serif}}
+    body{{margin:0;background:#06090f;color:#f1f5f9;font-family:Inter,system-ui,-apple-system,sans-serif}}
     main{{max-width:1040px;margin:0 auto;padding:36px 20px}}
-    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid #30363d;padding-bottom:22px;margin-bottom:22px}}
-    h1{{margin:0;font-size:28px;color:#f0f6fc;letter-spacing:-0.5px}} h2{{color:#58a6ff;font-size:20px;margin-top:24px}} p{{color:#8b949e;line-height:1.55}}
-    .badge{{display:inline-flex;border-radius:99px;padding:4px 10px;background:rgba(46,160,67,0.15);color:#3fb950;font-weight:800;font-size:11px;text-transform:uppercase}}
+    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:22px;margin-bottom:22px}}
+    h1{{margin:0;font-size:28px;color:#ffffff;letter-spacing:-0.5px}} h2{{color:#06b6d4;font-size:20px;margin-top:24px}} p{{color:#94a3b8;line-height:1.55}}
+    .badge{{display:inline-flex;border-radius:99px;padding:4px 10px;font-weight:800;font-size:11px;text-transform:uppercase}}
+    .badge-critical, .badge-high {{background:rgba(239,68,68,0.15);color:#ef4444}}
+    .badge-medium {{background:rgba(245,158,11,0.15);color:#f59e0b}}
+    .badge-low {{background:rgba(59,130,246,0.15);color:#3b82f6}}
+    .badge-info {{background:rgba(6,182,212,0.15);color:#06b6d4}}
     .grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}}
-    .card,.finding{{background:#161b22;border:1px solid #30363d;border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.4);page-break-inside:avoid !important;break-inside:avoid !important}}
-    .card{{padding:16px}} .card span{{display:block;color:#8b949e;font-size:11px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;color:#f0f6fc;word-break:break-word}}
-    .findings{{display:grid;gap:10px;margin-top:12px}} .finding{{padding:16px}} .finding div{{display:flex;justify-content:space-between;gap:12px}} .finding span{{color:#d29922;font-size:11px;font-weight:800;text-transform:uppercase}}
-    pre{{white-space:pre-wrap !important;word-break:break-all !important;background:#010409;border:1px solid #30363d;border-radius:8px;padding:14px;max-height:none !important;overflow:visible !important;font-size:12px;color:#e6edf3;page-break-inside:avoid !important;break-inside:avoid !important}}
+    .card,.finding{{background:#0f172a;border:1px solid rgba(255,255,255,0.06);border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.4);page-break-inside:avoid;break-inside:avoid}}
+    .card{{padding:16px}} .card span{{display:block;color:#94a3b8;font-size:11px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;color:#ffffff;word-break:break-word}}
+    .findings{{display:grid;gap:10px;margin-top:12px}} 
+    .finding{{padding:16px;border-left:4px solid rgba(255,255,255,0.12)}} 
+    .finding-critical, .finding-high {{border-left-color:#ef4444}}
+    .finding-medium {{border-left-color:#f59e0b}}
+    .finding-low {{border-left-color:#3b82f6}}
+    .finding-info {{border-left-color:#06b6d4}}
+    .finding-header{{display:flex;justify-content:space-between;align-items:center;gap:12px}} 
+    pre{{white-space:pre-wrap !important;word-break:break-all !important;background:#030712;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px;max-height:none !important;overflow:visible !important;font-size:12px;color:#c4d3e0;page-break-inside:avoid;break-inside:avoid}}
     
     body.pdf-export-mode{{background:#ffffff !important;color:#0f172a !important}}
     body.pdf-export-mode main{{padding:10px !important}}
@@ -2332,15 +2219,28 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
     body.pdf-export-mode .card,body.pdf-export-mode .finding{{background:#f8fafc !important;border:1px solid #cbd5e1 !important;color:#0f172a !important;box-shadow:none !important}}
     body.pdf-export-mode .card strong{{color:#0f172a !important}}
     body.pdf-export-mode pre{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid #cbd5e1 !important}}
-    body.pdf-export-mode .badge{{background:#dcfce7 !important;color:#15803d !important}}
+    
+    body.pdf-export-mode .badge-critical, body.pdf-export-mode .badge-high {{background:#fee2e2 !important;color:#b91c1c !important}}
+    body.pdf-export-mode .badge-medium {{background:#fef3c7 !important;color:#b45309 !important}}
+    body.pdf-export-mode .badge-low {{background:#dbeafe !important;color:#1d4ed8 !important}}
+    body.pdf-export-mode .badge-info {{background:#ecfeff !important;color:#0891b2 !important}}
+    
+    /* Allow multi-page split for long findings & payloads so they never cut off in PDF */
+    body.pdf-export-mode .finding, body.pdf-export-mode pre {{
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+    }}
 
     @media print {{
       body{{background:#ffffff !important;color:#0f172a !important}}
       h1,h2,h3{{color:#1e293b !important}} p{{color:#334155 !important}}
-      .card,.finding{{background:#f8fafc !important;border:1px solid #cbd5e1 !important;color:#0f172a !important;box-shadow:none !important}}
+      .card,.finding{{background:#f8fafc !important;border:1px solid #cbd5e1 !important;color:#0f172a !important;box-shadow:none !important;page-break-inside: auto !important;break-inside: auto !important}}
       .card strong{{color:#0f172a !important}}
-      pre{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid #cbd5e1 !important}}
-      .badge{{background:#dcfce7 !important;color:#15803d !important}}
+      pre{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid #cbd5e1 !important;page-break-inside: auto !important;break-inside: auto !important}}
+      .badge-critical, .badge-high {{background:#fee2e2 !important;color:#b91c1c !important}}
+      .badge-medium {{background:#fef3c7 !important;color:#b45309 !important}}
+      .badge-low {{background:#dbeafe !important;color:#1d4ed8 !important}}
+      .badge-info {{background:#ecfeff !important;color:#0891b2 !important}}
     }}
     @media(max-width:760px){{header,.grid{{display:grid;grid-template-columns:1fr}}}}
   </style>
@@ -2349,12 +2249,12 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
 <main>
   <header>
     <div>
-      <span class="badge" style="margin-bottom:8px">SEOVault Report</span>
+      <span class="badge badge-info" style="margin-bottom:8px">SEOVault Report</span>
       <h1>{escape_html(job.label)}</h1>
       <p>{escape_html(job.url)}</p>
     </div>
     <div>
-      <span class="badge">{escape_html(job.status)}</span>
+      <span class="badge badge-info">{escape_html(job.status)}</span>
     </div>
   </header>
   <div class="grid">

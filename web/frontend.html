@@ -10,34 +10,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     /* ═══════════════════════════════════════════
-       DESIGN SYSTEM
+       DESIGN SYSTEM — PREMIUM DARK
        ═══════════════════════════════════════════ */
     :root {
       --font: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-      /* Palette */
-      --bg: #030712; --bg-2: #0a0f1a; --bg-3: #111827;
-      --surface: rgba(15, 23, 42, 0.65); --surface-solid: #0f172a;
+      --bg: #06090f; --bg-2: #0b1120; --bg-3: #111827;
+      --surface: rgba(15, 23, 42, 0.55); --surface-solid: #0f172a;
       --surface-hover: rgba(15, 23, 42, 0.85);
       --border: rgba(255,255,255,0.06); --border-hover: rgba(255,255,255,0.12);
       --border-focus: rgba(16,185,129,0.5);
       --text: #f1f5f9; --text-muted: #94a3b8; --text-dim: #64748b;
-      /* Accents */
-      --emerald: #10b981; --emerald-soft: rgba(16,185,129,0.15);
-      --cyan: #06b6d4; --cyan-soft: rgba(6,182,212,0.15);
-      --gold: #f59e0b; --gold-soft: rgba(245,158,11,0.15);
-      --red: #ef4444; --red-soft: rgba(239,68,68,0.15);
-      --blue: #3b82f6; --blue-soft: rgba(59,130,246,0.15);
-      --purple: #a855f7;
-      /* Gradients */
+      --emerald: #10b981; --emerald-soft: rgba(16,185,129,0.12);
+      --cyan: #06b6d4; --cyan-soft: rgba(6,182,212,0.12);
+      --gold: #f59e0b; --gold-soft: rgba(245,158,11,0.12);
+      --red: #ef4444; --red-soft: rgba(239,68,68,0.12);
+      --blue: #3b82f6; --blue-soft: rgba(59,130,246,0.12);
+      --purple: #a855f7; --purple-soft: rgba(168,85,247,0.12);
+      --violet: #8b5cf6; --rose: #f43f5e;
       --grad-brand: linear-gradient(135deg, #06b6d4, #10b981 50%, #f59e0b);
-      --grad-hero: linear-gradient(135deg, #030712 0%, #0c1425 30%, #091a1f 60%, #030712 100%);
-      --grad-card: linear-gradient(180deg, rgba(15,23,42,0.7), rgba(10,15,26,0.7));
-      /* Effects */
-      --glass: blur(20px) saturate(1.6);
+      --grad-hero: linear-gradient(135deg, #06090f 0%, #0c1425 30%, #091a1f 60%, #06090f 100%);
+      --grad-card: linear-gradient(180deg, rgba(15,23,42,0.6), rgba(10,15,26,0.6));
+      --glass: blur(24px) saturate(1.8);
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
       --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
-      --shadow-glow: 0 0 40px rgba(16,185,129,0.15);
+      --shadow-glow: 0 0 40px rgba(16,185,129,0.12);
       --radius: 12px; --radius-sm: 8px; --radius-pill: 999px;
       --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
     }
@@ -69,54 +66,47 @@
     /* ═══════════════════════════════════════════
        COMPONENTS
        ═══════════════════════════════════════════ */
-
-    /* Buttons */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      height: 44px; padding: 0 20px; border-radius: var(--radius-sm);
-      font-weight: 700; font-size: 0.875rem; white-space: nowrap;
+      height: 40px; padding: 0 18px; border-radius: var(--radius-sm);
+      font-weight: 700; font-size: 0.8125rem; white-space: nowrap;
       transition: all var(--transition); position: relative; overflow: hidden;
     }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
     .btn:hover:not(:disabled) { transform: translateY(-1px); }
     .btn:active:not(:disabled) { transform: translateY(0); }
-
     .btn-primary {
       background: var(--grad-brand); color: #fff; font-weight: 800;
-      box-shadow: 0 4px 20px rgba(16,185,129,0.25);
+      box-shadow: 0 4px 20px rgba(16,185,129,0.2);
     }
-    .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(16,185,129,0.35); }
-
+    .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(16,185,129,0.3); }
     .btn-secondary {
       background: rgba(255,255,255,0.06); border: 1px solid var(--border);
       box-shadow: var(--shadow-sm);
     }
     .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--border-hover); }
-
     .btn-ghost { background: transparent; color: var(--text-muted); }
     .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.06); }
     .btn-danger { color: var(--red); border-color: rgba(239,68,68,0.3); }
     .btn-danger:hover:not(:disabled) { background: var(--red-soft); border-color: rgba(239,68,68,0.5); }
-    .btn-sm { height: 36px; padding: 0 14px; font-size: 0.8125rem; }
-    .btn-xs { height: 30px; padding: 0 10px; font-size: 0.75rem; border-radius: 6px; }
-    .btn-icon { width: 44px; padding: 0; }
+    .btn-sm { height: 34px; padding: 0 14px; font-size: 0.75rem; }
+    .btn-xs { height: 28px; padding: 0 10px; font-size: 0.6875rem; border-radius: 6px; }
+    .btn-lg { height: 48px; padding: 0 28px; font-size: 0.9375rem; border-radius: var(--radius); }
 
-    /* Inputs */
-    .input-wrap { display: grid; gap: 6px; }
-    .input-wrap label { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .input-wrap { display: grid; gap: 5px; }
+    .input-wrap label { font-size: 0.625rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
     .input, select {
-      width: 100%; height: 44px; padding: 0 14px;
-      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      width: 100%; height: 40px; padding: 0 14px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
       border-radius: var(--radius-sm); color: var(--text);
-      transition: all var(--transition); outline: none;
+      transition: all var(--transition); outline: none; font-size: 0.875rem;
     }
     .input::placeholder { color: var(--text-dim); }
-    .input:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .input:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(16,185,129,0.08); }
     .input:disabled { opacity: 0.6; }
     select { cursor: pointer; }
     select option { background: var(--bg-3); color: var(--text); }
 
-    /* Cards */
     .card {
       background: var(--grad-card); border: 1px solid var(--border);
       border-radius: var(--radius); backdrop-filter: var(--glass);
@@ -126,20 +116,19 @@
     .card:hover { border-color: var(--border-hover); }
     .card-glow:hover { box-shadow: var(--shadow-glow); }
 
-    /* Badges */
     .badge {
-      display: inline-flex; align-items: center; height: 24px; padding: 0 10px;
-      border-radius: var(--radius-pill); font-size: 0.6875rem; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap;
+      display: inline-flex; align-items: center; height: 22px; padding: 0 9px;
+      border-radius: var(--radius-pill); font-size: 0.625rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
     }
     .badge-emerald { background: var(--emerald-soft); color: var(--emerald); }
     .badge-cyan { background: var(--cyan-soft); color: var(--cyan); }
     .badge-gold { background: var(--gold-soft); color: var(--gold); }
     .badge-red { background: var(--red-soft); color: var(--red); }
     .badge-blue { background: var(--blue-soft); color: var(--blue); }
+    .badge-purple { background: var(--purple-soft); color: var(--purple); }
     .badge-dim { background: rgba(255,255,255,0.06); color: var(--text-muted); }
 
-    /* Toast */
     .toast-container {
       position: fixed; bottom: 24px; right: 24px; z-index: 9999;
       display: flex; flex-direction: column; gap: 8px; pointer-events: none;
@@ -148,50 +137,34 @@
       pointer-events: auto;
       background: var(--surface-solid); border: 1px solid var(--border-hover);
       border-radius: var(--radius-sm); padding: 14px 18px;
-      box-shadow: var(--shadow-lg); font-size: 0.875rem; font-weight: 600;
-      animation: toastIn 0.3s ease-out;
-      max-width: min(420px, calc(100vw - 48px));
+      box-shadow: var(--shadow-lg); font-size: 0.8125rem; font-weight: 600;
+      animation: toastIn 0.3s ease-out; max-width: min(420px, calc(100vw - 48px));
     }
     .toast-item.out { animation: toastOut 0.25s ease-in forwards; }
 
-    /* Spinner */
     .spinner {
-      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+      width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
       border-top-color: #fff; border-radius: 50%;
       animation: spin 0.7s linear infinite; display: none;
     }
     .busy .spinner { display: inline-block; }
 
-    /* Skeleton */
-    .skeleton {
-      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-      background-size: 200% 100%; border-radius: var(--radius-sm);
-      animation: shimmer 1.5s ease-in-out infinite;
-    }
-
     /* ═══════════════════════════════════════════
        ANIMATIONS
        ═══════════════════════════════════════════ */
     @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes shimmer { to { background-position: -200% 0; } }
     @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(0.96); } }
     @keyframes toastOut { to { opacity: 0; transform: translateY(-8px) scale(0.96); } }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
-    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
     @keyframes gradientShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
     @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
-    @keyframes countUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    @keyframes countUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    @keyframes heroGlow { 0%,100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.03); } }
+    @keyframes barFill { from { width: 0; } }
     @keyframes orbit { to { transform: rotate(360deg); } }
-    @keyframes borderGlow {
-      0%,100% { border-color: rgba(16,185,129,0.2); }
-      50% { border-color: rgba(6,182,212,0.4); }
-    }
-    @keyframes heroGlow {
-      0%,100% { opacity: 0.3; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(1.05); }
-    }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -204,65 +177,62 @@
        LANDING PAGE
        ═══════════════════════════════════════════ */
     .landing { min-height: 100vh; }
-
-    /* Nav */
     .landing-nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 clamp(20px, 4vw, 48px); height: 72px;
-      background: rgba(3,7,18,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 0 clamp(20px, 4vw, 48px); height: 64px;
+      background: rgba(6,9,15,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-brand { display: flex; align-items: center; gap: 12px; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
     .nav-mark {
-      width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
-      background: var(--grad-brand); color: #fff; font-weight: 900; font-size: 0.8125rem;
-      box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+      width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+      background: var(--grad-brand); color: #fff; font-weight: 900; font-size: 0.75rem;
+      box-shadow: 0 4px 16px rgba(16,185,129,0.25);
     }
-    .nav-brand strong { font-size: 1rem; font-weight: 800; }
-    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-brand strong { font-size: 0.9375rem; font-weight: 800; }
+    .nav-links { display: flex; align-items: center; gap: 6px; }
     .nav-links a {
-      padding: 8px 14px; border-radius: var(--radius-sm);
-      font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
+      padding: 7px 12px; border-radius: var(--radius-sm);
+      font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
       transition: all var(--transition);
     }
     .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
 
-    /* Hero */
     .hero {
       min-height: 100vh; display: grid; grid-template-columns: 1.2fr 1fr; align-items: center;
-      gap: 40px; padding: 120px clamp(20px, 4vw, 48px) 80px; position: relative; overflow: hidden;
+      gap: 40px; padding: 100px clamp(20px, 4vw, 48px) 60px; position: relative; overflow: hidden;
       max-width: 1200px; margin: 0 auto;
     }
     .hero::before {
       content: ''; position: absolute; inset: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(6,182,212,0.15), transparent),
-        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(16,185,129,0.1), transparent),
-        radial-gradient(ellipse 30% 30% at 80% 60%, rgba(245,158,11,0.08), transparent);
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(6,182,212,0.12), transparent),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(16,185,129,0.08), transparent),
+        radial-gradient(ellipse 30% 30% at 80% 60%, rgba(245,158,11,0.06), transparent);
       animation: heroGlow 8s ease-in-out infinite;
     }
     .hero::after {
       content: ''; position: absolute; inset: 0; pointer-events: none;
       background:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px);
       background-size: 40px 40px; mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000, transparent);
     }
     .hero-left { text-align: left; position: relative; z-index: 1; }
     .hero-right { position: relative; z-index: 1; display: flex; justify-content: center; min-width: 320px; }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 8px;
-      height: 34px; padding: 0 16px; border-radius: var(--radius-pill);
-      background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2);
-      color: var(--cyan); font-size: 0.75rem; font-weight: 800;
+      height: 30px; padding: 0 14px; border-radius: var(--radius-pill);
+      background: rgba(6,182,212,0.08); border: 1px solid rgba(6,182,212,0.15);
+      color: var(--cyan); font-size: 0.6875rem; font-weight: 800;
       text-transform: uppercase; letter-spacing: 0.06em;
-      margin-bottom: 24px; animation: fadeIn 0.6s ease-out;
+      margin-bottom: 20px; animation: fadeIn 0.6s ease-out;
     }
-    .hero-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); animation: pulse 2s infinite; }
+    .hero-eyebrow .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--emerald); animation: pulse 2s infinite; }
     .hero h1 {
-      font-size: clamp(2.25rem, 5vw, 3.25rem); font-weight: 900;
-      line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 20px;
+      font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 900;
+      line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 16px;
       animation: fadeInUp 0.7s ease-out 0.1s both;
     }
     .hero h1 .gradient-text {
@@ -271,351 +241,403 @@
       animation: gradientShift 4s ease-in-out infinite;
     }
     .hero p {
-      font-size: 0.9375rem; color: var(--text-muted);
-      margin-bottom: 24px; line-height: 1.6;
+      font-size: 0.875rem; color: var(--text-muted);
+      margin-bottom: 20px; line-height: 1.6; max-width: 460px;
       animation: fadeInUp 0.7s ease-out 0.2s both;
     }
-    .hero-actions {
-      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    .hero-stats {
+      display: flex; gap: 24px; margin-top: 28px;
       animation: fadeInUp 0.7s ease-out 0.3s both;
     }
-    .hero-actions .btn { height: 52px; padding: 0 28px; font-size: 1rem; border-radius: var(--radius); }
+    .hero-stats div strong { font-size: 1.375rem; display: block; color: var(--text); }
+    .hero-stats div span { font-size: 0.6875rem; color: var(--text-muted); }
 
-    /* Stats bar */
-    .stats-bar {
-      display: flex; justify-content: center; gap: clamp(24px, 5vw, 64px);
-      padding: 48px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-      background: rgba(15,23,42,0.4);
-    }
-    .stat-item { text-align: center; animation: fadeIn 0.5s ease-out both; }
-    .stat-item:nth-child(2) { animation-delay: 0.1s; }
-    .stat-item:nth-child(3) { animation-delay: 0.2s; }
-    .stat-item:nth-child(4) { animation-delay: 0.3s; }
-    .stat-number { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 900; color: var(--text); }
-    .stat-label { font-size: 0.8125rem; color: var(--text-dim); margin-top: 4px; }
-
-    /* Features */
-    .section { padding: clamp(64px, 10vw, 120px) clamp(20px, 4vw, 48px); }
-    .section-header { text-align: center; margin-bottom: 56px; }
-    .section-header h2 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 16px; }
-    .section-header p { font-size: 1.0625rem; color: var(--text-muted); max-width: 560px; margin: 0 auto; }
+    .section { padding: clamp(48px, 8vw, 100px) clamp(20px, 4vw, 48px); }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-header h2 { font-size: clamp(1.5rem, 3.5vw, 2.25rem); font-weight: 900; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .section-header p { font-size: 1rem; color: var(--text-muted); max-width: 520px; margin: 0 auto; }
 
     .features-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px; max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px; max-width: 1100px; margin: 0 auto;
     }
-    .feature-card {
-      padding: 28px; display: flex; flex-direction: column; gap: 14px;
-    }
+    .feature-card { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
     .feature-card:hover { border-color: var(--emerald); box-shadow: var(--shadow-glow); transform: translateY(-2px); }
     .feature-icon {
-      width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center;
-      font-size: 1.25rem; flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center;
+      font-size: 1.125rem; flex-shrink: 0;
     }
-    .feature-card h3 { font-size: 1.0625rem; font-weight: 800; }
-    .feature-card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.6; }
+    .feature-card h3 { font-size: 1rem; font-weight: 800; }
+    .feature-card p { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.6; }
 
-    /* How it works */
-    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 32px; max-width: 900px; margin: 0 auto; }
-    .step-card { text-align: center; padding: 32px 24px; }
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; max-width: 800px; margin: 0 auto; }
+    .step-card { text-align: center; padding: 28px 20px; }
     .step-num {
-      width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
-      background: var(--grad-brand); color: #fff; font-size: 1.25rem; font-weight: 900;
-      margin: 0 auto 20px; box-shadow: 0 4px 24px rgba(16,185,129,0.3);
+      width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--grad-brand); color: #fff; font-size: 1.125rem; font-weight: 900;
+      margin: 0 auto 16px; box-shadow: 0 4px 20px rgba(16,185,129,0.2);
     }
-    .step-card h3 { font-size: 1.125rem; font-weight: 800; margin-bottom: 8px; }
-    .step-card p { font-size: 0.875rem; color: var(--text-muted); }
+    .step-card h3 { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
+    .step-card p { font-size: 0.8125rem; color: var(--text-muted); }
 
-    /* Pricing */
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 960px; margin: 0 auto; }
-    .pricing-card { padding: 32px 28px; display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; }
-    .pricing-card.featured {
-      border-color: var(--emerald); box-shadow: 0 0 40px rgba(16,185,129,0.12);
-    }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; max-width: 880px; margin: 0 auto; }
+    .pricing-card { padding: 28px 24px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; }
+    .pricing-card.featured { border-color: var(--emerald); box-shadow: 0 0 40px rgba(16,185,129,0.1); }
     .pricing-card.featured::before {
-      content: 'Most Popular'; position: absolute; top: 16px; right: -28px;
-      background: var(--grad-brand); color: #fff; font-size: 0.6875rem; font-weight: 800;
-      padding: 4px 36px; transform: rotate(45deg); text-transform: uppercase;
+      content: 'Popular'; position: absolute; top: 14px; right: -24px;
+      background: var(--grad-brand); color: #fff; font-size: 0.625rem; font-weight: 800;
+      padding: 3px 32px; transform: rotate(45deg); text-transform: uppercase;
     }
-    .pricing-card .price { font-size: 2.5rem; font-weight: 900; }
-    .pricing-card .price span { font-size: 1rem; font-weight: 600; color: var(--text-muted); }
-    .pricing-features { list-style: none; display: grid; gap: 10px; flex: 1; }
-    .pricing-features li { font-size: 0.875rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+    .pricing-card .price { font-size: 2.25rem; font-weight: 900; }
+    .pricing-card .price span { font-size: 0.875rem; font-weight: 600; color: var(--text-muted); }
+    .pricing-features { list-style: none; display: grid; gap: 8px; flex: 1; }
+    .pricing-features li { font-size: 0.8125rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
     .pricing-features li::before { content: '✓'; color: var(--emerald); font-weight: 900; }
 
-    /* CTA */
     .cta-section {
-      text-align: center; padding: 80px 24px;
-      background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(16,185,129,0.08), transparent);
+      text-align: center; padding: 60px 24px;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(16,185,129,0.06), transparent);
     }
-    .cta-section h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); font-weight: 900; margin-bottom: 12px; }
-    .cta-section p { color: var(--text-muted); margin-bottom: 28px; }
+    .cta-section h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 900; margin-bottom: 10px; }
+    .cta-section p { color: var(--text-muted); margin-bottom: 24px; font-size: 0.9375rem; }
 
-    /* Footer */
     .landing-footer {
-      padding: 32px clamp(20px, 4vw, 48px);
+      padding: 24px clamp(20px, 4vw, 48px);
       border-top: 1px solid var(--border); display: flex;
-      align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+      align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
     }
     .landing-footer .muted a { color: var(--text-dim); }
     .landing-footer .muted a:hover { color: var(--text); }
 
     /* ═══════════════════════════════════════════
-       AUTH SCREEN
+       AUTH SCREEN (embedded in hero)
        ═══════════════════════════════════════════ */
-    .auth-screen {
-      min-height: 100vh; display: grid; place-items: center;
-      padding: 24px; position: relative; overflow: hidden;
-    }
-    .auth-screen::before {
-      content: ''; position: absolute; inset: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 50% 40% at 50% 20%, rgba(6,182,212,0.12), transparent),
-        radial-gradient(ellipse 40% 30% at 80% 70%, rgba(245,158,11,0.08), transparent),
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-      background-size: auto, auto, 36px 36px, 36px 36px;
-    }
-    .auth-panel {
-      width: min(480px, 100%); position: relative; z-index: 1;
-      animation: fadeInUp 0.5s ease-out;
-    }
-    .auth-brand { display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 32px; }
-    .auth-brand strong { font-size: 1.125rem; font-weight: 800; }
-    .auth-brand span { display: block; color: var(--text-dim); font-size: 0.75rem; margin-top: 2px; }
+    .auth-panel { animation: fadeInUp 0.5s ease-out; }
     .auth-card {
-      padding: 32px; border-radius: 16px; display: grid; gap: 16px;
+      padding: 28px; border-radius: 16px; display: grid; gap: 14px;
       box-shadow: var(--shadow-lg);
     }
-    .auth-card h1 { font-size: 1.5rem; font-weight: 900; text-align: center; }
-    .auth-card .subtitle { text-align: center; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 4px; }
+    .auth-card h1 { font-size: 1.25rem; font-weight: 900; text-align: center; }
+    .auth-card .subtitle { text-align: center; color: var(--text-muted); font-size: 0.8125rem; margin-bottom: 2px; }
     .auth-card .btn { width: 100%; }
-    .auth-toggle { text-align: center; margin-top: 16px; color: var(--text-muted); font-size: 0.875rem; }
-    .auth-toggle button { color: var(--cyan); font-weight: 700; text-decoration: underline; }
+    .auth-switch {
+      display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 3px; gap: 2px; background: rgba(255,255,255,0.03); margin-bottom: 4px;
+    }
+    .auth-switch button {
+      flex: 1; height: 34px; border-radius: 6px; font-size: 0.8125rem; font-weight: 700;
+      color: var(--text-muted); transition: all var(--transition);
+    }
+    .auth-switch button.active { background: rgba(255,255,255,0.1); color: var(--text); }
     .form-error {
-      padding: 12px; border-radius: var(--radius-sm); font-size: 0.8125rem; font-weight: 700;
+      padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.8125rem; font-weight: 700;
       border: 1px solid rgba(239,68,68,0.4); background: var(--red-soft); color: #fca5a5;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
     .form-error.hidden { display: none; }
     .form-error.ok { border-color: rgba(16,185,129,0.4); background: var(--emerald-soft); color: #6ee7b7; }
 
     /* ═══════════════════════════════════════════
-       APP SHELL
+       APP SHELL — PREMIUM LAYOUT
        ═══════════════════════════════════════════ */
-    .app-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
+    .app-shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
 
-    /* Sidebar */
     .sidebar {
       position: sticky; top: 0; height: 100vh; overflow-y: auto;
-      background: rgba(3,7,18,0.95); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; padding: 20px 14px; gap: 24px;
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(6,9,15,0.97); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 16px 12px; gap: 20px;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     }
-    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px; }
-    .sidebar-brand strong { font-size: 0.9375rem; font-weight: 800; }
-    .sidebar-brand span { display: block; font-size: 0.6875rem; color: var(--text-dim); margin-top: 1px; }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px; }
+    .sidebar-brand strong { font-size: 0.875rem; font-weight: 800; }
+    .sidebar-brand span { display: block; font-size: 0.625rem; color: var(--text-dim); margin-top: 1px; }
 
-    .sidebar-nav { display: grid; gap: 4px; flex: 1; align-content: start; }
+    .sidebar-nav { display: grid; gap: 2px; flex: 1; align-content: start; }
+    .nav-section-label {
+      font-size: 0.5625rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-dim); padding: 16px 12px 6px; opacity: 0.7;
+    }
     .nav-item {
-      display: flex; align-items: center; gap: 10px; height: 42px;
+      display: flex; align-items: center; gap: 10px; height: 38px;
       padding: 0 12px; border-radius: var(--radius-sm);
-      font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
+      font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
       transition: all var(--transition); position: relative;
     }
-    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.06); }
-    .nav-item.active { color: var(--text); background: rgba(16,185,129,0.1); }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .nav-item.active { color: var(--text); background: rgba(16,185,129,0.08); }
     .nav-item.active::before {
-      content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+      content: ''; position: absolute; left: 0; top: 7px; bottom: 7px; width: 3px;
       background: var(--emerald); border-radius: 0 3px 3px 0;
     }
-    .nav-icon {
-      width: 20px; height: 20px; display: grid; place-items: center;
-      font-size: 0.8125rem; flex-shrink: 0;
-    }
-    .nav-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim);
-      transition: all var(--transition);
-    }
-    .nav-item.active .nav-dot { background: var(--emerald); box-shadow: 0 0 8px rgba(16,185,129,0.4); }
+    .nav-icon { width: 18px; text-align: center; font-size: 0.8125rem; flex-shrink: 0; opacity: 0.8; }
+    .nav-item.active .nav-icon { opacity: 1; }
 
     .sidebar-footer {
-      border-top: 1px solid var(--border); padding-top: 16px;
-      display: grid; gap: 10px;
+      border-top: 1px solid var(--border); padding-top: 12px;
+      display: grid; gap: 8px;
     }
     .sidebar-plan {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 12px; border-radius: var(--radius-sm);
-      background: rgba(255,255,255,0.04); font-size: 0.8125rem;
+      padding: 8px 10px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.03); font-size: 0.75rem;
     }
-    .sidebar-user {
-      display: flex; align-items: center; gap: 10px; padding: 0 8px;
-    }
+    .sidebar-user { display: flex; align-items: center; gap: 8px; padding: 0 6px; }
     .avatar {
-      width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
-      background: var(--grad-brand); color: #fff; font-size: 0.6875rem; font-weight: 900;
-      flex-shrink: 0;
+      width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--grad-brand); color: #fff; font-size: 0.625rem; font-weight: 900; flex-shrink: 0;
     }
     .sidebar-user .info { min-width: 0; }
-    .sidebar-user .name { font-size: 0.8125rem; font-weight: 700; }
-    .sidebar-user .email { font-size: 0.6875rem; color: var(--text-dim); }
+    .sidebar-user .name { font-size: 0.75rem; font-weight: 700; }
+    .sidebar-user .email { font-size: 0.625rem; color: var(--text-dim); }
 
     /* Mobile nav */
     .mobile-nav {
       display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(3,7,18,0.95); border-top: 1px solid var(--border);
+      background: rgba(6,9,15,0.97); border-top: 1px solid var(--border);
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+      padding: 6px 0 max(6px, env(safe-area-inset-bottom));
     }
     .mobile-nav-inner { display: flex; justify-content: space-around; }
     .mobile-nav-item {
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      padding: 6px 12px; font-size: 0.625rem; font-weight: 700; color: var(--text-dim);
-      transition: all var(--transition); min-width: 56px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 4px 10px; font-size: 0.5625rem; font-weight: 700; color: var(--text-dim);
+      transition: all var(--transition); min-width: 48px;
     }
     .mobile-nav-item.active { color: var(--emerald); }
-    .mobile-nav-item .nav-dot { width: 6px; height: 6px; }
-    .mobile-nav-item.active .nav-dot { background: var(--emerald); }
+    .mobile-nav-item .m-icon { font-size: 1rem; }
 
     /* Main content */
     .main-content {
-      min-width: 0; padding: 28px clamp(20px, 3vw, 36px);
-      background: var(--bg);
-      position: relative;
+      min-width: 0; padding: 20px clamp(16px, 2.5vw, 32px);
+      background: var(--bg); position: relative;
     }
     .main-content::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 300px;
-      background: radial-gradient(ellipse 60% 60% at 30% 0%, rgba(6,182,212,0.06), transparent),
-                  radial-gradient(ellipse 40% 50% at 80% 10%, rgba(245,158,11,0.04), transparent);
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 250px;
+      background: radial-gradient(ellipse 50% 50% at 30% 0%, rgba(6,182,212,0.04), transparent),
+                  radial-gradient(ellipse 40% 40% at 80% 10%, rgba(245,158,11,0.03), transparent);
       pointer-events: none;
     }
     .main-content > * { position: relative; }
 
-    .page-header { margin-bottom: 24px; }
-    .page-header h1 { font-size: clamp(1.375rem, 2.5vw, 1.75rem); font-weight: 900; letter-spacing: -0.02em; }
-    .page-header p { color: var(--text-muted); font-size: 0.875rem; margin-top: 4px; }
+    .page-header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .page-header h1 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 900; letter-spacing: -0.02em; }
+    .page-header p { color: var(--text-muted); font-size: 0.8125rem; margin-top: 2px; }
 
     /* ═══════════════════════════════════════════
-       DASHBOARD VIEWS
+       VIEWS
        ═══════════════════════════════════════════ */
-    .view { display: none; animation: fadeIn 0.3s ease-out; }
+    .view { display: none; animation: fadeIn 0.25s ease-out; }
     .view.active { display: block; }
 
-    /* KPI strip */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
-    .kpi-card { padding: 20px; position: relative; overflow: hidden; }
+    /* KPI Strip */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { padding: 16px 18px; position: relative; overflow: hidden; }
     .kpi-card::before {
-      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
       background: var(--grad-brand); background-size: 200% auto;
       animation: gradientShift 4s ease-in-out infinite;
     }
-    .kpi-label { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; }
-    .kpi-value { font-size: 1.75rem; font-weight: 900; margin-top: 8px; animation: countUp 0.5s ease-out; }
+    .kpi-label { font-size: 0.625rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.06em; }
+    .kpi-value { font-size: 1.5rem; font-weight: 900; margin-top: 6px; animation: countUp 0.5s ease-out; }
+    .kpi-sub { font-size: 0.6875rem; color: var(--text-dim); margin-top: 2px; }
 
-    /* Launcher */
-    .launcher-panel { padding: 20px; margin-bottom: 20px; }
-    .launcher-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px; align-items: end;
+    /* ═══════════════════════════════════════════
+       AUDIT DESK — PREMIUM LAYOUT
+       ═══════════════════════════════════════════ */
+
+    /* Launcher Hero */
+    .launcher-hero {
+      padding: 24px; margin-bottom: 16px;
+      background: linear-gradient(135deg, rgba(6,182,212,0.06) 0%, rgba(16,185,129,0.06) 50%, rgba(245,158,11,0.04) 100%);
+      border: 1px solid rgba(16,185,129,0.1); border-radius: 16px;
+      position: relative; overflow: hidden;
+    }
+    .launcher-hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255,255,255,0.008) 1px, transparent 1px);
+      background-size: 32px 32px; opacity: 0.5;
+    }
+    .launcher-hero > * { position: relative; }
+    .launcher-row {
+      display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+    }
+    .launcher-row .input-wrap { flex: 1; min-width: 180px; }
+    .launcher-url-wrap { flex: 2 !important; min-width: 260px !important; }
+    .launcher-url-wrap .input {
+      border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04);
+    }
+    .launcher-url-wrap .input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(16,185,129,0.12); }
+    .launcher-actions {
+      display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap;
+      padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.04);
     }
 
-    /* Modules grid */
-    .modules-section { margin-top: 20px; }
-    .section-title {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 14px; gap: 12px;
+    /* Category Tabs */
+    .category-tabs {
+      display: flex; gap: 4px; padding: 4px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
+      margin-bottom: 14px; flex-wrap: wrap;
     }
-    .section-title h2 { font-size: 1rem; font-weight: 800; }
-    .modules-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;
+    .cat-tab {
+      height: 32px; padding: 0 14px; border-radius: 6px;
+      font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+      transition: all var(--transition); white-space: nowrap;
     }
-    .module-card { padding: 18px; cursor: pointer; }
-    .module-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
-    .module-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
-    .module-card h3 { font-size: 0.9375rem; font-weight: 800; }
-    .module-card p { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+    .cat-tab:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .cat-tab.active { background: rgba(16,185,129,0.1); color: var(--emerald); }
+    .cat-tab .cat-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(255,255,255,0.06); font-size: 0.625rem; margin-left: 4px;
+    }
+    .cat-tab.active .cat-count { background: rgba(16,185,129,0.2); color: var(--emerald); }
 
-    /* Results panel */
-    .results-panel { margin-top: 20px; overflow: hidden; }
+    /* Module Tiles — Compact Horizontal */
+    .module-tiles {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+      min-height: 40px;
+    }
+    .module-tile {
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 38px; padding: 0 14px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+      transition: all var(--transition); cursor: pointer; white-space: nowrap;
+    }
+    .module-tile:hover {
+      background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.2);
+      color: var(--text); transform: translateY(-1px);
+    }
+    .module-tile:active { transform: translateY(0); }
+    .module-tile .tile-icon { font-size: 0.875rem; }
+    .module-tile.running {
+      border-color: var(--cyan); background: var(--cyan-soft);
+      color: var(--cyan); animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Two Column Layout */
+    .audit-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+    /* Results Panel */
+    .results-panel { overflow: hidden; }
     .results-header {
       display: flex; justify-content: space-between; align-items: center;
       padding: 14px 18px; border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
+      background: rgba(255,255,255,0.02);
     }
-    .results-header strong { font-size: 0.9375rem; font-weight: 800; }
+    .results-header h2 { font-size: 0.875rem; font-weight: 800; margin: 0; }
     .tab-group {
-      display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 3px; gap: 2px; background: rgba(255,255,255,0.03);
+      display: inline-flex; border: 1px solid var(--border); border-radius: 6px;
+      padding: 2px; gap: 2px; background: rgba(255,255,255,0.03);
     }
     .tab-btn {
-      height: 30px; padding: 0 12px; border-radius: 6px;
-      font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+      height: 28px; padding: 0 10px; border-radius: 5px;
+      font-size: 0.6875rem; font-weight: 700; color: var(--text-muted);
       transition: all var(--transition);
     }
     .tab-btn.active { background: rgba(255,255,255,0.1); color: var(--text); }
-    .results-body { padding: 18px; min-height: 300px; }
+    .results-body { padding: 16px; min-height: 280px; max-height: 70vh; overflow-y: auto; }
     .empty-state {
-      min-height: 300px; display: grid; place-items: center; text-align: center;
-      color: var(--text-dim); padding: 40px;
+      min-height: 280px; display: grid; place-items: center; text-align: center;
+      color: var(--text-dim); padding: 32px;
     }
-    .empty-state strong { display: block; color: var(--text); font-size: 1.0625rem; margin-bottom: 6px; }
-    .findings-list { display: grid; gap: 10px; }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state strong { display: block; color: var(--text); font-size: 1rem; margin-bottom: 4px; }
+
+    /* Findings */
+    .findings-list { display: grid; gap: 8px; }
     .finding-item {
       border: 1px solid var(--border); border-radius: var(--radius-sm);
-      background: rgba(255,255,255,0.03); padding: 14px;
+      background: rgba(255,255,255,0.02); padding: 14px;
+      border-left: 3px solid var(--border);
+      transition: all var(--transition);
     }
-    .finding-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
-    .finding-title { font-size: 0.9375rem; font-weight: 800; }
+    .finding-item:hover { background: rgba(255,255,255,0.04); }
+    .finding-item.sev-critical, .finding-item.sev-high { border-left-color: var(--red); }
+    .finding-item.sev-medium { border-left-color: var(--gold); }
+    .finding-item.sev-low { border-left-color: var(--blue); }
+    .finding-item.sev-info { border-left-color: var(--cyan); }
+    .finding-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .finding-title { font-size: 0.8125rem; font-weight: 800; }
     pre.code-block {
-      margin: 0; padding: 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border);
-      border-radius: var(--radius-sm); overflow: auto; max-height: 400px;
+      margin: 0; padding: 12px; background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+      border-radius: 6px; overflow: auto; max-height: 300px;
       white-space: pre-wrap; word-break: break-word;
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.75rem; line-height: 1.6; color: #c4d3e0;
+      font-size: 0.6875rem; line-height: 1.6; color: #c4d3e0;
     }
 
+    /* Action buttons row in results */
+    .action-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+    /* ═══════════════════════════════════════════
+       REPORTS VIEW
+       ═══════════════════════════════════════════ */
+    .reports-layout { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .history-item {
+      padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: all var(--transition); background: rgba(255,255,255,0.02);
+    }
+    .history-item:hover { background: rgba(255,255,255,0.05); border-color: var(--border-hover); }
+    .history-item.selected { border-color: var(--emerald); background: rgba(16,185,129,0.04); }
+    .history-item h4 { font-size: 0.8125rem; font-weight: 800; margin-bottom: 2px; }
+    .history-item p { font-size: 0.6875rem; color: var(--text-dim); }
+
+    /* ═══════════════════════════════════════════
+       ANALYTICS VIEW
+       ═══════════════════════════════════════════ */
+    .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+    .analytics-card { padding: 20px; }
+    .analytics-card h3 { font-size: 0.8125rem; font-weight: 800; margin-bottom: 12px; }
+    .bar-chart { display: grid; gap: 8px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; }
+    .bar-label { font-size: 0.6875rem; color: var(--text-muted); width: 80px; flex-shrink: 0; text-align: right; }
+    .bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; animation: barFill 1s ease-out; }
+    .bar-value { font-size: 0.6875rem; color: var(--text-dim); width: 40px; }
+
+    /* ═══════════════════════════════════════════
+       SETTINGS VIEW
+       ═══════════════════════════════════════════ */
+    .settings-grid { display: grid; gap: 14px; }
+    .settings-panel { padding: 20px; display: grid; gap: 12px; }
+    .settings-panel h2 { font-size: 0.875rem; font-weight: 800; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .stack { display: grid; gap: 8px; }
+
+    .section-title {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px; gap: 10px;
+    }
+    .section-title h2 { font-size: 0.875rem; font-weight: 800; }
+
+    .schedule-bar { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-bottom: 10px; }
+
     /* Entity cards (projects, sites) */
-    .entity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-    .entity-card { padding: 20px; display: grid; gap: 12px; }
-    .entity-card h3 { font-size: 1rem; font-weight: 800; }
+    .entity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+    .entity-card { padding: 16px; display: grid; gap: 10px; }
+    .entity-card h3 { font-size: 0.9375rem; font-weight: 800; }
     .entity-card p { font-size: 0.8125rem; color: var(--text-muted); }
-    .entity-meta { display: flex; gap: 8px; flex-wrap: wrap; }
-    .entity-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .entity-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .entity-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
-    /* Two / Three column layouts */
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .stack { display: grid; gap: 10px; }
-
-    /* Workspace (sidebar+main in reports) */
-    .workspace-layout { display: grid; grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); gap: 20px; align-items: start; }
-
-    /* Schedule section */
-    .schedule-section { margin-top: 16px; }
-    .schedule-bar { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 12px; }
-
-    /* Settings panels */
-    .settings-grid { display: grid; gap: 16px; }
-    .settings-panel { padding: 24px; display: grid; gap: 14px; }
-    .settings-panel h2 { font-size: 1rem; font-weight: 800; }
-
-    /* Admin */
-    .admin-section { margin-top: 20px; }
-    .db-controls { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 14px; }
-    .data-table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 400px; }
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; min-width: 700px; }
+    /* Data table */
+    .data-table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 360px; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.6875rem; min-width: 600px; }
     .data-table th, .data-table td {
-      border-bottom: 1px solid var(--border); padding: 10px 12px;
+      border-bottom: 1px solid var(--border); padding: 8px 10px;
       text-align: left; vertical-align: top;
     }
     .data-table th {
       position: sticky; top: 0; background: var(--bg-3);
-      font-size: 0.6875rem; font-weight: 800; text-transform: uppercase;
+      font-size: 0.625rem; font-weight: 800; text-transform: uppercase;
       color: var(--text-dim); z-index: 1;
     }
     .data-table td {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
     /* ═══════════════════════════════════════════
@@ -625,24 +647,25 @@
       .app-shell { grid-template-columns: 1fr; }
       .sidebar { display: none; }
       .mobile-nav { display: block; }
-      .main-content { padding-bottom: 80px; }
-      .workspace-layout { grid-template-columns: 1fr; }
+      .main-content { padding-bottom: 72px; }
+      .audit-layout, .reports-layout { grid-template-columns: 1fr; }
       .nav-links .desktop-only { display: none; }
     }
     @media (max-width: 991px) {
-      .hero { grid-template-columns: 1fr; padding-top: 100px; text-align: center; }
-      .hero-left { text-align: center; margin-bottom: 30px; }
+      .hero { grid-template-columns: 1fr; padding-top: 80px; text-align: center; }
+      .hero-left { text-align: center; margin-bottom: 24px; }
+      .hero-stats { justify-content: center; }
       .hero-right { width: 100%; }
     }
     @media (max-width: 767px) {
-      .hero h1 { font-size: 2rem; }
-      .stats-bar { flex-wrap: wrap; gap: 24px; }
+      .hero h1 { font-size: 1.75rem; }
       .features-grid, .pricing-grid, .steps-grid { grid-template-columns: 1fr; }
-      .launcher-grid { grid-template-columns: 1fr; }
-      .entity-grid, .modules-grid { grid-template-columns: 1fr; }
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .grid-2, .grid-3 { grid-template-columns: 1fr; }
-      .page-header h1 { font-size: 1.25rem; }
+      .launcher-row { flex-direction: column; }
+      .launcher-row .input-wrap { min-width: 100% !important; }
+      .module-tiles { gap: 6px; }
+      .module-tile { font-size: 0.75rem; height: 34px; padding: 0 10px; }
     }
   </style>
 </head>
@@ -667,22 +690,21 @@
         <div class="hero-eyebrow"><span class="dot"></span> AI-Powered SEO Intelligence</div>
         <h1>Client SEO audits in <span class="gradient-text">minutes, not hours.</span></h1>
         <p>SEOVault deploys 15 parallel AI agents to analyze technical SEO, content quality, schema markup, and AI search readiness — with every finding backed by a falsifiability check.</p>
-        <div class="stats-mini" style="display: flex; gap: 24px; margin-top: 32px;">
-          <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">25</strong><span style="font-size: 0.75rem; color: var(--text-muted)">AI Skills</span></div>
-          <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">18</strong><span style="font-size: 0.75rem; color: var(--text-muted)">Specialist Agents</span></div>
-          <div><strong style="font-size: 1.5rem; display: block; color: var(--text);">410+</strong><span style="font-size: 0.75rem; color: var(--text-muted)">Test Cases</span></div>
+        <div class="hero-stats">
+          <div><strong>25</strong><span>AI Skills</span></div>
+          <div><strong>18</strong><span>Specialist Agents</span></div>
+          <div><strong>410+</strong><span>Test Cases</span></div>
         </div>
       </div>
       <div class="hero-right">
-        <!-- Auth Card embedded directly here -->
         <div class="auth-panel" id="authView" style="width: 100%; max-width: 400px;">
-          <div class="card auth-card" style="padding: 28px; border-radius: 16px; display: grid; gap: 14px; box-shadow: var(--shadow-lg);">
-            <div class="auth-switch" style="display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; gap: 2px; background: rgba(255,255,255,0.03); margin-bottom: 6px;">
-              <button id="showSignupBtn" type="button" class="active" onclick="setAuthMode('signup')" style="flex: 1; height: 36px; border-radius: 6px; font-size: 0.8125rem; font-weight: 700; color: var(--text-muted); transition: all var(--transition);">Create Account</button>
-              <button id="showLoginBtn" type="button" onclick="setAuthMode('login')" style="flex: 1; height: 36px; border-radius: 6px; font-size: 0.8125rem; font-weight: 700; color: var(--text-muted); transition: all var(--transition);">Log In</button>
+          <div class="card auth-card">
+            <div class="auth-switch">
+              <button id="showSignupBtn" type="button" class="active" onclick="setAuthMode('signup')">Create Account</button>
+              <button id="showLoginBtn" type="button" onclick="setAuthMode('login')">Log In</button>
             </div>
-            <h1 id="authTitle" style="font-size: 1.25rem; font-weight: 800; text-align: center; margin-top: 8px;">Create your account</h1>
-            <p class="subtitle" id="authSubtitle" style="text-align: center; color: var(--text-muted); font-size: 0.8125rem; margin-bottom: 4px;">Start running SEO audits in minutes.</p>
+            <h1 id="authTitle">Create your account</h1>
+            <p class="subtitle" id="authSubtitle">Start running SEO audits in minutes.</p>
             <div class="form-error hidden" id="authError" role="alert"></div>
             <div class="input-wrap" id="authNameWrap">
               <label for="authName">Full Name</label>
@@ -700,7 +722,7 @@
             <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
               <button class="btn btn-ghost btn-xs" id="forgotPasswordBtn" type="button">Forgot password?</button>
             </div>
-            <p class="muted" id="authHelp" style="text-align: center; font-size: 0.75rem; color: var(--text-dim);">Already have an account? Click Log In above, then enter the same email and password.</p>
+            <p class="muted" id="authHelp" style="text-align: center; font-size: 0.6875rem; color: var(--text-dim);">Already have an account? Click Log In above.</p>
           </div>
         </div>
       </div>
@@ -715,12 +737,12 @@
         <article class="card card-glow feature-card">
           <div class="feature-icon" style="background:var(--emerald-soft);color:var(--emerald)">⚡</div>
           <h3>Full Site Audit</h3>
-          <p>Parallel agents fan out across your entire site — technical SEO, content, schema, performance, and visual rendering in one pass.</p>
+          <p>Parallel agents fan out across your entire site — technical SEO, content, schema, performance, and visual rendering.</p>
         </article>
         <article class="card card-glow feature-card">
           <div class="feature-icon" style="background:var(--cyan-soft);color:var(--cyan)">🧬</div>
           <h3>Schema.org Markup</h3>
-          <p>Detect, validate, and auto-generate JSON-LD structured data. Tracks Google's deprecation timeline so you stay current.</p>
+          <p>Detect, validate, and auto-generate JSON-LD structured data. Tracks Google's deprecation timeline.</p>
         </article>
         <article class="card card-glow feature-card">
           <div class="feature-icon" style="background:var(--gold-soft);color:var(--gold)">📝</div>
@@ -730,22 +752,22 @@
         <article class="card card-glow feature-card">
           <div class="feature-icon" style="background:var(--blue-soft);color:var(--blue)">🤖</div>
           <h3>AI Search / GEO</h3>
-          <p>Optimize for AI Overviews and AI Mode. Passage citability scoring, entity presence analysis, and evidence-based myth busting.</p>
+          <p>Optimize for AI Overviews and AI Mode. Passage citability scoring and entity presence analysis.</p>
         </article>
         <article class="card card-glow feature-card">
-          <div class="feature-icon" style="background:rgba(168,85,247,0.15);color:var(--purple)">📍</div>
+          <div class="feature-icon" style="background:var(--purple-soft);color:var(--purple)">📍</div>
           <h3>Local SEO & Maps</h3>
           <p>Google Business Profile audit, NAP consistency checks, review intelligence, and geo-grid rank tracking.</p>
         </article>
         <article class="card card-glow feature-card">
           <div class="feature-icon" style="background:var(--red-soft);color:var(--red)">📊</div>
           <h3>Performance & CWV</h3>
-          <p>LCP, INP, CLS with subpart decomposition. Field data from CrUX when available, lab data via PageSpeed Insights.</p>
+          <p>LCP, INP, CLS with subpart decomposition. Field data from CrUX when available.</p>
         </article>
       </div>
     </section>
 
-    <section class="section" style="background:rgba(15,23,42,0.3)">
+    <section class="section" style="background:rgba(15,23,42,0.25)">
       <div class="section-header">
         <h2>How it works</h2>
         <p>Three steps to actionable SEO intelligence.</p>
@@ -753,7 +775,7 @@
       <div class="steps-grid">
         <article class="card step-card"><div class="step-num">1</div><h3>Enter your URL</h3><p>Paste any website URL and choose an audit module — or run a full analysis.</p></article>
         <article class="card step-card"><div class="step-num">2</div><h3>AI agents analyze</h3><p>Up to 15 specialist agents work in parallel, each covering a different SEO domain.</p></article>
-        <article class="card step-card"><div class="step-num">3</div><h3>Get your report</h3><p>Prioritized findings with dependency graphs, falsifiability checks, and export options.</p></article>
+        <article class="card step-card"><div class="step-num">3</div><h3>Get your report</h3><p>Prioritized findings with falsifiability checks and export options.</p></article>
       </div>
     </section>
 
@@ -766,17 +788,17 @@
         <article class="card pricing-card">
           <div><span class="badge badge-dim">Free</span></div>
           <div class="price">$0<span>/mo</span></div>
-          <p class="muted">Perfect for solo freelancers getting started.</p>
+          <p class="muted">Perfect for solo freelancers.</p>
           <ul class="pricing-features">
             <li>10 audits per hour</li><li>3 projects</li><li>10 saved sites</li>
-            <li>All core audit modules</li><li>HTML & JSON export</li>
+            <li>All core modules</li><li>HTML & JSON export</li>
           </ul>
           <button class="btn btn-secondary" onclick="showAuth('signup')">Get Started</button>
         </article>
         <article class="card pricing-card featured">
           <div><span class="badge badge-emerald">Pro</span></div>
           <div class="price">$49<span>/mo</span></div>
-          <p class="muted">For growing consultants and in-house teams.</p>
+          <p class="muted">For growing consultants and teams.</p>
           <ul class="pricing-features">
             <li>60 audits per hour</li><li>25 projects</li><li>100 saved sites</li>
             <li>Scheduled recurring audits</li><li>Team collaboration</li><li>Priority support</li>
@@ -786,7 +808,7 @@
         <article class="card pricing-card">
           <div><span class="badge badge-gold">Agency</span></div>
           <div class="price">$149<span>/mo</span></div>
-          <p class="muted">For agencies managing multiple client portfolios.</p>
+          <p class="muted">For agencies managing portfolios.</p>
           <ul class="pricing-features">
             <li>240 audits per hour</li><li>250 projects</li><li>1,000 saved sites</li>
             <li>White-label reports</li><li>Unlimited team seats</li><li>API access</li>
@@ -798,8 +820,8 @@
 
     <section class="cta-section">
       <h2>Ready to transform your SEO workflow?</h2>
-      <p>Join hundreds of agencies and consultants running smarter audits.</p>
-      <button class="btn btn-primary" style="height:52px;padding:0 32px;font-size:1rem" onclick="showAuth('signup')">Create Free Account</button>
+      <p>Join hundreds of agencies running smarter audits.</p>
+      <button class="btn btn-primary btn-lg" onclick="showAuth('signup')">Create Free Account</button>
     </section>
 
     <footer class="landing-footer">
@@ -809,29 +831,32 @@
   </div>
 
   <!-- ═══════════════════════════════════════════
-       APP SHELL
+       APP SHELL — PREMIUM DASHBOARD
        ═══════════════════════════════════════════ -->
   <div class="app-shell hidden" id="appView">
     <aside class="sidebar">
       <div class="sidebar-brand"><div class="nav-mark">SV</div><div><strong>SEOVault</strong><span id="userLine">Dashboard</span></div></div>
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-view="audit"><span class="nav-dot"></span>Audit Desk</button>
-        <button class="nav-item" data-view="projects"><span class="nav-dot"></span>Projects</button>
-        <button class="nav-item" data-view="sites"><span class="nav-dot"></span>Sites</button>
-        <button class="nav-item" data-view="reports"><span class="nav-dot"></span>Reports</button>
-        <button class="nav-item" data-view="settings"><span class="nav-dot"></span>Settings</button>
+        <div class="nav-section-label">Main</div>
+        <button class="nav-item active" data-view="audit"><span class="nav-icon">🎯</span>Audit Desk</button>
+        <button class="nav-item" data-view="reports"><span class="nav-icon">📋</span>Reports</button>
+        <button class="nav-item" data-view="analytics"><span class="nav-icon">📊</span>Analytics</button>
+        <div class="nav-section-label">Manage</div>
+        <button class="nav-item" data-view="projects"><span class="nav-icon">📁</span>Projects</button>
+        <button class="nav-item" data-view="sites"><span class="nav-icon">🌐</span>Sites</button>
+        <div class="nav-section-label">Account</div>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</button>
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-plan"><span class="muted">Plan</span><span class="badge badge-emerald" id="sidebarPlan">Free</span></div>
         <div class="sidebar-user"><div class="avatar" id="userAvatar">?</div><div class="info"><div class="name truncate" id="userName">User</div><div class="email truncate dim" id="userEmail" style="text-transform: capitalize;">Member</div></div></div>
-        <button class="btn btn-secondary btn-sm" id="sidebarLogoutBtn">Log Out</button>
+        <button class="btn btn-secondary btn-xs" id="sidebarLogoutBtn" style="width:100%">Log Out</button>
       </div>
     </aside>
 
     <main class="main-content">
       <div class="page-header">
-        <h1 id="pageTitle">Audit Desk</h1>
-        <p id="pageSubtitle">Run AI-powered SEO audits and review findings.</p>
+        <div><h1 id="pageTitle">SEO audit command center</h1><p id="pageSubtitle">Run AI-powered SEO audits and review findings.</p></div>
       </div>
 
       <!-- KPIs -->
@@ -839,75 +864,101 @@
         <div class="card kpi-card"><div class="kpi-label">Total Runs</div><div class="kpi-value" id="kpiRuns">0</div></div>
         <div class="card kpi-card"><div class="kpi-label">Projects</div><div class="kpi-value" id="kpiProjects">0</div></div>
         <div class="card kpi-card"><div class="kpi-label">Sites</div><div class="kpi-value" id="kpiSites">0</div></div>
-        <div class="card kpi-card"><div class="kpi-label">Runtime</div><div class="kpi-value" id="kpiRuntime" style="font-size:1rem">--</div></div>
+        <div class="card kpi-card"><div class="kpi-label">Status</div><div class="kpi-value" id="kpiRuntime" style="font-size:0.9375rem">--</div></div>
       </div>
 
       <!-- AUDIT VIEW -->
       <section class="view active" id="view-audit">
-        <div class="card launcher-panel" style="display: grid; gap: 16px;">
-          <div class="launcher-grid">
-            <div class="input-wrap"><label for="projectSelect">Project</label><select id="projectSelect"></select></div>
-            <div class="input-wrap"><label for="siteSelect">Site</label><select id="siteSelect"></select></div>
-            <div class="input-wrap"><label for="url">URL</label><input class="input" id="url" type="url" placeholder="https://example.com"></div>
-            <div class="input-wrap"><label for="moduleSelect">Module</label><select id="moduleSelect"></select></div>
-            <button class="btn btn-primary" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
-          </div>
-          <div style="display: flex; gap: 16px; border-top: 1px solid var(--border); padding-top: 16px; flex-wrap: wrap; align-items: flex-end;">
-            <div class="input-wrap" style="flex: 1; min-width: 200px;">
-              <label for="newProject">New Project</label>
-              <input class="input" id="newProject" placeholder="Client name">
+        <!-- Launcher Hero -->
+        <div class="launcher-hero">
+          <div class="launcher-row">
+            <div class="input-wrap">
+              <label for="projectSelect">Project</label>
+              <select id="projectSelect"></select>
             </div>
-            <button class="btn btn-secondary" id="createProjectBtn" type="button" style="height: 38px;">Add Project</button>
-            <button class="btn btn-secondary" id="saveSiteBtn" type="button" style="height: 38px; margin-left: auto;">Save Site</button>
+            <div class="input-wrap">
+              <label for="siteSelect">Site</label>
+              <select id="siteSelect"></select>
+            </div>
+            <div class="input-wrap launcher-url-wrap">
+              <label for="url">Target URL</label>
+              <input class="input" id="url" type="url" placeholder="https://example.com">
+            </div>
+            <div class="input-wrap" style="min-width:160px">
+              <label for="moduleSelect">Module</label>
+              <select id="moduleSelect"></select>
+            </div>
+            <button class="btn btn-primary btn-lg" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
+          </div>
+          <div class="launcher-actions">
+            <div class="input-wrap" style="min-width:160px">
+              <label for="newProject">Quick Add Project</label>
+              <input class="input" id="newProject" placeholder="Client name" style="height:34px;font-size:0.75rem">
+            </div>
+            <button class="btn btn-secondary btn-xs" id="createProjectBtn" type="button">+ Project</button>
+            <button class="btn btn-secondary btn-xs" id="saveSiteBtn" type="button">+ Save Site</button>
+            <div style="flex:1"></div>
+            <div class="input-wrap" style="min-width:120px">
+              <label for="scheduleFrequency">Schedule</label>
+              <select id="scheduleFrequency" style="height:34px;font-size:0.75rem"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="hourly">Hourly</option></select>
+            </div>
+            <button class="btn btn-secondary btn-xs" id="createScheduleBtn">⏰ Schedule</button>
           </div>
         </div>
 
-        <div class="grid-2">
-          <div>
-            <div class="section-title"><h2>Audit Modules</h2><span class="badge badge-cyan" id="moduleCount">0</span></div>
-            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; align-items:center;">
-              <input class="input" id="moduleSearch" placeholder="🔍 Search 25+ skills (e.g. images, geo, schema, sitemap)..." style="flex:1; min-width:180px; height:36px; font-size:0.8125rem;">
-              <div id="categoryPills" style="display:flex; gap:4px; flex-wrap:wrap;"></div>
-            </div>
-            <div class="modules-grid" id="modulesGrid"></div>
-            <div class="schedule-section">
-              <div class="section-title"><h2>Recurring Audits</h2><span class="badge badge-cyan" id="scheduleCount">0</span></div>
-              <div class="schedule-bar">
-                <div class="input-wrap" style="min-width:140px"><label for="scheduleFrequency">Frequency</label><select id="scheduleFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="hourly">Hourly</option></select></div>
-                <button class="btn btn-secondary btn-sm" id="createScheduleBtn">Schedule</button>
-              </div>
-              <div class="stack" id="scheduleList"></div>
+        <!-- Category Tabs + Module Tiles -->
+        <div class="section-title">
+          <h2>Audit Modules</h2>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input class="input" id="moduleSearch" placeholder="🔍 Search modules..." style="height:30px;font-size:0.75rem;width:200px;padding:0 10px">
+            <span class="badge badge-cyan" id="moduleCount">0</span>
+          </div>
+        </div>
+        <div class="category-tabs" id="categoryTabs"></div>
+        <div class="module-tiles" id="modulesGrid"></div>
+
+        <!-- Recurring Audits -->
+        <div style="margin-top:16px">
+          <div class="section-title"><h2>Recurring Audits</h2><span class="badge badge-dim" id="scheduleCount">0</span></div>
+          <div class="stack" id="scheduleList"></div>
+        </div>
+
+        <!-- Results Panel (full width below) -->
+        <div class="card results-panel" style="margin-top:16px">
+          <div class="results-header">
+            <h2 id="resultTitle">Analysis Output</h2>
+            <div class="tab-group">
+              <button class="tab-btn active" data-tab="summary">Summary</button>
+              <button class="tab-btn" data-tab="raw">Raw JSON</button>
             </div>
           </div>
-          <div>
-            <div class="card results-panel">
-              <div class="results-header"><h2 id="resultTitle" style="font-size: 0.9375rem; font-weight: 800; margin: 0;">Analysis Output</h2>
-                <div class="tab-group"><button class="tab-btn active" data-tab="summary">Summary</button><button class="tab-btn" data-tab="raw">Raw JSON</button></div>
-              </div>
-              <div class="results-body">
-                <div class="empty-state" id="emptyState"><div><strong>No audit selected</strong><p>Run a module or open a recent report.</p></div></div>
-                <div class="findings-list" id="summaryView" hidden></div>
-                <div id="rawView" hidden><pre class="code-block" id="rawOutput"></pre></div>
+          <div class="results-body">
+            <div class="empty-state" id="emptyState">
+              <div>
+                <div class="empty-icon">🎯</div>
+                <strong>No audit selected</strong>
+                <p>Enter a URL above and click a module tile or Run Audit to start.</p>
               </div>
             </div>
-
+            <div class="findings-list" id="summaryView" hidden></div>
+            <div id="rawView" hidden><pre class="code-block" id="rawOutput"></pre></div>
           </div>
         </div>
       </section>
 
       <!-- PROJECTS VIEW -->
       <section class="view" id="view-projects">
-        <div class="grid-2" style="margin-bottom:20px">
-          <div class="card" style="padding:20px">
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card" style="padding:18px">
             <div class="section-title"><h2>New Project</h2><span class="badge badge-cyan">Workspace</span></div>
             <div class="stack">
               <div class="input-wrap"><label for="projectNamePanel">Project Name</label><input class="input" id="projectNamePanel" placeholder="Client name or brand"></div>
               <button class="btn btn-primary btn-sm" id="createProjectPanelBtn">Create Project</button>
             </div>
           </div>
-          <div class="card" style="padding:20px">
+          <div class="card" style="padding:18px">
             <div class="section-title"><h2>Portfolio</h2><span class="badge badge-emerald" id="projectCount">0</span></div>
-            <p class="muted">Organize clients, campaigns, and business units into projects for structured auditing.</p>
+            <p class="muted">Organize clients and campaigns into projects for structured auditing.</p>
           </div>
         </div>
         <div class="section-title"><h2>All Projects</h2><span class="badge badge-dim" id="projectListCount">0</span></div>
@@ -916,8 +967,8 @@
 
       <!-- SITES VIEW -->
       <section class="view" id="view-sites">
-        <div class="grid-2" style="margin-bottom:20px">
-          <div class="card" style="padding:20px">
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card" style="padding:18px">
             <div class="section-title"><h2>Add Site</h2><span class="badge badge-cyan">Inventory</span></div>
             <div class="stack">
               <div class="input-wrap"><label for="siteProjectPanel">Project</label><select id="siteProjectPanel"></select></div>
@@ -925,7 +976,7 @@
               <button class="btn btn-primary btn-sm" id="saveSitePanelBtn">Save Site</button>
             </div>
           </div>
-          <div class="card" style="padding:20px">
+          <div class="card" style="padding:18px">
             <div class="section-title"><h2>Coverage</h2><span class="badge badge-emerald" id="siteCount">0</span></div>
             <p class="muted">Saved sites can be reused across audits for faster repeat analysis.</p>
           </div>
@@ -936,14 +987,36 @@
 
       <!-- REPORTS VIEW -->
       <section class="view" id="view-reports">
-        <div class="workspace-layout">
+        <div class="reports-layout">
           <div>
             <div class="section-title"><h2>Report History</h2><span class="badge badge-emerald" id="historyCount">0</span></div>
             <div class="stack" id="historyList"></div>
           </div>
           <div class="card results-panel">
-            <div class="results-header"><strong>Report Preview</strong><span class="badge badge-cyan">Shareable</span></div>
+            <div class="results-header"><h2 style="font-size:0.875rem;font-weight:800;margin:0">Report Preview</h2><span class="badge badge-cyan">Shareable</span></div>
             <div class="results-body"><div class="findings-list" id="reportPreview"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS VIEW -->
+      <section class="view" id="view-analytics">
+        <div class="analytics-grid">
+          <div class="card analytics-card">
+            <h3>Module Usage Distribution</h3>
+            <div class="bar-chart" id="moduleUsageChart"></div>
+          </div>
+          <div class="card analytics-card">
+            <h3>Severity Distribution</h3>
+            <div class="bar-chart" id="severityChart"></div>
+          </div>
+          <div class="card analytics-card">
+            <h3>Recent Activity</h3>
+            <div class="stack" id="recentActivity"></div>
+          </div>
+          <div class="card analytics-card">
+            <h3>Audit Performance</h3>
+            <div class="bar-chart" id="performanceChart"></div>
           </div>
         </div>
       </section>
@@ -962,7 +1035,7 @@
               <div class="section-title"><h2>Security</h2><span class="badge" id="verifyBadge">Email</span></div>
               <div class="input-wrap"><label for="currentPassword">Current Password</label><input class="input" id="currentPassword" type="password"></div>
               <div class="input-wrap"><label for="newPassword">New Password</label><input class="input" id="newPassword" type="password"></div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <button class="btn btn-secondary btn-sm" id="changePasswordBtn">Change Password</button>
                 <button class="btn btn-secondary btn-sm" id="resendVerifyBtn">Resend Verification</button>
               </div>
@@ -973,28 +1046,28 @@
             <span class="badge badge-emerald" id="planBadge" style="display:none">free</span>
             <p class="muted" id="planDetail">Free plan.</p>
             <p class="muted" id="settingsSubscription">Local development subscription state.</p>
-            <div id="planLimitsDisplay" class="muted" style="font-size:0.8125rem;margin-top:4px"></div>
-            <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
+            <div id="planLimitsDisplay" class="muted" style="font-size:0.75rem;margin-top:2px"></div>
+            <div style="display:flex;gap:6px;margin-top:6px"><button class="btn btn-secondary btn-sm" data-plan="pro">Upgrade Pro</button><button class="btn btn-secondary btn-sm" data-plan="agency">Upgrade Agency</button></div>
           </div>
           <div class="card settings-panel">
-            <div class="section-title"><h2>CMS Direct Auto-Patcher Integrations</h2><span class="badge badge-emerald" id="cmsStatusBadge">Connected</span></div>
-            <p class="muted">Connect your CMS via REST API or Webhook to deploy auto-fixes and blog content directly from SEOVault in 1 click.</p>
-            <div class="schedule-bar" style="margin-top:12px">
+            <div class="section-title"><h2>CMS Auto-Patcher</h2><span class="badge badge-emerald" id="cmsStatusBadge">Connected</span></div>
+            <p class="muted">Connect your CMS via REST API to deploy auto-fixes and blog content from SEOVault.</p>
+            <div class="schedule-bar" style="margin-top:8px">
               <div class="input-wrap"><label for="cmsPlatform">Platform</label><select id="cmsPlatform"><option value="wordpress">WordPress REST API</option><option value="shopify">Shopify Admin API</option><option value="webflow">Webflow API</option><option value="webhook">Custom Webhook</option></select></div>
               <div class="input-wrap" style="flex:1"><label for="cmsSiteUrl">Target Site URL</label><input class="input" id="cmsSiteUrl" placeholder="https://example.com"></div>
-              <div class="input-wrap" style="flex:1"><label for="cmsApiKey">API Token / App Key</label><input class="input" id="cmsApiKey" type="password" placeholder="Key or App Password"></div>
+              <div class="input-wrap" style="flex:1"><label for="cmsApiKey">API Token</label><input class="input" id="cmsApiKey" type="password" placeholder="Key or App Password"></div>
               <button class="btn btn-primary btn-sm" id="saveCmsBtn">Connect CMS</button>
             </div>
           </div>
           <div class="card settings-panel">
-            <div class="section-title"><h2>API Credentials & Data Services</h2><span class="badge badge-cyan" id="credStatusBadge">Credentials Configured</span></div>
-            <p class="muted">Manage live credentials for Google Search Console, PageSpeed Insights, IndexNow, and DataForSEO APIs.</p>
-            <div class="grid-2" style="margin-top:12px">
-              <div class="input-wrap"><label for="googleApiKey">Google API Key / GSC Token</label><input class="input" id="googleApiKey" type="password" placeholder="AIzaSy... / OAuth token"></div>
-              <div class="input-wrap"><label for="indexnowKey">IndexNow Key (Bing/Yandex)</label><input class="input" id="indexnowKey" type="password" placeholder="IndexNow Verification Key"></div>
+            <div class="section-title"><h2>API Credentials</h2><span class="badge badge-cyan" id="credStatusBadge">Configured</span></div>
+            <p class="muted">Manage credentials for Google Search Console, PageSpeed, IndexNow, and DataForSEO.</p>
+            <div class="grid-2" style="margin-top:8px">
+              <div class="input-wrap"><label for="googleApiKey">Google API Key / GSC Token</label><input class="input" id="googleApiKey" type="password" placeholder="AIzaSy..."></div>
+              <div class="input-wrap"><label for="indexnowKey">IndexNow Key</label><input class="input" id="indexnowKey" type="password" placeholder="IndexNow Key"></div>
             </div>
-            <div class="input-wrap" style="margin-top:8px"><label for="dataforseoAuth">DataForSEO Auth (Username:Password)</label><input class="input" id="dataforseoAuth" type="password" placeholder="user:pass"></div>
-            <button class="btn btn-secondary btn-sm" id="saveCredsBtn" style="margin-top:12px">Save API Credentials</button>
+            <div class="input-wrap" style="margin-top:6px"><label for="dataforseoAuth">DataForSEO Auth (User:Pass)</label><input class="input" id="dataforseoAuth" type="password" placeholder="user:pass"></div>
+            <button class="btn btn-secondary btn-sm" id="saveCredsBtn" style="margin-top:8px">Save API Credentials</button>
           </div>
           <div class="card settings-panel">
             <div class="section-title"><h2>Team Access</h2><span class="badge badge-cyan" id="teamCount">0 members</span></div>
@@ -1011,18 +1084,16 @@
         </div>
       </section>
 
-
     </main>
   </div>
 
   <!-- Mobile bottom nav -->
   <nav class="mobile-nav hidden" id="mobileNav">
     <div class="mobile-nav-inner">
-      <button class="mobile-nav-item active" data-view="audit"><span class="nav-dot"></span>Audit</button>
-      <button class="mobile-nav-item" data-view="projects"><span class="nav-dot"></span>Projects</button>
-      <button class="mobile-nav-item" data-view="sites"><span class="nav-dot"></span>Sites</button>
-      <button class="mobile-nav-item" data-view="reports"><span class="nav-dot"></span>Reports</button>
-      <button class="mobile-nav-item" data-view="settings"><span class="nav-dot"></span>More</button>
+      <button class="mobile-nav-item active" data-view="audit"><span class="m-icon">🎯</span>Audit</button>
+      <button class="mobile-nav-item" data-view="reports"><span class="m-icon">📋</span>Reports</button>
+      <button class="mobile-nav-item" data-view="analytics"><span class="m-icon">📊</span>Analytics</button>
+      <button class="mobile-nav-item" data-view="settings"><span class="m-icon">⚙️</span>Settings</button>
     </div>
   </nav>
 
@@ -1039,15 +1110,30 @@
       database: null, dbTable: null, latest: null, activeTab: 'summary',
       poll: null, authMode: 'signup', view: 'audit',
       resetToken: null, inviteToken: null,
+      selectedCategory: 'All', searchQuery: '',
     };
 
     const viewMeta = {
-      audit:    ['SEO audit command center', 'Select a client project and site, run an audit, then share the completed report with stakeholders.'],
-      projects: ['Client project portfolio', 'Manage client workspaces and campaign portfolios.'],
-      sites:    ['Managed site inventory', 'Save and organize customer domains for repeat analysis.'],
-      reports:  ['Executive report library', 'Review completed audits, export deliverables, and share links.'],
-      settings: ['Account and security settings', 'Manage your profile, security, subscription, and team.'],
-      admin:    ['Admin operations console', 'Monitor users, jobs, and system activity.'],
+      audit:     ['SEO audit command center', 'Run AI-powered SEO audits and review findings.'],
+      projects:  ['Client project portfolio', 'Manage client workspaces and campaign portfolios.'],
+      sites:     ['Managed site inventory', 'Save and organize customer domains for repeat analysis.'],
+      reports:   ['Executive report library', 'Review completed audits, export deliverables, and share links.'],
+      analytics: ['Analytics', 'Monitor audit activity, severity trends, and module usage.'],
+      settings:  ['Account and security settings', 'Manage your profile, security, subscription, and team.'],
+    };
+
+    const moduleIcons = {
+      'overview': '🔍', 'full-audit': '⚡', 'seo-images': '🖼️', 'sitemap': '🗺️',
+      'performance': '⚡', 'preload': '🚀', 'ux': '🎨', 'visual': '👁️',
+      'content': '📝', 'seo-content-brief': '📋', 'seo-cluster': '🧬',
+      'local': '📍', 'seo-maps': '🗺️', 'schema-commerce': '🛒',
+      'schema-generator': '🏗️', 'lcp': '⏱️', 'indexing': '📡',
+      'drift-check': '📈', 'backlinks-verify': '🔗', 'nlp-content': '🧠',
+      'content-humanize': '✍️', 'crux-history': '📊', 'gsc-inspect': '🔎',
+      'unlighthouse': '🔦', 'parasite-risk': '🛡️', 'auto-fix-generator': '🛠️',
+      'ai-content-studio': '✨', 'outreach-generator': '📧',
+      'seo-geo': '🌍', 'seo-plan': '🗓️', 'seo-flow': '🌊',
+      'seo-hreflang': '🌐', 'seo-programmatic': '⚙️', 'seo-competitor-pages': '🏆',
     };
 
     /* ═══════════════════════════════════════════
@@ -1070,37 +1156,22 @@
     function copyText(val) {
       if (!val) return;
       if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(val).then(() => {
-          toast('Copied to clipboard!');
-        }).catch(() => fallbackCopy(val));
-      } else {
-        fallbackCopy(val);
-      }
+        navigator.clipboard.writeText(val).then(() => toast('Copied to clipboard!')).catch(() => fallbackCopy(val));
+      } else { fallbackCopy(val); }
     }
 
     function fallbackCopy(val) {
       try {
         const ta = document.createElement('textarea');
-        ta.value = val;
-        ta.style.position = 'fixed';
-        ta.style.top = '0';
-        ta.style.left = '0';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        const success = document.execCommand('copy');
+        ta.value = val; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        document.execCommand('copy') ? toast('Copied to clipboard!') : toast('Copy not supported.');
         document.body.removeChild(ta);
-        if (success) toast('Copied to clipboard!');
-        else toast('Copy not supported.');
-      } catch(e) {
-        toast('Copy failed.');
-      }
+      } catch { toast('Copy failed.'); }
     }
 
     function copySnippetFromAttr(btn) {
-      const code = decodeURIComponent(btn.dataset.code || '');
-      copyText(code);
+      copyText(decodeURIComponent(btn.dataset.code || ''));
     }
 
     async function fetchJson(url, opts = {}) {
@@ -1121,9 +1192,7 @@
       if (billing === 'success') toast('Payment received. Your plan will update shortly.');
       if (billing === 'cancelled') toast('Checkout cancelled.');
 
-      if (S.inviteToken && !S.token) {
-        showAuth('login');
-      }
+      if (S.inviteToken && !S.token) showAuth('login');
 
       if (location.pathname === '/verify-email' && params.get('token')) {
         try {
@@ -1160,7 +1229,7 @@
     }
 
     /* ═══════════════════════════════════════════
-       NAVIGATION (LANDING / AUTH / APP)
+       NAVIGATION
        ═══════════════════════════════════════════ */
     function showLanding() {
       $('landingView').classList.remove('hidden');
@@ -1188,7 +1257,6 @@
       $('authView').classList.add('hidden');
       $('appView').classList.remove('hidden');
       $('mobileNav').classList.remove('hidden');
-
       const initial = S.user?.name?.[0] || S.user?.email?.[0] || '?';
       $('userAvatar').textContent = initial.toUpperCase();
       $('userName').textContent = S.user?.name || 'User';
@@ -1213,21 +1281,14 @@
       $('forgotPasswordBtn').classList.toggle('hidden', resetReq || resetConf || signup);
       $('authPasswordLabel').textContent = resetConf ? 'New Password' : 'Password';
       $('authTitle').textContent = login ? 'Welcome back' : signup ? 'Create your account' : resetReq ? 'Reset password' : 'Set new password';
-      $('authSubtitle').textContent = login ? 'Log in to your workspace.' : signup ? 'Start running SEO audits in minutes.' : resetReq ? 'Enter your email to receive a reset link.' : 'Choose a new password.';
-      
+      $('authSubtitle').textContent = login ? 'Log in to your workspace.' : signup ? 'Start running SEO audits in minutes.' : resetReq ? 'Enter your email for a reset link.' : 'Choose a new password.';
+
       const btn = $('authSubmitBtn');
       if (btn) {
         const labelText = login ? 'Log In' : signup ? 'Create Account' : resetReq ? 'Send Reset Link' : 'Reset Password';
         btn.innerHTML = `<span class="spinner"></span><span>${labelText}</span>`;
       }
-      
-      const authToggle = $('authToggle');
-      if (authToggle) {
-        authToggle.style.display = (login || signup) ? '' : 'none';
-        authToggle.innerHTML = login
-          ? "Don't have an account? <button id=\"authSwitchBtn\" onclick=\"setAuthMode('signup')\">Sign up</button>"
-          : "Already have an account? <button id=\"authSwitchBtn\" onclick=\"setAuthMode('login')\">Log in</button>";
-      }
+
       $('showSignupBtn')?.classList.toggle('active', signup);
       $('showLoginBtn')?.classList.toggle('active', login);
     }
@@ -1248,16 +1309,13 @@
       const span = btn.querySelector('span:not(.spinner)');
       if (span) {
         const mode = S.authMode;
-        if (active) {
-          span.textContent = mode === 'login' ? 'Logging in...' : mode === 'signup' ? 'Creating account...' : 'Processing...';
-        } else {
-          span.textContent = mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : mode === 'reset-request' ? 'Send Reset Link' : 'Reset Password';
-        }
+        span.textContent = active
+          ? (mode === 'login' ? 'Logging in...' : mode === 'signup' ? 'Creating account...' : 'Processing...')
+          : (mode === 'login' ? 'Log In' : mode === 'signup' ? 'Create Account' : mode === 'reset-request' ? 'Send Reset Link' : 'Reset Password');
       }
     }
 
     async function handleAuth() {
-      console.log('handleAuth called, mode:', S.authMode);
       const mode = S.authMode;
       showAuthError('');
       const email = $('authEmail')?.value.trim().toLowerCase();
@@ -1310,9 +1368,7 @@
           msg = 'No matching account found. Check the email and password.';
         }
         showAuthError(msg);
-      } finally {
-        setAuthBusy(false);
-      }
+      } finally { setAuthBusy(false); }
     }
 
     /* ═══════════════════════════════════════════
@@ -1321,16 +1377,16 @@
     function setView(view) {
       if (view === 'admin') return;
       S.view = view;
-      document.querySelectorAll('[data-view]').forEach(b => {
-        b.classList.toggle('active', b.dataset.view === view);
-      });
+      document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
       document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${view}`));
-      $('pageTitle').textContent = viewMeta[view][0];
-      $('pageSubtitle').textContent = viewMeta[view][1];
+      const meta = viewMeta[view] || ['Page', ''];
+      $('pageTitle').textContent = meta[0];
+      $('pageSubtitle').textContent = meta[1];
       if (view === 'reports') renderReportPreview(S.latest);
       if (view === 'projects') renderProjects();
       if (view === 'sites') renderSites();
       if (view === 'settings') { renderSettings(); loadTeam(); }
+      if (view === 'analytics') renderAnalytics();
     }
 
     /* ═══════════════════════════════════════════
@@ -1339,9 +1395,7 @@
     async function loadHealth() {
       try {
         const s = await fetchJson('/api/ready');
-        const d = s.runtime || s;
-        const backend = s.database_backend === 'postgres' ? 'Postgres' : 'SQLite';
-        $('kpiRuntime').textContent = s.ready ? 'Ready' : 'Setup';
+        $('kpiRuntime').textContent = s.ready ? '● Ready' : '○ Setup';
         $('kpiRuntime').style.color = s.ready ? 'var(--emerald)' : 'var(--red)';
       } catch {}
     }
@@ -1349,30 +1403,13 @@
     async function loadModules() {
       S.modules = await fetchJson('/api/modules');
       $('moduleCount').textContent = S.modules.length;
-      
+
       const categories = [...new Set(S.modules.map(m => m.category))];
       $('moduleSelect').innerHTML = categories.map(cat => `
         <optgroup label="${esc(cat)}">
           ${S.modules.filter(m => m.category === cat).map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('')}
         </optgroup>
       `).join('');
-
-      S.selectedCategory = S.selectedCategory || 'All';
-      S.searchQuery = S.searchQuery || '';
-
-      const pillsHtml = ['All', ...categories].map(cat => `
-        <button class="btn btn-xs ${S.selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}" data-cat-pill="${esc(cat)}" style="font-size:0.75rem; padding:2px 8px;">
-          ${esc(cat)}
-        </button>
-      `).join('');
-      $('categoryPills').innerHTML = pillsHtml;
-
-      document.querySelectorAll('[data-cat-pill]').forEach(btn => {
-        btn.onclick = () => {
-          S.selectedCategory = btn.dataset.catPill;
-          filterAndRenderModules();
-        };
-      });
 
       $('moduleSearch').oninput = (e) => {
         S.searchQuery = e.target.value.toLowerCase();
@@ -1388,28 +1425,36 @@
         filtered = filtered.filter(m => m.category === S.selectedCategory);
       }
       if (S.searchQuery) {
-        filtered = filtered.filter(m => m.label.toLowerCase().includes(S.searchQuery) || m.description.toLowerCase().includes(S.searchQuery) || m.id.toLowerCase().includes(S.searchQuery));
+        filtered = filtered.filter(m =>
+          m.label.toLowerCase().includes(S.searchQuery) ||
+          m.description.toLowerCase().includes(S.searchQuery) ||
+          m.id.toLowerCase().includes(S.searchQuery)
+        );
       }
 
       const categories = [...new Set(S.modules.map(m => m.category))];
-      $('categoryPills').innerHTML = ['All', ...categories].map(cat => `
-        <button class="btn btn-xs ${S.selectedCategory === cat ? 'btn-primary' : 'btn-secondary'}" data-cat-pill="${esc(cat)}" style="font-size:0.75rem; padding:2px 8px;">
-          ${esc(cat)}
+      const catCounts = {};
+      categories.forEach(c => { catCounts[c] = S.modules.filter(m => m.category === c).length; });
+
+      $('categoryTabs').innerHTML = ['All', ...categories].map(cat => `
+        <button class="cat-tab ${S.selectedCategory === cat ? 'active' : ''}" data-cat="${esc(cat)}">
+          ${esc(cat)}<span class="cat-count">${cat === 'All' ? S.modules.length : catCounts[cat]}</span>
         </button>
       `).join('');
 
-      document.querySelectorAll('[data-cat-pill]').forEach(btn => {
+      document.querySelectorAll('[data-cat]').forEach(btn => {
         btn.onclick = () => {
-          S.selectedCategory = btn.dataset.catPill;
+          S.selectedCategory = btn.dataset.cat;
           filterAndRenderModules();
         };
       });
 
       $('modulesGrid').innerHTML = filtered.length ? filtered.map(m => `
-        <article class="card card-glow module-card" data-module="${esc(m.id)}">
-          <div class="module-top"><div><h3>${esc(m.label)}</h3><p>${esc(m.description)}</p></div><span class="badge badge-dim">${esc(m.category)}</span></div>
-        </article>
-      `).join('') : '<div class="muted" style="grid-column:1/-1; padding:20px; text-align:center;">No matching audit skills found.</div>';
+        <button class="module-tile" data-module="${esc(m.id)}" title="${esc(m.description)}">
+          <span class="tile-icon">${moduleIcons[m.id] || '📄'}</span>
+          ${esc(m.label)}
+        </button>
+      `).join('') : '<div class="muted" style="padding:16px;text-align:center;width:100%">No matching modules found.</div>';
 
       document.querySelectorAll('[data-module]').forEach(b => b.onclick = () => startJob(b.dataset.module));
     }
@@ -1486,55 +1531,44 @@
     function renderHistory() {
       $('historyCount').textContent = S.history.length;
       $('historyList').innerHTML = S.history.length ? S.history.map(r => `
-        <article class="card entity-card" style="padding:14px">
-          <div class="finding-top"><button class="btn btn-ghost btn-xs" data-history="${esc(r.id)}" style="color:var(--cyan);font-weight:800">${esc(r.label)}</button><span class="badge ${r.status === 'complete' ? 'badge-emerald' : r.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(r.status)}</span></div>
-          <p class="muted truncate">${esc(r.url)}</p>
-        </article>
-      `).join('') : '<div class="card entity-card"><h3>No reports yet</h3><p class="muted">Completed audits appear here.</p></div>';
-      document.querySelectorAll('[data-history]').forEach(b => b.onclick = () => { const job = S.history.find(r => r.id === b.dataset.history); renderJob(job); setView('reports'); renderReportPreview(job); });
+        <div class="history-item${S.latest?.id === r.id ? ' selected' : ''}" data-history="${esc(r.id)}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h4>${esc(r.label)}</h4>
+            <span class="badge ${r.status === 'complete' ? 'badge-emerald' : r.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(r.status)}</span>
+          </div>
+          <p>${esc(r.url)} · ${dateTime(r.created_at)}</p>
+        </div>
+      `).join('') : '<div class="card" style="padding:14px"><p class="muted">No reports yet. Completed audits appear here.</p></div>';
+      document.querySelectorAll('[data-history]').forEach(b => b.onclick = () => {
+        const job = S.history.find(r => r.id === b.dataset.history);
+        renderJob(job); setView('reports'); renderReportPreview(job);
+      });
     }
 
     function renderReportPreview(job) {
       if (!$('reportPreview')) return;
-      if (!job) { $('reportPreview').innerHTML = '<div class="finding-item"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select from history.</p></div>'; return; }
+      if (!job) { $('reportPreview').innerHTML = '<div class="finding-item sev-info"><div class="finding-title">No report selected</div><p class="muted">Run an audit or select from history.</p></div>'; return; }
       const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
-      const exports = job.status === 'complete' ? `\nHTML: ${location.origin}/api/jobs/${job.id}/report.html\nJSON: ${location.origin}/api/jobs/${job.id}/export.json` : '';
-      
+
       let actionButtons = '';
       if (job.status === 'complete') {
+        const htmlReportUrl = job.share_url ? `${location.origin}${job.share_url}` : `${location.origin}/api/jobs/${job.id}/report.html?token=${S.token}`;
         actionButtons = `
-          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <a href="/api/jobs/${job.id}/report.html" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
-            <a href="/api/jobs/${job.id}/export.json" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">Export JSON</a>
-            <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
+          <div class="action-row">
+            <a href="${htmlReportUrl}" target="_blank" class="btn btn-secondary btn-xs">View Report</a>
+            <button class="btn btn-secondary btn-xs" onclick="downloadJobJson('${job.id}')">Export JSON</button>
+            <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')">Copy Link</button>
           </div>
         `;
       }
 
-      let fixBlocks = '';
-      try {
-        const parsedOut = typeof job.output?.stdout === 'string' ? JSON.parse(job.output.stdout) : (job.output?.stdout || {});
-        if (parsedOut.auto_fixes && Array.isArray(parsedOut.auto_fixes)) {
-          fixBlocks = parsedOut.auto_fixes.map(fix => `
-            <div class="finding-item" style="border:1px solid var(--border-focus);background:var(--surface-solid);margin-top:10px">
-              <div class="finding-top">
-                <div class="finding-title" style="color:var(--emerald)">🛠️ ${esc(fix.title)}</div>
-                <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(fix.code)}">Copy Snippet</button>
-              </div>
-              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(fix.code)}</pre>
-            </div>
-          `).join('');
-        }
-      } catch {}
-
       $('reportPreview').innerHTML = `
-        <div class="finding-item">
+        <div class="finding-item sev-${job.status === 'complete' ? 'info' : job.status === 'error' ? 'critical' : 'low'}">
           <div class="finding-top"><div class="finding-title">${esc(job.label)}</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
-          <pre class="code-block">${esc(`${job.url}\nShare: ${share}${exports}`)}</pre>
+          <p class="muted">${esc(job.url)} · ${dateTime(job.created_at)}</p>
           ${actionButtons}
         </div>
-        ${fixBlocks}
-        ${(job.findings || []).slice(0, 8).map(f => `<div class="finding-item"><div class="finding-title">${esc(f.title)}</div><p class="muted">${esc(f.detail || '')}</p></div>`).join('')}
+        ${(job.findings || []).slice(0, 8).map(f => `<div class="finding-item sev-${f.severity || 'info'}"><div class="finding-title">${esc(f.title)}</div><p class="muted" style="white-space:pre-wrap">${esc(f.detail || '')}</p></div>`).join('')}
       `;
     }
 
@@ -1542,8 +1576,8 @@
       const active = S.schedules.filter(s => s.status === 'active');
       $('scheduleCount').textContent = active.length;
       $('scheduleList').innerHTML = S.schedules.length ? S.schedules.map(s => `
-        <div class="card" style="padding:14px"><div class="finding-top"><div class="finding-title">${esc(s.label)}</div><span class="badge ${s.status === 'active' ? 'badge-emerald' : 'badge-dim'}">${esc(s.frequency)} · ${esc(s.status)}</span></div><p class="muted">${esc(s.url)} · next ${dateTime(s.next_run_at)}</p><div class="entity-actions" style="margin-top:8px"><button class="btn btn-secondary btn-xs btn-danger" data-pause-schedule="${esc(s.id)}">Pause</button></div></div>
-      `).join('') : '<div class="card" style="padding:14px"><p class="muted">No recurring audits. Schedule one from above.</p></div>';
+        <div class="card" style="padding:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong style="font-size:0.8125rem">${esc(s.label)}</strong><span class="badge ${s.status === 'active' ? 'badge-emerald' : 'badge-dim'}">${esc(s.frequency)} · ${esc(s.status)}</span></div><p class="muted">${esc(s.url)} · next ${dateTime(s.next_run_at)}</p><div class="entity-actions" style="margin-top:6px"><button class="btn btn-secondary btn-xs btn-danger" data-pause-schedule="${esc(s.id)}">Pause</button></div></div>
+      `).join('') : '<div class="card" style="padding:12px"><p class="muted">No recurring audits scheduled.</p></div>';
       document.querySelectorAll('[data-pause-schedule]').forEach(b => b.onclick = () => pauseSchedule(b.dataset.pauseSchedule));
     }
 
@@ -1554,10 +1588,10 @@
       $('memberCount').textContent = owned.length;
       $('inviteCount').textContent = invites.filter(i => i.status === 'pending').length;
       $('memberList').innerHTML = (owned.length || joined.length)
-        ? [...owned.map(m => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(m.email)}</strong><span class="badge badge-cyan">${esc(m.role)}</span></div><p class="muted">${esc(m.status)}</p></div>`),
-           ...joined.map(m => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(m.email)}</strong><span class="badge badge-emerald">Joined</span></div></div>`)].join('')
-        : '<div class="card" style="padding:12px"><p class="muted">No teammates yet.</p></div>';
-      $('inviteList').innerHTML = invites.length ? invites.map(i => `<div class="card" style="padding:12px"><div class="finding-top"><strong style="font-size:.8125rem">${esc(i.email)}</strong><span class="badge ${i.status === 'pending' ? 'badge-gold' : i.status === 'accepted' ? 'badge-emerald' : 'badge-red'}">${esc(i.status)}</span></div>${i.status === 'pending' ? `<button class="btn btn-secondary btn-xs btn-danger" data-revoke-invite="${esc(i.id)}" style="margin-top:6px">Revoke</button>` : ''}</div>`).join('') : '<div class="card" style="padding:12px"><p class="muted">No invitations.</p></div>';
+        ? [...owned.map(m => `<div class="card" style="padding:10px"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:.75rem">${esc(m.email)}</strong><span class="badge badge-cyan">${esc(m.role)}</span></div></div>`),
+           ...joined.map(m => `<div class="card" style="padding:10px"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:.75rem">${esc(m.email)}</strong><span class="badge badge-emerald">Joined</span></div></div>`)].join('')
+        : '<div class="card" style="padding:10px"><p class="muted">No teammates yet.</p></div>';
+      $('inviteList').innerHTML = invites.length ? invites.map(i => `<div class="card" style="padding:10px"><div style="display:flex;justify-content:space-between;align-items:center"><strong style="font-size:.75rem">${esc(i.email)}</strong><span class="badge ${i.status === 'pending' ? 'badge-gold' : i.status === 'accepted' ? 'badge-emerald' : 'badge-red'}">${esc(i.status)}</span></div>${i.status === 'pending' ? `<button class="btn btn-secondary btn-xs btn-danger" data-revoke-invite="${esc(i.id)}" style="margin-top:4px">Revoke</button>` : ''}</div>`).join('') : '<div class="card" style="padding:10px"><p class="muted">No invitations.</p></div>';
       document.querySelectorAll('[data-revoke-invite]').forEach(b => b.onclick = () => revokeInvite(b.dataset.revokeInvite));
     }
 
@@ -1571,6 +1605,49 @@
       $('verifyBadge').className = `badge ${S.user.email_verified ? 'badge-emerald' : 'badge-red'}`;
       $('settingsPlan').textContent = S.user.plan || 'free';
       $('settingsSubscription').textContent = `${S.user.subscription_status || 'dev'} subscription · ${S.user.email_verified ? 'verified' : 'unverified'}`;
+    }
+
+    function renderAnalytics() {
+      // Module usage
+      const moduleCounts = {};
+      S.history.forEach(h => { moduleCounts[h.label] = (moduleCounts[h.label] || 0) + 1; });
+      const top5 = Object.entries(moduleCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const maxCount = Math.max(...top5.map(e => e[1]), 1);
+      $('moduleUsageChart').innerHTML = top5.length ? top5.map(([label, count]) => `
+        <div class="bar-row">
+          <span class="bar-label">${esc(label.length > 12 ? label.slice(0,12)+'…' : label)}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(count/maxCount*100).toFixed(0)}%;background:var(--grad-brand)"></div></div>
+          <span class="bar-value">${count}</span>
+        </div>
+      `).join('') : '<p class="muted" style="padding:8px">No audit data yet.</p>';
+
+      // Severity
+      const sevCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+      S.history.forEach(h => { (h.findings || []).forEach(f => { if (sevCounts[f.severity] !== undefined) sevCounts[f.severity]++; }); });
+      const maxSev = Math.max(...Object.values(sevCounts), 1);
+      const sevColors = { critical: 'var(--red)', high: 'var(--red)', medium: 'var(--gold)', low: 'var(--blue)', info: 'var(--cyan)' };
+      $('severityChart').innerHTML = Object.entries(sevCounts).map(([sev, count]) => `
+        <div class="bar-row">
+          <span class="bar-label">${esc(sev)}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(count/maxSev*100).toFixed(0)}%;background:${sevColors[sev]}"></div></div>
+          <span class="bar-value">${count}</span>
+        </div>
+      `).join('');
+
+      // Recent activity
+      $('recentActivity').innerHTML = S.history.length ? S.history.slice(0, 6).map(h => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:0.75rem;font-weight:600">${esc(h.label)}</span>
+          <span class="badge ${h.status === 'complete' ? 'badge-emerald' : 'badge-dim'}">${esc(h.status)}</span>
+        </div>
+      `).join('') : '<p class="muted" style="padding:8px">No activity yet.</p>';
+
+      // Performance placeholder
+      $('performanceChart').innerHTML = `
+        <div class="bar-row"><span class="bar-label">Avg Speed</span><div class="bar-track"><div class="bar-fill" style="width:78%;background:var(--emerald)"></div></div><span class="bar-value">1.2s</span></div>
+        <div class="bar-row"><span class="bar-label">Success</span><div class="bar-track"><div class="bar-fill" style="width:${S.history.length ? (S.history.filter(h=>h.status==='complete').length/S.history.length*100).toFixed(0) : 0}%;background:var(--emerald)"></div></div><span class="bar-value">${S.history.length ? (S.history.filter(h=>h.status==='complete').length/S.history.length*100).toFixed(0) : 0}%</span></div>
+        <div class="bar-row"><span class="bar-label">Errors</span><div class="bar-track"><div class="bar-fill" style="width:${S.history.length ? (S.history.filter(h=>h.status==='error').length/S.history.length*100).toFixed(0) : 0}%;background:var(--red)"></div></div><span class="bar-value">${S.history.filter(h=>h.status==='error').length}</span></div>
+      `;
     }
 
     /* ═══════════════════════════════════════════
@@ -1625,9 +1702,7 @@
       if (!confirm('Cancel this queued audit?')) return;
       try {
         const job = await fetchJson(`/api/jobs/${id}/cancel`, { method:'POST' });
-        renderJob(job);
-        await refreshWorkspace();
-        toast('Audit cancelled.');
+        renderJob(job); await refreshWorkspace(); toast('Audit cancelled.');
       } catch(e) { toast(e.message); }
     }
 
@@ -1635,28 +1710,22 @@
       const url = targetUrl() || 'https://example.com';
       try {
         const res = await fetchJson('/api/cms/deploy-fix', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          method: 'POST', headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ fix_title: title, code, url })
         });
         toast(`⚡ ${res.message || 'Deployed to CMS!'}`);
-      } catch(e) {
-        toast(e.message);
-      }
+      } catch(e) { toast(e.message); }
     }
 
     function downloadJobJson(jobId) {
-      const url = `/api/jobs/${jobId}/export.json?token=${S.token}`;
-      fetch(url)
+      fetch(`/api/jobs/${jobId}/export.json?token=${S.token}`)
         .then(r => r.blob())
         .then(blob => {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
           a.download = `seovault_${jobId.slice(0, 8)}.json`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          toast('JSON Export downloaded successfully.');
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          toast('JSON exported.');
         })
         .catch(e => toast('Download failed: ' + e.message));
     }
@@ -1669,19 +1738,17 @@
       $('rawOutput').textContent = JSON.stringify(job, null, 2);
       const share = job.share_url ? `${location.origin}${job.share_url}` : 'After completion';
       const htmlReportUrl = job.share_url ? `${location.origin}${job.share_url}` : `${location.origin}/api/jobs/${job.id}/report.html?token=${S.token}`;
-      const jsonExportUrl = `${location.origin}/api/jobs/${job.id}/export.json?token=${S.token}`;
-      const exports = job.status === 'complete' ? `\nHTML: ${htmlReportUrl}\nJSON: ${jsonExportUrl}` : '';
-      
+
       let actionButtons = '';
       if (job.status === 'queued') {
-        actionButtons = `<div style="margin-top:12px"><button class="btn btn-danger btn-xs" onclick="cancelJob('${job.id}')">Cancel Audit</button></div>`;
+        actionButtons = `<div class="action-row"><button class="btn btn-danger btn-xs" onclick="cancelJob('${job.id}')">Cancel Audit</button></div>`;
       } else if (job.status === 'complete') {
         actionButtons = `
-          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <a href="${htmlReportUrl}" target="_blank" class="btn btn-secondary btn-xs" style="color:var(--text);border-color:var(--border-hover)">View Report</a>
-            <button class="btn btn-secondary btn-xs" onclick="downloadJobJson('${job.id}')" style="color:var(--text);border-color:var(--border-hover)">Export JSON</button>
-            <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')" style="color:var(--text);border-color:var(--border-hover)">Copy Share Link</button>
-            <a href="${htmlReportUrl.includes('?') ? htmlReportUrl + '&download_pdf=1' : htmlReportUrl + '?download_pdf=1'}" target="_blank" class="btn btn-primary btn-xs">🖨️ Save as PDF</a>
+          <div class="action-row">
+            <a href="${htmlReportUrl}" target="_blank" class="btn btn-secondary btn-xs">📄 View Report</a>
+            <button class="btn btn-secondary btn-xs" onclick="downloadJobJson('${job.id}')">📦 Export JSON</button>
+            <button class="btn btn-secondary btn-xs" onclick="copyText('${share}')">🔗 Copy Link</button>
+            <a href="${htmlReportUrl.includes('?') ? htmlReportUrl + '&download_pdf=1' : htmlReportUrl + '?download_pdf=1'}" target="_blank" class="btn btn-primary btn-xs">📥 Save as PDF</a>
           </div>
         `;
       }
@@ -1691,62 +1758,62 @@
         const parsedOut = typeof job.output?.stdout === 'string' ? JSON.parse(job.output.stdout) : (job.output?.stdout || {});
         if (parsedOut.auto_fixes && Array.isArray(parsedOut.auto_fixes)) {
           fixBlocks += parsedOut.auto_fixes.map(fix => `
-            <div class="finding-item" style="border:1px solid var(--border-focus);background:var(--surface-solid);margin-top:10px">
+            <div class="finding-item sev-info" style="border-left-color:var(--emerald)">
               <div class="finding-top">
                 <div class="finding-title" style="color:var(--emerald)">🛠️ ${esc(fix.title)}</div>
-                <div style="display:flex;gap:6px">
+                <div style="display:flex;gap:4px">
                   <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(fix.code)}">Copy Snippet</button>
-                  <button class="btn btn-primary btn-xs" onclick="deployCmsFix('${esc(fix.title)}', decodeURIComponent(this.dataset.code))" data-code="${encodeURIComponent(fix.code)}">⚡ Deploy Direct to CMS</button>
+                  <button class="btn btn-primary btn-xs" onclick="deployCmsFix('${esc(fix.title)}', decodeURIComponent(this.dataset.code))" data-code="${encodeURIComponent(fix.code)}">⚡ Deploy</button>
                 </div>
               </div>
-              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(fix.code)}</pre>
+              <pre class="code-block" style="margin-top:6px">${esc(fix.code)}</pre>
             </div>
           `).join('');
         }
         if (parsedOut.article_markdown) {
           fixBlocks += `
-            <div class="finding-item" style="border:1px solid var(--cyan);background:var(--surface-solid);margin-top:10px">
+            <div class="finding-item sev-info" style="border-left-color:var(--cyan)">
               <div class="finding-top">
                 <div class="finding-title" style="color:var(--cyan)">✍️ ${esc(parsedOut.article_title)}</div>
-                <div style="display:flex;gap:6px">
-                  <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(parsedOut.article_markdown)}">Copy Article Markdown</button>
-                  <button class="btn btn-primary btn-xs" onclick="deployCmsFix('${esc(parsedOut.article_title)}', decodeURIComponent(this.dataset.code))" data-code="${encodeURIComponent(parsedOut.article_markdown)}">⚡ Publish Draft to CMS</button>
+                <div style="display:flex;gap:4px">
+                  <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(parsedOut.article_markdown)}">Copy Snippet</button>
+                  <button class="btn btn-primary btn-xs" onclick="deployCmsFix('${esc(parsedOut.article_title)}', decodeURIComponent(this.dataset.code))" data-code="${encodeURIComponent(parsedOut.article_markdown)}">⚡ Publish</button>
                 </div>
               </div>
-              <p class="muted" style="margin-top:4px">Word Count: ${esc(parsedOut.word_count)} words | E-E-A-T Score: ${esc(parsedOut.eeat_score)}</p>
-              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(parsedOut.article_markdown)}</pre>
+              <p class="muted" style="margin-top:4px">Words: ${esc(parsedOut.word_count)} | E-E-A-T: ${esc(parsedOut.eeat_score)}</p>
+              <pre class="code-block" style="margin-top:6px">${esc(parsedOut.article_markdown)}</pre>
             </div>
           `;
         }
         if (parsedOut.email_body) {
           fixBlocks += `
-            <div class="finding-item" style="border:1px solid var(--gold);background:var(--surface-solid);margin-top:10px">
+            <div class="finding-item sev-info" style="border-left-color:var(--gold)">
               <div class="finding-top">
-                <div class="finding-title" style="color:var(--gold)">📧 Backlink Outreach Pitch (${esc(parsedOut.target_domain)})</div>
-                <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(parsedOut.email_body)}">Copy Pitch Email</button>
+                <div class="finding-title" style="color:var(--gold)">📧 Outreach: ${esc(parsedOut.target_domain)}</div>
+                <button class="btn btn-secondary btn-xs" onclick="copySnippetFromAttr(this)" data-code="${encodeURIComponent(parsedOut.email_body)}">Copy Snippet</button>
               </div>
               <p class="muted" style="margin-top:4px">Subject: ${esc(parsedOut.email_subject)}</p>
-              <pre class="code-block" style="color:var(--text);background:rgba(0,0,0,0.4);margin-top:8px">${esc(parsedOut.email_body)}</pre>
+              <pre class="code-block" style="margin-top:6px">${esc(parsedOut.email_body)}</pre>
             </div>
           `;
         }
       } catch {}
 
       $('summaryView').innerHTML = `
-        <div class="finding-item">
+        <div class="finding-item sev-${job.status === 'complete' ? 'info' : job.status === 'error' ? 'critical' : 'low'}">
           <div class="finding-top"><div class="finding-title">Run Details</div><span class="badge ${job.status === 'complete' ? 'badge-emerald' : job.status === 'error' ? 'badge-red' : 'badge-dim'}">${esc(job.status)}</span></div>
-          <pre class="code-block">${esc(`${job.url}\nModule: ${job.label}\nCommand: ${job.command || 'Pending'}\nShare: ${share}${exports}`)}</pre>
+          <p class="muted">${esc(job.url)} · ${esc(job.label)} · ${esc(job.command || 'Pending')}</p>
           ${actionButtons}
         </div>
         ${fixBlocks}
-        ${(job.findings || []).map(f => `<div class="finding-item"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${f.severity === 'critical' || f.severity === 'high' ? 'badge-red' : f.severity === 'info' ? 'badge-cyan' : 'badge-dim'}">${esc(f.severity)}</span></div><pre class="code-block">${esc(f.detail || '')}</pre></div>`).join('')}
+        ${(job.findings || []).map(f => `<div class="finding-item sev-${f.severity || 'info'}"><div class="finding-top"><div class="finding-title">${esc(f.title)}</div><span class="badge ${f.severity === 'critical' || f.severity === 'high' ? 'badge-red' : f.severity === 'medium' ? 'badge-gold' : f.severity === 'low' ? 'badge-blue' : 'badge-cyan'}">${esc(f.severity)}</span></div><pre class="code-block">${esc(f.detail || '')}</pre></div>`).join('')}
       `;
       renderReportPreview(job); updateTabs();
     }
 
     function setBusy(v) {
       $('startBtn').disabled = v; $('startBtn').classList.toggle('busy', v);
-      document.querySelectorAll('.module-card').forEach(b => b.style.pointerEvents = v ? 'none' : '');
+      document.querySelectorAll('.module-tile').forEach(b => b.style.pointerEvents = v ? 'none' : '');
     }
 
     function updateTabs() {
@@ -1786,8 +1853,6 @@
 
     bind('landingLoginBtn', () => showAuth('login'));
     bind('landingSignupBtn', () => showAuth('signup'));
-    bind('heroGetStarted', () => showAuth('signup'));
-    bind('backToLandingBtn', showLanding);
     bind('authSubmitBtn', handleAuth);
     bind('forgotPasswordBtn', () => setAuthMode('reset-request'));
     bind('authPassword', e => { if (e.key === 'Enter') handleAuth(); }, 'keydown');
