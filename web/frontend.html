@@ -14,27 +14,27 @@
        ═══════════════════════════════════════════ */
     :root {
       --font: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-      --bg: #02040a; --bg-2: #070b13; --bg-3: #0c1122;
-      --surface: rgba(10, 17, 32, 0.65); --surface-solid: #090d16;
-      --surface-hover: rgba(15, 27, 50, 0.85);
-      --border: rgba(6, 182, 212, 0.15); --border-hover: rgba(6, 182, 212, 0.35);
-      --border-focus: rgba(0, 242, 254, 0.8);
-      --text: #f8fafc; --text-muted: #94a3b8; --text-dim: #475569;
-      --emerald: #10b981; --emerald-soft: rgba(16,185,129,0.12);
-      --cyan: #06b6d4; --cyan-soft: rgba(6,182,212,0.12);
+      --bg: #040603; --bg-2: #0a0e07; --bg-3: #10160c;
+      --surface: rgba(16, 26, 12, 0.65); --surface-solid: #0d140a;
+      --surface-hover: rgba(22, 38, 18, 0.85);
+      --border: rgba(107, 164, 5, 0.15); --border-hover: rgba(107, 164, 5, 0.35);
+      --border-focus: rgba(158, 240, 26, 0.8);
+      --text: #f4f6f0; --text-muted: #a3b899; --text-dim: #5c6e54;
+      --emerald: #6ba405; --emerald-soft: rgba(107,164,5,0.12);
+      --cyan: #9ef01a; --cyan-soft: rgba(158,240,26,0.12);
       --gold: #f59e0b; --gold-soft: rgba(245,158,11,0.12);
       --red: #ef4444; --red-soft: rgba(239,68,68,0.12);
       --blue: #3b82f6; --blue-soft: rgba(59,130,246,0.12);
       --purple: #a855f7; --purple-soft: rgba(168,85,247,0.12);
       --violet: #8b5cf6; --rose: #f43f5e;
-      --grad-brand: linear-gradient(135deg, #00f2fe, #4facfe 50%, #a855f7);
-      --grad-hero: linear-gradient(135deg, #02040a 0%, #081125 35%, #051d24 70%, #02040a 100%);
-      --grad-card: linear-gradient(180deg, rgba(9,15,26,0.7), rgba(4,8,16,0.7));
+      --grad-brand: linear-gradient(135deg, #6ba405, #9ef01a 50%, #10b981);
+      --grad-hero: linear-gradient(135deg, #040603 0%, #0c1407 35%, #051d0c 70%, #040603 100%);
+      --grad-card: linear-gradient(180deg, rgba(10,16,8,0.7), rgba(4,8,3,0.7));
       --glass: blur(20px) saturate(1.8);
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
-      --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
-      --shadow-lg: 0 24px 80px rgba(0,0,0,0.7);
-      --shadow-glow: 0 0 25px rgba(6, 182, 212, 0.2);
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.5);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.7);
+      --shadow-lg: 0 24px 80px rgba(0,0,0,0.8);
+      --shadow-glow: 0 0 25px rgba(107, 164, 5, 0.2);
       --radius: 12px; --radius-sm: 8px; --radius-pill: 999px;
       --transition: 0.25s cubic-bezier(0.16,1,0.3,1);
     }
@@ -117,31 +117,31 @@
     
     /* Glowing Neon Primary Button */
     .btn-primary {
-      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-      color: #06090f; font-weight: 800;
-      box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);
-      border-color: rgba(0, 242, 254, 0.4);
+      background: linear-gradient(135deg, #6ba405 0%, #9ef01a 100%);
+      color: #040603; font-weight: 800;
+      box-shadow: 0 0 15px rgba(107, 164, 5, 0.35);
+      border-color: rgba(107, 164, 5, 0.4);
     }
     .btn-primary:hover:not(:disabled) { 
-      box-shadow: 0 0 25px rgba(0, 242, 254, 0.7); 
-      border-color: rgba(0, 242, 254, 0.8);
+      box-shadow: 0 0 25px rgba(107, 164, 5, 0.7); 
+      border-color: rgba(158, 240, 26, 0.8);
     }
     
     /* High Tech Border Secondaries */
     .btn-secondary {
-      background: rgba(6, 182, 212, 0.05); 
-      border: 1px solid rgba(6, 182, 212, 0.35);
-      color: #00f2fe;
+      background: rgba(107, 164, 5, 0.05); 
+      border: 1px solid rgba(107, 164, 5, 0.35);
+      color: #9ef01a;
       box-shadow: var(--shadow-sm);
     }
     .btn-secondary:hover:not(:disabled) { 
-      background: rgba(6, 182, 212, 0.15); 
-      border-color: #00f2fe; 
-      box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+      background: rgba(107, 164, 5, 0.15); 
+      border-color: #9ef01a; 
+      box-shadow: 0 0 12px rgba(107, 164, 5, 0.3);
     }
     
     .btn-ghost { background: transparent; color: var(--text-muted); }
-    .btn-ghost:hover { color: var(--text); background: rgba(6, 182, 212, 0.08); border-color: rgba(6, 182, 212, 0.2); }
+    .btn-ghost:hover { color: var(--text); background: rgba(107, 164, 5, 0.08); border-color: rgba(107, 164, 5, 0.2); }
     
     .btn-danger { 
       color: #f43f5e; 
@@ -162,14 +162,14 @@
     .input-wrap label { font-size: 0.625rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
     .input, select {
       width: 100%; height: 40px; padding: 0 14px;
-      background: rgba(6, 182, 212, 0.03); border: 1px solid rgba(6, 182, 212, 0.15);
+      background: rgba(107, 164, 5, 0.03); border: 1px solid rgba(107, 164, 5, 0.15);
       border-radius: var(--radius-sm); color: var(--text);
       transition: all var(--transition); outline: none; font-size: 0.875rem;
     }
     .input::placeholder { color: var(--text-dim); }
     .input:focus, select:focus { 
       border-color: var(--border-focus); 
-      box-shadow: 0 0 0 3px rgba(0, 242, 254, 0.15), 0 0 15px rgba(0, 242, 254, 0.15); 
+      box-shadow: 0 0 0 3px rgba(158, 240, 26, 0.15), 0 0 15px rgba(158, 240, 26, 0.15); 
     }
     .input:disabled { opacity: 0.6; }
     select { cursor: pointer; }
@@ -239,6 +239,127 @@
     @keyframes barFill { from { width: 0; } }
     @keyframes orbit { to { transform: rotate(360deg); } }
 
+    /* CSS Conic Spinning Borders */
+    @property --border-angle {
+      syntax: '<angle>';
+      inherits: false;
+      initial-value: 0deg;
+    }
+    .btn-border-wrap {
+      position: relative;
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      background: transparent;
+      display: inline-block;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .btn-border-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 2px;
+      background: conic-gradient(from var(--border-angle), #6ba405, #0a0e07, #9ef01a, #0a0e07, #6ba405);
+      animation: rotateBorder 4s linear infinite;
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+      z-index: -1;
+    }
+    @keyframes rotateBorder {
+      to { --border-angle: 360deg; }
+    }
+
+    /* Typewriter Caret Cursor */
+    #heroHeading::after {
+      content: '|';
+      color: #9ef01a;
+      animation: blinkCursor 0.8s step-end infinite;
+      margin-left: 4px;
+      font-weight: 700;
+    }
+    @keyframes blinkCursor {
+      from, to { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    /* Cyber Circles Visualization */
+    .cyber-circles-container {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 580px; height: 580px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.65;
+    }
+    .orbit-circle {
+      position: absolute;
+      top: 50%; left: 50%;
+      border-radius: 50%;
+      border: 1px dashed rgba(107, 164, 5, 0.25);
+      transform: translate(-50%, -50%);
+    }
+    .orbit-1 {
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(107, 164, 5, 0.1) 0%, transparent 80%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border: 1px solid rgba(107, 164, 5, 0.4);
+      box-shadow: 0 0 30px rgba(107, 164, 5, 0.15);
+      z-index: 2;
+    }
+    .orbit-center-text {
+      text-align: center;
+      animation: rotateCCW 20s linear infinite; /* keep text upright */
+      transform-origin: center;
+    }
+    .orbit-center-text .count-number {
+      display: block; font-size: 1.5rem; font-weight: 900; color: #9ef01a; text-shadow: 0 0 10px rgba(158, 240, 26, 0.5);
+    }
+    .orbit-center-text .count-label {
+      display: block; font-size: 0.6875rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .orbit-2 {
+      width: 300px; height: 300px;
+      animation: rotateCW 35s linear infinite;
+    }
+    .orbit-3 {
+      width: 440px; height: 440px;
+      animation: rotateCCW 45s linear infinite;
+    }
+    .orbit-4 {
+      width: 580px; height: 580px;
+      animation: rotateCW 60s linear infinite;
+    }
+    
+    .agent-node {
+      position: absolute;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #090d16;
+      border: 1px solid rgba(107, 164, 5, 0.6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.875rem;
+      box-shadow: 0 0 15px rgba(107, 164, 5, 0.3), inset 0 0 8px rgba(107, 164, 5, 0.2);
+      transform: translate(-50%, -50%);
+    }
+    
+    /* Position nodes on Orbit 2 (150px radius) */
+    .node-tech { top: 15%; left: 85%; }
+    .node-ux { top: 85%; left: 15%; }
+    
+    /* Position nodes on Orbit 3 (220px radius) */
+    .node-content { top: 50%; left: 100%; }
+    .node-schema { top: 50%; left: 0%; }
+    
+    /* Position nodes on Orbit 4 (290px radius) */
+    .node-local { top: 90%; left: 75%; }
+    .node-backlink { top: 10%; left: 25%; }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
@@ -262,20 +383,28 @@
     /* Cyber Animated Logo */
     .nav-cyber-logo {
       display: inline-flex; align-items: center; justify-content: center;
-      position: relative; width: 38px; height: 38px;
-      filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.5));
+      position: relative; width: 34px; height: 34px;
       flex-shrink: 0;
     }
-    .cyber-orbit-outer {
+    .cyber-shield {
+      animation: shieldPulse 3s ease-in-out infinite alternate;
       transform-origin: center;
-      animation: rotateCW 12s linear infinite;
     }
-    .cyber-orbit-inner {
+    .cyber-scanner {
+      animation: rotateCW 10s linear infinite;
       transform-origin: center;
-      animation: rotateCCW 8s linear infinite;
     }
     .cyber-core {
-      animation: corePulse 2s ease-in-out infinite alternate;
+      animation: coreGlow 1.5s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+    @keyframes shieldPulse {
+      0% { transform: scale(0.96); opacity: 0.8; }
+      100% { transform: scale(1.02); opacity: 1; }
+    }
+    @keyframes coreGlow {
+      0% { r: 8px; filter: drop-shadow(0 0 2px #9ef01a); }
+      100% { r: 12px; filter: drop-shadow(0 0 8px #9ef01a); }
     }
     @keyframes rotateCW {
       from { transform: rotate(0deg); }
@@ -284,10 +413,6 @@
     @keyframes rotateCCW {
       from { transform: rotate(360deg); }
       to { transform: rotate(0deg); }
-    }
-    @keyframes corePulse {
-      0% { r: 12px; opacity: 0.85; }
-      100% { r: 16px; opacity: 1; }
     }
 
     /* Sweep Scanner Laser Animation */
@@ -800,7 +925,7 @@
        ═══════════════════════════════════════════ -->
   <div class="landing" id="landingView">
     <nav class="landing-nav">
-      <div class="nav-brand"><div class="nav-cyber-logo"><svg width="30" height="30" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="url(#cyber-grad)" stroke-width="6" stroke-dasharray="16 10" class="cyber-orbit-outer"></circle><circle cx="50" cy="50" r="28" fill="none" stroke="#a855f7" stroke-width="5" stroke-dasharray="8 6" class="cyber-orbit-inner"></circle><circle cx="50" cy="50" r="14" fill="url(#core-grad)" class="cyber-core"></circle><circle cx="50" cy="50" r="6" fill="#ffffff"></circle><defs><linearGradient id="cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="#10b981"></stop></linearGradient><radialGradient id="core-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="rgba(0, 242, 254, 0.2)"></stop></radialGradient></defs></svg></div><strong>SEOVault</strong></div>
+      <div class="nav-brand"><div class="nav-cyber-logo"><svg width="34" height="34" viewBox="0 0 100 100" class="cyber-logo" style="overflow: visible;"><polygon points="50,15 85,32 85,68 50,85 15,68 15,32" fill="none" stroke="#6ba405" stroke-width="6" stroke-linejoin="round" class="cyber-shield" style="filter: drop-shadow(0 0 5px rgba(107, 164, 5, 0.6));"></polygon><circle cx="50" cy="50" r="22" fill="none" stroke="#9ef01a" stroke-width="4" stroke-dasharray="12 8" class="cyber-scanner"></circle><circle cx="50" cy="50" r="10" fill="url(#nvidia-core-grad)" class="cyber-core"></circle><circle cx="50" cy="50" r="4" fill="#ffffff"></circle><defs><radialGradient id="nvidia-core-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#9ef01a"></stop><stop offset="100%" stop-color="rgba(107, 164, 5, 0.1)"></stop></radialGradient></defs></svg></div><strong>SEOVault</strong></div>
       <div class="nav-links">
         <a href="#features" class="desktop-only">Features</a>
         <a href="#pricing" class="desktop-only">Pricing</a>
@@ -812,7 +937,7 @@
     <section class="hero">
       <div class="hero-left">
         <div class="hero-eyebrow"><span class="dot"></span> AI-Powered SEO Intelligence</div>
-        <h1>Client SEO audits in <span class="gradient-text">minutes, not hours.</span></h1>
+        <h1 id="heroHeading" style="min-height: 120px;">Client SEO audits in minutes, not hours.</h1>
         <p>SEOVault deploys 15 parallel AI agents to analyze technical SEO, content quality, schema markup, and AI search readiness — with every finding backed by a falsifiability check.</p>
         <div class="hero-stats">
           <div><strong>25</strong><span>AI Skills</span></div>
@@ -820,8 +945,30 @@
           <div><strong>410+</strong><span>Test Cases</span></div>
         </div>
       </div>
-      <div class="hero-right">
-        <div class="auth-panel" id="authView" style="width: 100%; max-width: 400px;">
+      <div class="hero-right" style="position: relative; display: flex; align-items: center; justify-content: center;">
+        <!-- Concentric Orbits Visualization -->
+        <div class="cyber-circles-container">
+          <div class="orbit-circle orbit-1">
+            <div class="orbit-center-text">
+              <span class="count-number" id="countSpecialists">0+</span>
+              <span class="count-label">Agents</span>
+            </div>
+          </div>
+          <div class="orbit-circle orbit-2">
+            <div class="agent-node node-tech" data-label="Tech Agent" title="Technical Agent">⚙️</div>
+            <div class="agent-node node-ux" data-label="UX Agent" title="UX Agent">🎨</div>
+          </div>
+          <div class="orbit-circle orbit-3">
+            <div class="agent-node node-content" data-label="Content Agent" title="Content Agent">📝</div>
+            <div class="agent-node node-schema" data-label="Schema Agent" title="Schema Agent">🏗️</div>
+          </div>
+          <div class="orbit-circle orbit-4">
+            <div class="agent-node node-local" data-label="Local Agent" title="Local Agent">📍</div>
+            <div class="agent-node node-backlink" data-label="Link Agent" title="Link Agent">🔗</div>
+          </div>
+        </div>
+
+        <div class="auth-panel" id="authView" style="width: 100%; max-width: 400px; z-index: 5;">
           <div class="card auth-card">
             <div class="auth-switch">
               <button id="showSignupBtn" type="button" class="active" onclick="setAuthMode('signup')">Create Account</button>
@@ -842,7 +989,9 @@
               <label for="authPassword" id="authPasswordLabel">Password</label>
               <input class="input" id="authPassword" type="password" placeholder="At least 8 characters" autocomplete="current-password">
             </div>
-            <button class="btn btn-primary" id="authSubmitBtn" type="button"><span class="spinner"></span><span>Create Account</span></button>
+            <div class="btn-border-wrap" style="width: 100%;">
+              <button class="btn btn-primary" id="authSubmitBtn" type="button" style="width: 100%; border: none;"><span class="spinner"></span><span>Create Account</span></button>
+            </div>
             <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
               <button class="btn btn-ghost btn-xs" id="forgotPasswordBtn" type="button">Forgot password?</button>
             </div>
@@ -959,7 +1108,7 @@
        ═══════════════════════════════════════════ -->
   <div class="app-shell hidden" id="appView">
     <aside class="sidebar">
-      <div class="sidebar-brand"><div class="nav-cyber-logo"><svg width="30" height="30" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="url(#cyber-grad)" stroke-width="6" stroke-dasharray="16 10" class="cyber-orbit-outer"></circle><circle cx="50" cy="50" r="28" fill="none" stroke="#a855f7" stroke-width="5" stroke-dasharray="8 6" class="cyber-orbit-inner"></circle><circle cx="50" cy="50" r="14" fill="url(#core-grad)" class="cyber-core"></circle><circle cx="50" cy="50" r="6" fill="#ffffff"></circle><defs><linearGradient id="cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="#10b981"></stop></linearGradient><radialGradient id="core-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#00f2fe"></stop><stop offset="100%" stop-color="rgba(0, 242, 254, 0.2)"></stop></radialGradient></defs></svg></div><div><strong>SEOVault</strong><span id="userLine">Dashboard</span></div></div>
+      <div class="sidebar-brand"><div class="nav-cyber-logo"><svg width="34" height="34" viewBox="0 0 100 100" class="cyber-logo" style="overflow: visible;"><polygon points="50,15 85,32 85,68 50,85 15,68 15,32" fill="none" stroke="#6ba405" stroke-width="6" stroke-linejoin="round" class="cyber-shield" style="filter: drop-shadow(0 0 5px rgba(107, 164, 5, 0.6));"></polygon><circle cx="50" cy="50" r="22" fill="none" stroke="#9ef01a" stroke-width="4" stroke-dasharray="12 8" class="cyber-scanner"></circle><circle cx="50" cy="50" r="10" fill="url(#nvidia-core-grad)" class="cyber-core"></circle><circle cx="50" cy="50" r="4" fill="#ffffff"></circle><defs><radialGradient id="nvidia-core-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#9ef01a"></stop><stop offset="100%" stop-color="rgba(107, 164, 5, 0.1)"></stop></radialGradient></defs></svg></div><div><strong>SEOVault</strong><span id="userLine">Dashboard</span></div></div>
       <nav class="sidebar-nav">
         <div class="nav-section-label">Main</div>
         <button class="nav-item active" data-view="audit"><span class="nav-icon">🎯</span>Audit Desk</button>
@@ -1012,7 +1161,9 @@
               <label for="moduleSelect">Module</label>
               <select id="moduleSelect"></select>
             </div>
-            <button class="btn btn-primary btn-lg" id="startBtn" type="button"><span class="spinner"></span><span>Run Audit</span></button>
+            <div class="btn-border-wrap" style="align-self: flex-end; height: 48px;">
+              <button class="btn btn-primary btn-lg" id="startBtn" type="button" style="height: 100%; border: none;"><span class="spinner"></span><span>Run Audit</span></button>
+            </div>
           </div>
           <div class="launcher-actions">
             <div class="input-wrap" style="min-width:160px">
@@ -1355,12 +1506,61 @@
     /* ═══════════════════════════════════════════
        NAVIGATION
        ═══════════════════════════════════════════ */
+    let typewriterActive = false;
+    function runTypewriter() {
+      if (typewriterActive) return;
+      const heading = $('heroHeading');
+      if (!heading) return;
+      typewriterActive = true;
+      const text = "Client SEO audits in minutes, not hours.";
+      heading.textContent = '';
+      let i = 0;
+      function type() {
+        if (i < text.length) {
+          heading.textContent += text.charAt(i);
+          i++;
+          setTimeout(type, 45);
+        } else {
+          typewriterActive = false;
+        }
+      }
+      setTimeout(type, 400);
+    }
+
+    let countUpActive = false;
+    function runCountUp() {
+      if (countUpActive) return;
+      const countEl = $('countSpecialists');
+      if (!countEl) return;
+      countUpActive = true;
+      const target = 18;
+      const duration = 2000;
+      const start = performance.now();
+      
+      function update(time) {
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(ease * target);
+        countEl.textContent = current + "+";
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          countEl.textContent = target + "+";
+          countUpActive = false;
+        }
+      }
+      requestAnimationFrame(update);
+    }
+
     function showLanding() {
       $('landingView').classList.remove('hidden');
       $('authView').classList.remove('hidden');
       $('appView').classList.add('hidden');
       $('mobileNav').classList.add('hidden');
       setAuthMode(S.authMode || 'signup');
+      runTypewriter();
+      runCountUp();
     }
 
     function showAuth(mode = 'login') {

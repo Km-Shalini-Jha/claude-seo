@@ -2191,26 +2191,26 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SEOVault Executive Report · {escape_html(job.label)}</title>
   <style>
-    body{{margin:0;background:#06090f;color:#f1f5f9;font-family:Inter,system-ui,-apple-system,sans-serif}}
+    body{{margin:0;background:#040603;color:#f4f6f0;font-family:Inter,system-ui,-apple-system,sans-serif}}
     main{{max-width:1040px;margin:0 auto;padding:36px 20px}}
-    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:22px;margin-bottom:22px}}
-    h1{{margin:0;font-size:28px;color:#ffffff;letter-spacing:-0.5px}} h2{{color:#06b6d4;font-size:20px;margin-top:24px}} p{{color:#94a3b8;line-height:1.55}}
+    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid rgba(107,164,5,0.15);padding-bottom:22px;margin-bottom:22px}}
+    h1{{margin:0;font-size:28px;color:#ffffff;letter-spacing:-0.5px}} h2{{color:#9ef01a;font-size:20px;margin-top:24px}} p{{color:#a3b899;line-height:1.55}}
     .badge{{display:inline-flex;border-radius:99px;padding:4px 10px;font-weight:800;font-size:11px;text-transform:uppercase}}
     .badge-critical, .badge-high {{background:rgba(239,68,68,0.15);color:#ef4444}}
     .badge-medium {{background:rgba(245,158,11,0.15);color:#f59e0b}}
     .badge-low {{background:rgba(59,130,246,0.15);color:#3b82f6}}
-    .badge-info {{background:rgba(6,182,212,0.15);color:#06b6d4}}
+    .badge-info {{background:rgba(158,240,26,0.15);color:#9ef01a}}
     .grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}}
-    .card,.finding{{background:#0f172a;border:1px solid rgba(255,255,255,0.06);border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.4);page-break-inside:avoid;break-inside:avoid}}
-    .card{{padding:16px}} .card span{{display:block;color:#94a3b8;font-size:11px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;color:#ffffff;word-break:break-word}}
+    .card,.finding{{background:#0d140a;border:1px solid rgba(107,164,5,0.15);border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.5);page-break-inside:avoid;break-inside:avoid}}
+    .card{{padding:16px}} .card span{{display:block;color:#a3b899;font-size:11px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;color:#ffffff;word-break:break-word}}
     .findings{{display:grid;gap:10px;margin-top:12px}} 
-    .finding{{padding:16px;border-left:4px solid rgba(255,255,255,0.12)}} 
+    .finding{{padding:16px;border-left:4px solid rgba(107,164,5,0.35)}} 
     .finding-critical, .finding-high {{border-left-color:#ef4444}}
     .finding-medium {{border-left-color:#f59e0b}}
     .finding-low {{border-left-color:#3b82f6}}
-    .finding-info {{border-left-color:#06b6d4}}
+    .finding-info {{border-left-color:#9ef01a}}
     .finding-header{{display:flex;justify-content:space-between;align-items:center;gap:12px}} 
-    pre{{white-space:pre-wrap !important;word-break:break-all !important;background:#030712;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:14px;max-height:none !important;overflow:visible !important;font-size:12px;color:#c4d3e0;page-break-inside:avoid;break-inside:avoid}}
+    pre{{white-space:pre-wrap !important;word-break:break-all !important;background:#060905;border:1px solid rgba(107,164,5,0.15);border-radius:8px;padding:14px;max-height:none !important;overflow:visible !important;font-size:12px;color:#f4f6f0;page-break-inside:avoid;break-inside:avoid}}
     
     body.pdf-export-mode{{background:#ffffff !important;color:#0f172a !important}}
     body.pdf-export-mode main{{padding:10px !important}}
