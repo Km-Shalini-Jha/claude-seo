@@ -23,7 +23,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Literal
 
-from fastapi import Depends, Header, HTTPException, Query, Request
+from fastapi import Depends, Header, HTTPException, Query, Request, BackgroundTasks
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, HttpUrl
@@ -533,7 +533,11 @@ def postgres_url() -> str:
     return f"{DATABASE_URL}{separator}sslmode=require"
 
 
+_SCHEMA_ENSURED = False
+
+
 def db() -> AppDatabase:
+    global _SCHEMA_ENSURED
     if DATABASE_BACKEND == "postgres":
         try:
             import psycopg
@@ -547,7 +551,9 @@ def db() -> AppDatabase:
         raw = sqlite3.connect(DB_PATH)
         raw.row_factory = sqlite3.Row
         conn = AppDatabase(raw, "sqlite")
-    ensure_schema(conn)
+    if not _SCHEMA_ENSURED:
+        ensure_schema(conn)
+        _SCHEMA_ENSURED = True
     return conn
 
 
@@ -2060,6 +2066,40 @@ def drift_background_loop() -> None:
         time.sleep(300)
 
 
+def execute_job_now(job_id: str) -> None:
+    job = None
+    with JOBS_LOCK:
+        job = JOBS.get(job_id)
+    if not job:
+        with db() as conn:
+            row = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+            if row:
+                job = row_to_job(row)
+    if not job:
+        return
+    
+    # Claim job
+    job.status = "running"
+    job.updated_at = now()
+    with JOBS_LOCK:
+        JOBS[job_id] = job
+    persist_job(job)
+    
+    try:
+        command, output = run_module(job.module, job.url)
+        completed = update_job(
+            job.id,
+            status="complete",
+            command=command,
+            output=output,
+            error=None,
+            share_token=job.share_token or secrets.token_urlsafe(18),
+        )
+    except Exception as exc:
+        completed = update_job(job.id, status="error", error=str(exc))
+    persist_job(completed)
+
+
 @app.on_event("startup")
 def start_worker() -> None:
     global WORKER_STARTED
@@ -2302,12 +2342,18 @@ async def health() -> dict[str, Any]:
 
 
 @app.get("/api/ready")
-async def ready():
+async def ready(background_tasks: BackgroundTasks):
     runtime = run_runtime_doctor()
     try:
         with db() as conn:
             db_ok = conn.execute("SELECT 1 AS ok").fetchone()["ok"] == 1
             queued = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE status = 'queued'").fetchone()["n"]
+            if not AUTO_WORKER:
+                background_tasks.add_task(process_due_schedules)
+                if queued > 0:
+                    row = conn.execute("SELECT id FROM jobs WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1").fetchone()
+                    if row:
+                        background_tasks.add_task(execute_job_now, row["id"])
     except Exception as exc:
         return JSONResponse(
             status_code=503,
@@ -2853,7 +2899,7 @@ async def delete_site(site_id: str, user: dict[str, Any] = Depends(current_user)
 
 
 @app.post("/api/jobs")
-async def create_job(request: JobRequest, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
+async def create_job(request: JobRequest, background_tasks: BackgroundTasks, user: dict[str, Any] = Depends(current_user)) -> dict[str, Any]:
     if request.module not in MODULES:
         raise HTTPException(status_code=404, detail="Unknown audit module")
     check_rate_limit(user)
@@ -2883,6 +2929,8 @@ async def create_job(request: JobRequest, user: dict[str, Any] = Depends(current
         JOBS[record.id] = record
     persist_job(record)
     WORKER_EVENT.set()
+    if not AUTO_WORKER:
+        background_tasks.add_task(execute_job_now, record.id)
     log_event(user["id"], "job.create", "job", record.id, {"module": request.module, "url": str(request.url)})
     return public_job(record)
 

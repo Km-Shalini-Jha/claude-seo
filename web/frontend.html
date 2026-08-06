@@ -1364,12 +1364,9 @@
       <div class="sidebar-brand"><div class="nav-cyber-logo"><svg width="34" height="34" viewBox="0 0 100 100" class="cyber-logo" style="overflow: visible;"><polygon points="50,15 85,32 85,68 50,85 15,68 15,32" fill="none" stroke="#b8860b" stroke-width="6" stroke-linejoin="round" class="cyber-shield" style="filter: drop-shadow(0 0 5px rgba(184,134,11,0.6));"></polygon><circle cx="50" cy="50" r="22" fill="none" stroke="#0b0b10" stroke-width="4" stroke-dasharray="12 8" class="cyber-scanner"></circle><circle cx="50" cy="50" r="10" fill="url(#cyber-core-grad)" class="cyber-core"></circle><circle cx="50" cy="50" r="4" fill="#ffffff"></circle><defs><radialGradient id="cyber-core-grad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#0b0b10"></stop><stop offset="100%" stop-color="rgba(184,134,11,0.08)"></stop></radialGradient></defs></svg></div><div><strong>SEOVault</strong><span id="userLine">Dashboard</span></div></div>
       <nav class="sidebar-nav">
         <div class="nav-section-label">Main</div>
-        <button class="nav-item active" data-view="audit"><span class="nav-icon">🎯</span>Audit Desk</button>
-        <button class="nav-item" data-view="reports"><span class="nav-icon">📋</span>Reports</button>
-        <button class="nav-item" data-view="analytics"><span class="nav-icon">📊</span>Analytics</button>
-        <div class="nav-section-label">Manage</div>
-        <button class="nav-item" data-view="projects"><span class="nav-icon">📁</span>Projects</button>
-        <button class="nav-item" data-view="sites"><span class="nav-icon">🌐</span>Sites</button>
+        <button class="nav-item active" data-view="audit"><span class="nav-icon">🎯</span>Command Center</button>
+        <div class="nav-section-label">Inventory</div>
+        <button class="nav-item" data-view="projects"><span class="nav-icon">📁</span>Workspaces</button>
         <div class="nav-section-label">Account</div>
         <button class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span>Settings</button>
       </nav>
@@ -1474,9 +1471,10 @@
         </div>
       </section>
 
-      <!-- PROJECTS VIEW -->
+      <!-- WORKSPACES & INVENTORY VIEW -->
       <section class="view" id="view-projects">
-        <div class="grid-2" style="margin-bottom:16px">
+        <div class="grid-2" style="margin-bottom:24px">
+          <!-- Create Project -->
           <div class="card" style="padding:18px">
             <div class="section-title"><h2>New Project</h2><span class="badge badge-cyan">Workspace</span></div>
             <div class="stack">
@@ -1484,33 +1482,35 @@
               <button class="btn btn-primary btn-sm" id="createProjectPanelBtn">Create Project</button>
             </div>
           </div>
+          <!-- Create Site (Merged here!) -->
           <div class="card" style="padding:18px">
-            <div class="section-title"><h2>Portfolio</h2><span class="badge badge-emerald" id="projectCount">0</span></div>
-            <p class="muted">Organize clients and campaigns into projects for structured auditing.</p>
-          </div>
-        </div>
-        <div class="section-title"><h2>All Projects</h2><span class="badge badge-dim" id="projectListCount">0</span></div>
-        <div class="entity-grid" id="projectGrid"></div>
-      </section>
-
-      <!-- SITES VIEW -->
-      <section class="view" id="view-sites">
-        <div class="grid-2" style="margin-bottom:16px">
-          <div class="card" style="padding:18px">
-            <div class="section-title"><h2>Add Site</h2><span class="badge badge-cyan">Inventory</span></div>
+            <div class="section-title"><h2>New Site</h2><span class="badge badge-cyan">Inventory</span></div>
             <div class="stack">
-              <div class="input-wrap"><label for="siteProjectPanel">Project</label><select id="siteProjectPanel"></select></div>
+              <div class="input-wrap"><label for="siteProjectPanel">Project / Campaign</label><select id="siteProjectPanel"></select></div>
               <div class="input-wrap"><label for="siteUrlPanel">Website URL</label><input class="input" id="siteUrlPanel" type="url" placeholder="https://client.com"></div>
               <button class="btn btn-primary btn-sm" id="saveSitePanelBtn">Save Site</button>
             </div>
           </div>
-          <div class="card" style="padding:18px">
-            <div class="section-title"><h2>Coverage</h2><span class="badge badge-emerald" id="siteCount">0</span></div>
-            <p class="muted">Saved sites can be reused across audits for faster repeat analysis.</p>
-          </div>
         </div>
-        <div class="section-title"><h2>All Sites</h2><span class="badge badge-dim" id="siteListCount">0</span></div>
-        <div class="entity-grid" id="siteGrid"></div>
+        
+        <!-- List of Projects -->
+        <div style="margin-bottom:32px">
+          <div class="section-title"><h2>All Projects</h2><span class="badge badge-dim" id="projectListCount">0</span></div>
+          <div class="entity-grid" id="projectGrid"></div>
+        </div>
+
+        <!-- List of Sites (Merged here!) -->
+        <div>
+          <div class="section-title"><h2>All Sites</h2><span class="badge badge-dim" id="siteListCount">0</span></div>
+          <div class="entity-grid" id="siteGrid"></div>
+        </div>
+      </section>
+
+      <!-- SITES VIEW (HIDDEN DUMMY FOR COMPATIBILITY) -->
+      <section class="view" id="view-sites" hidden>
+        <div id="siteCount" hidden>0</div>
+        <div id="siteListCount" hidden>0</div>
+        <div id="siteGrid" hidden></div>
       </section>
 
       <!-- REPORTS VIEW -->
@@ -1643,7 +1643,7 @@
 
     const viewMeta = {
       audit:     ['SEO audit command center', 'Run AI-powered SEO audits and review findings.'],
-      projects:  ['Client project portfolio', 'Manage client workspaces and campaign portfolios.'],
+      projects:  ['Workspaces & inventory', 'Manage client workspaces, saved domains, and portfolio campaigns.'],
       sites:     ['Managed site inventory', 'Save and organize customer domains for repeat analysis.'],
       reports:   ['Executive report library', 'Review completed audits, export deliverables, and share links.'],
       analytics: ['Analytics', 'Monitor audit activity, severity trends, and module usage.'],
@@ -2018,7 +2018,7 @@
       $('pageTitle').textContent = meta[0];
       $('pageSubtitle').textContent = meta[1];
       if (view === 'reports') renderReportPreview(S.latest);
-      if (view === 'projects') renderProjects();
+      if (view === 'projects') { renderProjects(); renderSites(); }
       if (view === 'sites') renderSites();
       if (view === 'settings') { renderSettings(); loadTeam(); }
       if (view === 'analytics') renderAnalytics();
@@ -2476,10 +2476,30 @@
     }
 
     async function saveSite(projId = null, urlVal = null) {
-      const project_id = projId || $('projectSelect').value; const url = urlVal || targetUrl();
-      if (!project_id) return toast('Select a project first.'); if (!url) return;
-      await fetchJson('/api/sites', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ project_id, url, name: new URL(url).hostname }) });
-      await refreshWorkspace(); toast('Site saved.');
+      const project_id = projId || $('projectSelect').value;
+      let url = urlVal || targetUrl();
+      if (!project_id) return toast('Select a project first.');
+      if (!url) return;
+      
+      // Force protocol if missing
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      
+      let hostname = '';
+      try {
+        hostname = new URL(url).hostname;
+      } catch {
+        return toast('Please enter a valid URL: https://example.com');
+      }
+      
+      await fetchJson('/api/sites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id, url, name: hostname })
+      });
+      await refreshWorkspace();
+      toast('Site saved.');
     }
 
     async function editProject(id) { const p = S.projects.find(x => x.id === id); if (!p) return; const name = prompt('Project name', p.name); if (name === null) return; await fetchJson(`/api/projects/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) }); await refreshWorkspace(); toast('Updated.'); }
