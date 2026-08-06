@@ -2533,8 +2533,16 @@
 
 <!-- Cinematic particle canvas, hero tilt, and CTA micro-animations -->
 <style>
-  /* Particle canvas overlay */
-  #heroCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; mix-blend-mode: screen; opacity: 0.9; }
+  /* Motion overlay control */
+  :root {
+    --motion-overlay-z: 10;
+    --motion-glow-intensity: 22px;
+    --motion-blend-mode: screen;
+    --motion-canvas-opacity: 0.98;
+  }
+  /* Particle canvas overlay (defaults behind content). Add .hero--overlay on .hero to bring it visually forward. */
+  #heroCanvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; mix-blend-mode: var(--motion-blend-mode); opacity: var(--motion-canvas-opacity); transition: opacity 0.25s ease; }
+  .hero.hero--overlay #heroCanvas { z-index: var(--motion-overlay-z); mix-blend-mode: var(--motion-blend-mode); filter: blur(0.6px); }
   /* CTA pulse */
   @keyframes ctaPulse { 0% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } 50% { box-shadow: 0 18px 60px rgba(184,134,11,0.16); transform: translateY(-4px); } 100% { box-shadow: 0 8px 30px rgba(184,134,11,0.10); transform: translateY(0); } }
   .btn-primary.cta-animated { animation: ctaPulse 4s ease-in-out infinite; }
@@ -2572,9 +2580,10 @@
       // ensure hero has positioning context
       if (getComputedStyle(hero).position === 'static') hero.style.position = 'relative';
 
-      // Create canvas overlay (insert as first child to sit behind hero content but above background)
+      // Create canvas overlay (insert as first child)
       const canvas = document.createElement('canvas');
       canvas.id = 'heroCanvas';
+      canvas.className = 'seo-motion-canvas';
       canvas.style.position = 'absolute';
       canvas.style.left = '0'; canvas.style.top = '0';
       canvas.style.width = '100%'; canvas.style.height = '100%';
@@ -2625,11 +2634,16 @@
           if (p.x < -60) p.x = W + 60; if (p.x > W + 60) p.x = -60;
           if (p.y < -60) p.y = H + 60; if (p.y > H + 60) p.y = -60;
 
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.shadowBlur = Math.min(48, 8 + (p.r * 0.5));
+          ctx.shadowColor = `rgba(184,134,11,${Math.min(0.45, p.alpha * 2)})`;
           const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.2})`);
-          g.addColorStop(0.5, `rgba(184,134,11,${p.alpha * 0.5})`);
+          g.addColorStop(0, `rgba(184,134,11,${p.alpha * 1.4})`);
+          g.addColorStop(0.4, `rgba(184,134,11,${p.alpha * 0.6})`);
           g.addColorStop(1, 'rgba(184,134,11,0)');
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+          ctx.restore();
         }
 
         // connections
@@ -2675,7 +2689,18 @@
       heroFloatEls.forEach(el => el.classList.add('hero-floating'));
 
       // expose debug handle
-      window._seoMotion = { started: true, particleCount: PARTICLE_COUNT };
+      window._seoMotion = {
+        started: true,
+        particleCount: PARTICLE_COUNT,
+        overlay: hero.classList.contains('hero--overlay') || false,
+        setOverlay: function(on) {
+          try {
+            if (on) hero.classList.add('hero--overlay'); else hero.classList.remove('hero--overlay');
+            this.overlay = !!on;
+            console.debug('[SEO-MOTION] overlay', this.overlay);
+          } catch(e) { console.warn('[SEO-MOTION] setOverlay failed', e); }
+        }
+      };
       console.debug('[SEO-MOTION] started', window._seoMotion);
 
       start();
