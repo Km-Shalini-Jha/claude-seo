@@ -2849,6 +2849,32 @@
       hero.addEventListener('mousemove', onMove);
       hero.addEventListener('mouseleave', onLeave);
 
+      // Global subtle 3D/parallax motion: update CSS vars used by transform rules (throttled via rAF)
+      (function(){
+        if (window.matchMedia('(pointer: coarse)').matches) return; // avoid on touch devices
+        let lastMotion = {mx:0,my:0}; let motionRaf = null;
+        function setMotionVars(m){
+          document.documentElement.style.setProperty('--motion-x', String(m.mx));
+          document.documentElement.style.setProperty('--motion-y', String(m.my));
+        }
+        function onGlobalMove(e){
+          // compute normalized cursor offset from center
+          const cx = window.innerWidth / 2; const cy = window.innerHeight / 2;
+          const nx = (e.clientX - cx) / cx; const ny = (e.clientY - cy) / cy;
+          const mx = Math.max(-8, Math.min(8, nx * 6));
+          const my = Math.max(-6, Math.min(6, -ny * 4));
+          lastMotion = { mx: mx, my: my };
+          if (motionRaf) return;
+          motionRaf = requestAnimationFrame(()=>{ setMotionVars(lastMotion); motionRaf = null; });
+        }
+        function onGlobalLeave(){ lastMotion = {mx:0,my:0}; setMotionVars(lastMotion); }
+        document.addEventListener('mousemove', onGlobalMove, { passive: true });
+        document.addEventListener('mouseleave', onGlobalLeave, { passive: true });
+        window.addEventListener('blur', onGlobalLeave);
+        // cleanup on unload
+        window.addEventListener('unload', ()=>{ document.removeEventListener('mousemove', onGlobalMove); document.removeEventListener('mouseleave', onGlobalLeave); window.removeEventListener('blur', onGlobalLeave); if (motionRaf) cancelAnimationFrame(motionRaf); });
+      })();
+
       // CTA and floating
       const heroPrimary = hero.querySelector('.btn-primary');
       if (heroPrimary) heroPrimary.classList.add('cta-animated');
