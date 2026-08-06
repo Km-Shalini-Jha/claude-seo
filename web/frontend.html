@@ -2659,7 +2659,29 @@
     /* ═══════════════════════════════════════════
        EVENT BINDINGS & BOOT
        ═══════════════════════════════════════════ */
-    const bind = (id, fn, ev = 'click') => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+    const bind = (id, fn, ev = 'click') => {
+      const el = $(id);
+      if (!el) return;
+      // Wrap handlers so that if they return a Promise we show a busy state on the button
+      el.addEventListener(ev, async function wrappedHandler(e) {
+        try {
+          // only show loader for primary interactions
+          el.classList.add('busy');
+          el.disabled = true;
+          const result = fn.call(this, e);
+          if (result && typeof result.then === 'function') {
+            await result;
+          }
+        } catch (err) {
+          // Let handler show its own error; still log for debugging
+          console.warn('[bind] handler error', err);
+          throw err;
+        } finally {
+          el.classList.remove('busy');
+          el.disabled = false;
+        }
+      });
+    };
 
     bind('landingLoginBtn', () => showAuth('login'));
     bind('landingSignupBtn', () => showAuth('signup'));
