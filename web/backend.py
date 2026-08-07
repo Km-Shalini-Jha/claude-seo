@@ -2233,24 +2233,24 @@ def render_report_html(job: JobRecord, print_auto: bool = False, download_pdf: b
   <style>
     body{{margin:0;background:#020202;color:#fcfbf8;font-family:Inter,system-ui,-apple-system,sans-serif}}
     main{{max-width:1040px;margin:0 auto;padding:36px 20px}}
-    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid rgba(255,170,0,0.15);padding-bottom:22px;margin-bottom:22px}}
-    h1{{margin:0;font-size:28px;color:#ffffff;letter-spacing:-0.5px}} h2{{color:#7c3aed;font-size:20px;margin-top:24px}} p{{color:#d4cfc3;line-height:1.55}}
+    header{{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid rgba(107,164,5,0.15);padding-bottom:22px;margin-bottom:22px}}
+    h1{{margin:0;font-size:28px;color:#ffffff;letter-spacing:-0.5px}} h2{{color:#6ba405;font-size:20px;margin-top:24px}} p{{color:#d4cfc3;line-height:1.55}}
     .badge{{display:inline-flex;border-radius:99px;padding:4px 10px;font-weight:800;font-size:11px;text-transform:uppercase}}
     .badge-critical, .badge-high {{background:rgba(239,68,68,0.15);color:#ef4444}}
     .badge-medium {{background:rgba(245,158,11,0.15);color:#f59e0b}}
     .badge-low {{background:rgba(59,130,246,0.15);color:#3b82f6}}
-    .badge-info {{background:rgba(14,165,164,0.12);color:#0ea5a4}}
+    .badge-info {{background:rgba(107,164,5,0.12);color:#6ba405}}
     .grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}}
-    .card,.finding{{background:#0d0d0d;border:1px solid rgba(255,170,0,0.15);border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.5);page-break-inside:avoid;break-inside:avoid}}
+    .card,.finding{{background:#0d0d0d;border:1px solid rgba(107,164,5,0.15);border-radius:8px;box-shadow:0 12px 34px rgba(0,0,0,.5);page-break-inside:avoid;break-inside:avoid}}
     .card{{padding:16px}} .card span{{display:block;color:#d4cfc3;font-size:11px;text-transform:uppercase;font-weight:800}} .card strong{{display:block;margin-top:8px;font-size:18px;color:#ffffff;word-break:break-word}}
     .findings{{display:grid;gap:10px;margin-top:12px}} 
-    .finding{{padding:16px;border-left:4px solid rgba(255,170,0,0.35)}} 
+    .finding{{padding:16px;border-left:4px solid rgba(107,164,5,0.35)}} 
     .finding-critical, .finding-high {{border-left-color:#ef4444}}
     .finding-medium {{border-left-color:#f59e0b}}
     .finding-low {{border-left-color:#3b82f6}}
-    .finding-info {{border-left-color:#7c3aed}}
+    .finding-info {{border-left-color:#6ba405}}
     .finding-header{{display:flex;justify-content:space-between;align-items:center;gap:12px}} 
-    pre{{white-space:pre-wrap !important;word-break:break-all !important;background:#080808;border:1px solid rgba(255,170,0,0.15);border-radius:8px;padding:14px;max-height:none !important;overflow:visible !important;font-size:12px;color:#fcfbf8;page-break-inside:avoid;break-inside:avoid}}
+    pre{{white-space:pre-wrap !important;word-break:break-all !important;background:#080808;border:1px solid rgba(107,164,5,0.15);border-radius:8px;padding:14px;max-height:none !important;overflow:visible !important;font-size:12px;color:#fcfbf8;page-break-inside:avoid;break-inside:avoid}}
     
     body.pdf-export-mode{{background:#ffffff !important;color:#0f172a !important}}
     body.pdf-export-mode main{{padding:10px !important}}
@@ -2821,9 +2821,7 @@ async def delete_project(project_id: str, user: dict[str, Any] = Depends(current
         row = conn.execute("SELECT * FROM projects WHERE id = ? AND user_id = ?", (project_id, user["id"])).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Project not found")
-        job_count = conn.execute("SELECT COUNT(*) AS n FROM jobs WHERE project_id = ?", (project_id,)).fetchone()["n"]
-        if job_count:
-            raise HTTPException(status_code=409, detail="Projects with audit history cannot be deleted")
+        conn.execute("DELETE FROM jobs WHERE project_id = ?", (project_id,))
         conn.execute("DELETE FROM sites WHERE project_id = ? AND user_id = ?", (project_id, user["id"]))
         conn.execute("DELETE FROM projects WHERE id = ? AND user_id = ?", (project_id, user["id"]))
     log_event(user["id"], "project.delete", "project", project_id)
